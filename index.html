@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>Al-Mufrodat — Arabische woordenschat</title>
+<meta name="theme-color" content="#1F4F45">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F4EFE4; --paper-deep:#EBE4D4; --surface:#FFFBF4;
+  --ink:#1A1916; --ink-soft:#4A453C; --muted:#6B6458;
+  --line:#E4D9C5; --line-strong:#D3C6AD;
+  --forest:#1F4F45; --forest-dark:#163832; --forest-soft:#DCE8E3;
+  --clay:#8F3D36; --clay-soft:#F3E4E1; --ok:#2D5A3D; --ok-soft:#E3F0E7;
+  --radius:16px; --shadow:0 8px 28px rgba(26,25,22,.07);
+  --font:Figtree,system-ui,sans-serif; --ar:Amiri,serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased}
+body{font-family:var(--font);background:var(--paper);color:var(--ink);min-height:100dvh;caret-color:transparent}
+input,textarea,select,[contenteditable="true"]{caret-color:var(--ink)}
+button,.tab,.path-card,.card,.lesson,.book-lesson,.opt,.icon-btn{caret-color:transparent;-webkit-user-select:none;user-select:none}
+
+button{font:inherit;cursor:pointer;border:none;background:none;color:inherit;-webkit-tap-highlight-color:transparent}
+input,select,textarea{font:inherit;color:inherit}
+#app{max-width:520px;margin:0 auto;padding:16px 16px calc(96px + env(safe-area-inset-bottom));min-height:100dvh}
+.ar{font-family:var(--ar);direction:rtl}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 18px;border-radius:12px;font-weight:600;font-size:14px;transition:.15s}
+.btn-primary{background:var(--forest);color:var(--paper)}
+.btn-primary:active{background:var(--forest-dark)}
+.btn-secondary{background:var(--surface);border:1.5px solid var(--line-strong)}
+.btn-ghost{color:var(--ink-soft)}
+.btn-danger{background:var(--clay);color:#fff}
+.btn:disabled{opacity:.4;cursor:default}
+.btn-block{width:100%}
+.btn-sm{min-height:38px;padding:0 12px;font-size:13px;border-radius:10px}
+.icon-btn{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;border:1.5px solid var(--line);background:var(--surface);color:var(--ink-soft)}
+.icon-btn:hover{border-color:var(--forest);color:var(--forest)}
+.card{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+.progress{height:8px;background:var(--paper-deep);border-radius:99px;overflow:hidden}
+.progress>i{display:block;height:100%;background:var(--forest);border-radius:inherit;transition:width .4s}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:10px}
+.back{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--ink-soft);min-height:40px}
+.back span{width:32px;height:32px;border-radius:10px;background:var(--ink);color:var(--paper);display:grid;place-items:center;font-size:16px}
+.tabbar{position:fixed;left:0;right:0;bottom:0;top:auto;z-index:40;background:rgba(255,251,244,.96);border-top:1px solid var(--line);border-bottom:none;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:6px 10px calc(6px + env(safe-area-inset-bottom))}
+.tabbar-inner{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.tab{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border-radius:12px;font-size:11px;font-weight:600;color:var(--muted)}
+.tab.active{color:var(--forest);background:var(--forest-soft)}
+.tab svg{width:20px;height:20px}
+.header{text-align:center;padding:8px 0 18px}
+.header .logo{font-family:var(--ar);font-size:42px;font-weight:700;color:var(--forest);line-height:1}
+.header h1{font-size:24px;font-weight:700;margin-top:8px;letter-spacing:-.02em}
+.header p{color:var(--muted);font-size:14px;margin-top:4px}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);font-size:12px;font-weight:600;color:var(--ink-soft)}
+.continue{background:var(--forest);color:var(--paper);border-radius:var(--radius);padding:18px;margin:14px 0}
+.continue .lbl{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.75}
+.continue h2{font-size:18px;margin:4px 0 2px}
+.continue .meta{font-size:13px;opacity:.8;margin-bottom:12px}
+.continue .row{display:flex;gap:8px}
+.continue .btn{flex:1;background:var(--paper);color:var(--forest)}
+.continue .btn.ghost{background:transparent;color:var(--paper);border:1.5px solid rgba(255,251,244,.4)}
+.section-h{display:flex;align-items:baseline;justify-content:space-between;margin:28px 0 10px}
+.section-h h2{font-size:18px;font-weight:700}
+.section-h span{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.lesson{border:1.5px solid var(--line);background:var(--surface);border-radius:var(--radius);padding:14px;margin-bottom:10px}
+.lesson .status{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
+.lesson .status.new{color:var(--muted)}.lesson .status.busy{color:var(--forest)}.lesson .status.done{color:var(--ok)}
+.lesson h3{font-size:15px;font-weight:700}
+.lesson .blurb{font-size:13px;color:var(--muted);margin:2px 0 10px}
+.lesson .row{display:flex;gap:8px;margin-top:10px}
+.lesson .row .btn{flex:1}
+.flash-card{min-height:320px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;cursor:pointer;padding:48px 20px 28px}
+.flash-card .tag{position:absolute;top:14px;left:16px;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.flash-card .speak{position:absolute;top:10px;right:10px}
+.flash-card .big-ar{font-family:var(--ar);font-size:clamp(40px,12vw,64px);font-weight:700;line-height:1.25;direction:rtl}
+.flash-card .translit{color:var(--muted);font-size:14px;margin-top:6px}
+.flash-card .hint{margin-top:22px;font-size:11px;font-weight:700;color:var(--forest);letter-spacing:.08em;text-transform:uppercase}
+.flash-card .nl{font-size:28px;font-weight:700}
+.flash-controls{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:18px}
+.qcard{position:relative;text-align:center;padding:28px 18px}
+.qcard .qlabel{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.qcard .qmain{font-size:28px;font-weight:700;margin:10px 0 4px}
+.qcard .qar{font-family:var(--ar);font-size:clamp(40px,11vw,56px);font-weight:700;direction:rtl;margin:8px 0}
+.options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+@media(max-width:420px){.options{grid-template-columns:1fr}}
+.opt{min-height:60px;border:2px solid var(--line);border-radius:12px;background:var(--paper);font-family:var(--ar);font-size:22px;direction:rtl;padding:10px;display:flex;align-items:center;justify-content:center;gap:8px}
+.opt:active{border-color:var(--forest)}
+.opt.correct{background:var(--ok);border-color:var(--ok);color:#fff}
+.opt.wrong{background:var(--clay);border-color:var(--clay);color:#fff}
+.opt:disabled{cursor:default}
+.type-row{display:flex;gap:8px;margin-top:16px}
+.type-row input{flex:1;min-height:46px;border:1.5px solid var(--line);border-radius:12px;padding:0 14px;background:var(--paper)}
+.type-row input:focus{outline:none;border-color:var(--forest);box-shadow:0 0 0 3px rgba(31,79,69,.12)}
+.dont-know{margin-top:14px;font-size:13px;color:var(--muted);text-decoration:underline;font-weight:600}
+.feedback{position:fixed;left:0;right:0;bottom:0;z-index:50;padding:14px 16px calc(14px + env(safe-area-inset-bottom));transform:translateY(110%);transition:transform .28s cubic-bezier(.22,1,.36,1);border-top:3px solid}
+.feedback.show{transform:translateY(0)}
+.feedback.ok{background:var(--ok-soft);border-color:var(--ok)}
+.feedback.no{background:var(--clay-soft);border-color:var(--clay)}
+.feedback-inner{max-width:520px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.feedback .txt{font-weight:700;font-size:14px}
+.feedback.ok .txt{color:var(--ok)}.feedback.no .txt{color:var(--clay)}
+.summary{text-align:center;padding:36px 20px}
+.summary h2{font-size:26px;margin:8px 0}
+.summary p{color:var(--muted);margin-bottom:16px}
+.badge{display:inline-block;background:var(--forest-soft);color:var(--forest);padding:6px 14px;border-radius:999px;font-weight:700;font-size:13px;margin-bottom:20px}
+.search{width:100%;min-height:46px;border:1.5px solid var(--line);border-radius:12px;padding:0 14px;background:var(--surface);margin:10px 0 16px}
+.search:focus{outline:none;border-color:var(--forest)}
+.wl-group{margin-bottom:18px}
+.wl-h{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.wl-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.wl-row .nl{flex:1;font-weight:600;font-size:14px}
+.wl-row .ar{font-size:22px}
+.form label{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:12px 0 5px}
+.form input,.form select{width:100%;min-height:44px;border:1.5px solid var(--line);border-radius:10px;padding:0 12px;background:var(--paper)}
+.form input:focus,.form select:focus{outline:none;border-color:var(--forest)}
+.form .ar-in{font-family:var(--ar);font-size:20px;direction:rtl}
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:12px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:60;max-width:90%}
+.toast.show{opacity:1}
+.book-lesson{border:1.5px solid var(--line);background:var(--surface);border-radius:var(--radius);padding:14px;margin-bottom:10px;cursor:pointer}
+.book-lesson h3{font-size:15px;font-weight:700}
+.book-lesson p{font-size:13px;color:var(--muted);margin-top:2px}
+.grammar-block{margin-bottom:16px}
+.grammar-block h3{font-size:15px;font-weight:700;margin-bottom:8px;color:var(--forest)}
+.grammar-block ul{padding-left:18px;margin-bottom:12px}
+.grammar-block li{font-size:14px;line-height:1.5;margin-bottom:6px;color:var(--ink-soft)}
+.ex{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.ex .ar{font-size:20px;font-weight:700}
+.ex .nl{font-size:13px;color:var(--muted);text-align:right}
+.welcome{padding:24px 4px 12px}
+.welcome .steps{margin:20px 0}
+.step{display:flex;gap:12px;padding:12px;border:1.5px solid var(--line);background:var(--surface);border-radius:12px;margin-bottom:8px}
+.step .n{width:28px;height:28px;border-radius:50%;background:var(--forest-soft);color:var(--forest);display:grid;place-items:center;font-weight:700;font-size:13px;flex-shrink:0}
+.step b{display:block;font-size:14px}
+.step span{font-size:13px;color:var(--muted)}
+.empty{text-align:center;color:var(--muted);padding:32px 12px;font-style:italic}
+.dots{display:flex;justify-content:center;gap:6px;margin-top:14px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--paper-deep)}
+.dot.on{background:var(--forest)}
+./* Fixed app header — always visible */
+.app-header{
+  position:fixed;left:0;right:0;top:0;z-index:45;
+  background:rgba(255,251,244,.97);
+  border-bottom:1px solid var(--line);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  padding:8px 14px calc(8px);
+  padding-top:calc(8px + env(safe-area-inset-top));
+}
+.app-header-inner{
+  max-width:720px;margin:0 auto;
+  display:flex;align-items:center;gap:10px;min-height:40px;
+}
+.app-header .brand{
+  font-family:var(--ar);font-size:20px;font-weight:700;color:var(--forest);line-height:1;
+  flex-shrink:0;
+}
+.app-header .ctx{flex:1;min-width:0}
+.app-header .ctx .path-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  padding:2px 8px;border-radius:999px;margin-bottom:2px;
+}
+.app-header .ctx .path-badge.vocab{background:var(--forest-soft);color:var(--forest)}
+.app-header .ctx .path-badge.grammar{background:#E8E0F0;color:#5B3A7A}
+.app-header .ctx .title{
+  font-size:13px;font-weight:700;color:var(--ink);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.app-header .ctx .sub{
+  font-size:11px;color:var(--muted);font-weight:600;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.app-header .hdr-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.app-header .hdr-back{
+  width:36px;height:36px;border-radius:10px;border:1.5px solid var(--line);
+  background:var(--surface);display:grid;place-items:center;
+  font-size:16px;color:var(--ink-soft);flex-shrink:0;
+}
+.app-header .hdr-back:active{background:var(--paper-deep)}
+.path-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+@media(max-width:420px){.path-cards{grid-template-columns:1fr}}
+.path-card{
+  border:1.5px solid var(--line);background:var(--surface);border-radius:var(--radius);
+  padding:16px 14px;cursor:pointer;text-align:left;transition:.15s;
+}
+.path-card:active{transform:scale(.98)}
+.path-card.vocab{border-color:var(--forest);background:linear-gradient(160deg,var(--forest-soft),var(--surface))}
+.path-card.grammar{border-color:#9B7AB8;background:linear-gradient(160deg,#F3EDF8,var(--surface))}
+.path-card .pc-icon{font-size:28px;margin-bottom:6px}
+.path-card h3{font-size:16px;font-weight:700;margin-bottom:4px}
+.path-card p{font-size:12px;color:var(--muted);line-height:1.4;margin:0}
+.path-card .pc-meta{font-size:11px;font-weight:700;margin-top:10px;color:var(--forest)}
+.path-card.grammar .pc-meta{color:#5B3A7A}
+
+
+.pic-frame{background:var(--paper);border:1.5px solid var(--line);border-radius:16px;padding:18px 20px;margin:8px auto 14px;display:flex;justify-content:center;align-items:center;max-width:220px;box-shadow:0 2px 8px rgba(44,74,58,.06)}
+.pic-frame svg{display:block}
+
+
+.lesson-tabs{position:sticky;top:8px;z-index:15;display:flex;gap:6px;margin:12px 0 16px;padding:4px;background:var(--cream);border-radius:14px;border:1.5px solid var(--line);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.lesson-tabs::-webkit-scrollbar{display:none}
+.lesson-tab{flex:1;min-width:0;padding:10px 8px;border:none;border-radius:10px;background:transparent;font-family:inherit;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;transition:.15s;white-space:nowrap;text-align:center}
+.lesson-tab.active{background:var(--forest);color:var(--paper);box-shadow:0 2px 8px rgba(44,74,58,.2)}
+.lesson-tab .tab-count{display:block;font-size:10px;font-weight:600;opacity:.75;margin-top:2px}
+.lesson-pane{display:none}
+.lesson-pane.active{display:block}
+@media(max-width:420px){
+  .lesson-tab{font-size:12px;padding:9px 6px}
+  .pic-frame{padding:12px;max-width:100%}
+  .pic-frame svg{width:56px;height:56px}
+}
+@media(min-width:700px){
+  .lesson-tab{font-size:14px;padding:12px 14px}
+  .pic-frame{max-width:260px}
+}
+
+
+/* App padding: fixed header top + tabbar bottom (mobile) */
+#app{
+  padding-bottom:calc(72px + env(safe-area-inset-bottom));
+  padding-top:calc(64px + env(safe-area-inset-top));
+  margin:0 auto;
+  max-width:520px;
+}
+/* Desktop: tabbar also at top under header */
+@media(min-width:768px){
+  .tabbar{
+    top:calc(56px + env(safe-area-inset-top))!important;bottom:auto!important;
+    border-bottom:1px solid var(--line)!important;
+    border-top:none!important;
+    padding:6px 20px!important;
+  }
+  .tabbar-inner{max-width:720px!important;gap:8px}
+  .tab{flex-direction:row!important;gap:8px;padding:10px 14px;font-size:13px;justify-content:center}
+  #app{
+    padding-top:calc(120px + env(safe-area-inset-top))!important;
+    padding-bottom:40px!important;
+    max-width:720px;
+  }
+  .app-header-inner{max-width:720px}
+}
+/* Feedback above bottom tabbar on mobile */
+.feedback{bottom:calc(60px + env(safe-area-inset-bottom))!important}
+@media(min-width:768px){
+  .feedback{bottom:0!important}
+}
+
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+<script>
+const BASE_WORDS = [{"id": "l1-1", "lesson": 1, "ar": "بَيْت", "translit": "bayt", "nl": "huis", "en": "house"}, {"id": "l1-2", "lesson": 1, "ar": "مَسْجِد", "translit": "masjid", "nl": "moskee", "en": "mosque"}, {"id": "l1-3", "lesson": 1, "ar": "بَاب", "translit": "baab", "nl": "deur", "en": "door"}, {"id": "l1-4", "lesson": 1, "ar": "كِتَاب", "translit": "kitaab", "nl": "boek", "en": "book"}, {"id": "l1-5", "lesson": 1, "ar": "قَلَم", "translit": "qalam", "nl": "pen", "en": "pen"}, {"id": "l1-6", "lesson": 1, "ar": "مِفْتَاح", "translit": "miftaah", "nl": "sleutel", "en": "key"}, {"id": "l1-7", "lesson": 1, "ar": "مَكْتَب", "translit": "maktab", "nl": "bureau", "en": "writing table"}, {"id": "l1-8", "lesson": 1, "ar": "سَرِير", "translit": "sareer", "nl": "bed", "en": "bed"}, {"id": "l1-9", "lesson": 1, "ar": "كُرْسِيّ", "translit": "kursiy", "nl": "stoel", "en": "chair"}, {"id": "l1-10", "lesson": 1, "ar": "نَجْم", "translit": "najm", "nl": "ster", "en": "star"}, {"id": "l1-11", "lesson": 1, "ar": "قَمِيص", "translit": "qamees", "nl": "hemd", "en": "shirt"}, {"id": "l1-12", "lesson": 1, "ar": "طَبِيب", "translit": "tabeeb", "nl": "dokter", "en": "doctor"}, {"id": "l1-13", "lesson": 1, "ar": "وَلَد", "translit": "walad", "nl": "jongen", "en": "boy"}, {"id": "l1-14", "lesson": 1, "ar": "طَالِب", "translit": "taalib", "nl": "student", "en": "student"}, {"id": "l1-15", "lesson": 1, "ar": "رَجُل", "translit": "rajul", "nl": "man", "en": "man"}, {"id": "l1-16", "lesson": 1, "ar": "تَاجِر", "translit": "taajir", "nl": "handelaar", "en": "merchant"}, {"id": "l1-17", "lesson": 1, "ar": "كَلْب", "translit": "kalb", "nl": "hond", "en": "dog"}, {"id": "l1-18", "lesson": 1, "ar": "قِطّ", "translit": "qitt", "nl": "kat", "en": "cat"}, {"id": "l1-19", "lesson": 1, "ar": "حِمَار", "translit": "himaar", "nl": "ezel", "en": "donkey"}, {"id": "l1-20", "lesson": 1, "ar": "فَرَس", "translit": "faras", "nl": "paard", "en": "horse"}, {"id": "l1-21", "lesson": 1, "ar": "جَمَل", "translit": "jamal", "nl": "kameel", "en": "camel"}, {"id": "l1-22", "lesson": 1, "ar": "دِيك", "translit": "deek", "nl": "haan", "en": "rooster"}, {"id": "l1-23", "lesson": 1, "ar": "مُدَرِّس", "translit": "mudarris", "nl": "leraar", "en": "teacher"}, {"id": "l1-24", "lesson": 1, "ar": "مِنْدِيل", "translit": "mindeel", "nl": "zakdoek", "en": "handkerchief"}, {"id": "l2-1", "lesson": 2, "ar": "زَعِيم", "translit": "za'eem", "nl": "leider", "en": "leader"}, {"id": "l2-2", "lesson": 2, "ar": "حَجَر", "translit": "hajar", "nl": "steen", "en": "stone"}, {"id": "l2-3", "lesson": 2, "ar": "سُكَّر", "translit": "sukkar", "nl": "suiker", "en": "sugar"}, {"id": "l2-4", "lesson": 2, "ar": "لَبَن", "translit": "laban", "nl": "melk", "en": "milk"}, {"id": "l3-1", "lesson": 3, "ar": "غَنِيّ", "translit": "ghaniy", "nl": "rijk", "en": "rich"}, {"id": "l3-2", "lesson": 3, "ar": "فَقِير", "translit": "faqeer", "nl": "arm", "en": "poor"}, {"id": "l3-3", "lesson": 3, "ar": "طَوِيل", "translit": "taweel", "nl": "lang", "en": "tall"}, {"id": "l3-4", "lesson": 3, "ar": "قَصِير", "translit": "qaseer", "nl": "kort", "en": "short"}, {"id": "l3-5", "lesson": 3, "ar": "بَارِد", "translit": "baarid", "nl": "koud", "en": "cold"}, {"id": "l3-6", "lesson": 3, "ar": "حَارّ", "translit": "haarr", "nl": "heet", "en": "hot"}, {"id": "l3-7", "lesson": 3, "ar": "جَالِس", "translit": "jaalis", "nl": "zittend", "en": "sitting"}, {"id": "l3-8", "lesson": 3, "ar": "وَاقِف", "translit": "waaqif", "nl": "staand", "en": "standing"}, {"id": "l3-9", "lesson": 3, "ar": "جَدِيد", "translit": "jadeed", "nl": "nieuw", "en": "new"}, {"id": "l3-10", "lesson": 3, "ar": "قَدِيم", "translit": "qadeem", "nl": "oud", "en": "old"}, {"id": "l3-11", "lesson": 3, "ar": "قَرِيب", "translit": "qareeb", "nl": "dichtbij", "en": "near"}, {"id": "l3-12", "lesson": 3, "ar": "بَعِيد", "translit": "ba'eed", "nl": "ver weg", "en": "far away"}, {"id": "l3-13", "lesson": 3, "ar": "نَظِيف", "translit": "nazeef", "nl": "schoon", "en": "clean"}, {"id": "l3-14", "lesson": 3, "ar": "وَسِخ", "translit": "wasikh", "nl": "vuil", "en": "dirty"}, {"id": "l3-15", "lesson": 3, "ar": "صَغِير", "translit": "sagheer", "nl": "klein", "en": "small"}, {"id": "l3-16", "lesson": 3, "ar": "كَبِير", "translit": "kabeer", "nl": "groot", "en": "big"}, {"id": "l3-17", "lesson": 3, "ar": "خَفِيف", "translit": "khafeef", "nl": "licht", "en": "light (weight)"}, {"id": "l3-18", "lesson": 3, "ar": "ثَقِيل", "translit": "thaqeel", "nl": "zwaar", "en": "heavy"}, {"id": "l3-19", "lesson": 3, "ar": "وَرَقَة", "translit": "waraqah", "nl": "papier", "en": "paper"}, {"id": "l3-20", "lesson": 3, "ar": "مَكْسُور", "translit": "maksoor", "nl": "gebroken", "en": "broken"}, {"id": "l3-21", "lesson": 3, "ar": "مَاء", "translit": "maa", "nl": "water", "en": "water"}, {"id": "l3-22", "lesson": 3, "ar": "مَفْتُوح", "translit": "maftooh", "nl": "open", "en": "open"}, {"id": "l3-23", "lesson": 3, "ar": "تُفَّاحَة", "translit": "tuffaahah", "nl": "appel", "en": "apple"}, {"id": "l3-24", "lesson": 3, "ar": "حُلْو", "translit": "hulw", "nl": "zoet", "en": "sweet"}, {"id": "l3-25", "lesson": 3, "ar": "جَمِيل", "translit": "jameel", "nl": "mooi", "en": "beautiful"}, {"id": "l3-26", "lesson": 3, "ar": "مَرِيض", "translit": "mareed", "nl": "ziek", "en": "ill"}, {"id": "l3-27", "lesson": 3, "ar": "دُكَّان", "translit": "dukkaan", "nl": "winkel", "en": "shop"}, {"id": "l4-1", "lesson": 4, "ar": "أَيْنَ", "translit": "ayna", "nl": "waar", "en": "where"}, {"id": "l4-2", "lesson": 4, "ar": "حُجْرَة", "translit": "hujrah", "nl": "kamer", "en": "room"}, {"id": "l4-3", "lesson": 4, "ar": "سَمَاء", "translit": "samaa", "nl": "lucht / hemel", "en": "sky"}, {"id": "l4-4", "lesson": 4, "ar": "حَمَّام", "translit": "hammaam", "nl": "badkamer", "en": "bathroom"}, {"id": "l4-5", "lesson": 4, "ar": "فَصْل", "translit": "fasl", "nl": "klaslokaal", "en": "classroom"}, {"id": "l4-6", "lesson": 4, "ar": "مَطْبَخ", "translit": "matbakh", "nl": "keuken", "en": "kitchen"}, {"id": "l4-7", "lesson": 4, "ar": "مِرْحَاض", "translit": "mirhaad", "nl": "toilet", "en": "toilet"}, {"id": "l4-8", "lesson": 4, "ar": "مَدْرَسَة", "translit": "madrasah", "nl": "school", "en": "school"}, {"id": "l4-9", "lesson": 4, "ar": "جَامِعَة", "translit": "jaami'ah", "nl": "universiteit", "en": "university"}, {"id": "l4-10", "lesson": 4, "ar": "سُوق", "translit": "sooq", "nl": "markt", "en": "market"}, {"id": "l4-11", "lesson": 4, "ar": "اليَابَان", "translit": "al-yaabaan", "nl": "Japan", "en": "Japan"}, {"id": "l4-12", "lesson": 4, "ar": "الصِّين", "translit": "as-seen", "nl": "China", "en": "China"}, {"id": "l4-13", "lesson": 4, "ar": "الْهِنْد", "translit": "al-hind", "nl": "India", "en": "India"}, {"id": "l4-14", "lesson": 4, "ar": "الْفِلِبِّين", "translit": "al-filibeen", "nl": "Filipijnen", "en": "Philippines"}, {"id": "l4-15", "lesson": 4, "ar": "مُدِير الْمَدْرَسَة", "translit": "mudeer al-madrasah", "nl": "schoolhoofd", "en": "headmaster"}, {"id": "l4-16", "lesson": 4, "ar": "ذَهَبَ", "translit": "dhahaba", "nl": "hij ging", "en": "he went"}, {"id": "l4-17", "lesson": 4, "ar": "خَرَجَ", "translit": "kharaja", "nl": "hij ging naar buiten", "en": "he went out"}, {"id": "l4-18", "lesson": 4, "ar": "فِي", "translit": "fee", "nl": "in", "en": "in"}, {"id": "l4-19", "lesson": 4, "ar": "عَلَى", "translit": "alaa", "nl": "op", "en": "on"}, {"id": "l4-20", "lesson": 4, "ar": "مِنْ", "translit": "min", "nl": "van / vanaf", "en": "from"}, {"id": "l4-21", "lesson": 4, "ar": "إِلَى", "translit": "ilaa", "nl": "naar", "en": "to"}, {"id": "l5-1", "lesson": 5, "ar": "الرَّسُول", "translit": "ar-rasool", "nl": "de Boodschapper", "en": "the Messenger"}, {"id": "l5-2", "lesson": 5, "ar": "عَمّ", "translit": "amm", "nl": "oom (vaderskant)", "en": "paternal uncle"}, {"id": "l5-3", "lesson": 5, "ar": "خَال", "translit": "khaal", "nl": "oom (moederskant)", "en": "maternal uncle"}, {"id": "l5-4", "lesson": 5, "ar": "الْكَعْبَة", "translit": "al-ka'bah", "nl": "de Kabah", "en": "the Kabah"}, {"id": "l5-5", "lesson": 5, "ar": "شَارِع", "translit": "shaari", "nl": "straat", "en": "street"}, {"id": "l5-6", "lesson": 5, "ar": "مُغْلَق", "translit": "mughlaq", "nl": "gesloten", "en": "closed"}, {"id": "l5-7", "lesson": 5, "ar": "اِسْم", "translit": "ism", "nl": "naam", "en": "name"}, {"id": "l5-8", "lesson": 5, "ar": "حَقِيبَة", "translit": "haqeebah", "nl": "tas", "en": "bag"}, {"id": "l5-9", "lesson": 5, "ar": "تَحْت", "translit": "tahta", "nl": "onder", "en": "under"}, {"id": "l5-10", "lesson": 5, "ar": "سَيَّارَة", "translit": "sayyaarah", "nl": "auto", "en": "car"}, {"id": "l5-11", "lesson": 5, "ar": "هُنَا", "translit": "hunaa", "nl": "hier", "en": "here"}, {"id": "l5-12", "lesson": 5, "ar": "هُنَاك", "translit": "hunaaka", "nl": "daar", "en": "there"}, {"id": "l5-13", "lesson": 5, "ar": "بِنْت", "translit": "bint", "nl": "dochter / meisje", "en": "daughter / girl"}, {"id": "l6-1", "lesson": 6, "ar": "يَد", "translit": "yad", "nl": "hand", "en": "hand"}, {"id": "l6-2", "lesson": 6, "ar": "رَأْس", "translit": "ra's", "nl": "hoofd", "en": "head"}, {"id": "l6-3", "lesson": 6, "ar": "أَنْف", "translit": "anf", "nl": "neus", "en": "nose"}, {"id": "l6-4", "lesson": 6, "ar": "رِجْل", "translit": "rijl", "nl": "been", "en": "leg"}, {"id": "l6-5", "lesson": 6, "ar": "فَم", "translit": "fam", "nl": "mond", "en": "mouth"}, {"id": "l6-6", "lesson": 6, "ar": "عَيْن", "translit": "ayn", "nl": "oog", "en": "eye"}, {"id": "l6-7", "lesson": 6, "ar": "وَجْه", "translit": "wajh", "nl": "gezicht", "en": "face"}, {"id": "l6-8", "lesson": 6, "ar": "أُذُن", "translit": "udhun", "nl": "oor", "en": "ear"}, {"id": "l6-9", "lesson": 6, "ar": "حَدِيد", "translit": "hadeed", "nl": "ijzer", "en": "iron"}, {"id": "l6-10", "lesson": 6, "ar": "دَرَّاجَة", "translit": "darraajah", "nl": "fiets", "en": "bicycle"}, {"id": "l6-11", "lesson": 6, "ar": "مِلْعَقَة", "translit": "mil'aqah", "nl": "lepel", "en": "spoon"}, {"id": "l6-12", "lesson": 6, "ar": "قِدْر", "translit": "qidr", "nl": "pot", "en": "pot"}, {"id": "l6-13", "lesson": 6, "ar": "بَقَرَة", "translit": "baqarah", "nl": "koe", "en": "cow"}, {"id": "l6-14", "lesson": 6, "ar": "فَلَّاح", "translit": "fallaah", "nl": "boer", "en": "farmer"}, {"id": "l6-15", "lesson": 6, "ar": "شَاي", "translit": "shaay", "nl": "thee", "en": "tea"}, {"id": "l6-16", "lesson": 6, "ar": "أُمّ", "translit": "umm", "nl": "moeder", "en": "mother"}, {"id": "l6-17", "lesson": 6, "ar": "ثَلَّاجَة", "translit": "thallaajah", "nl": "koelkast", "en": "fridge"}, {"id": "l6-18", "lesson": 6, "ar": "قَهْوَة", "translit": "qahwah", "nl": "koffie", "en": "coffee"}, {"id": "l6-19", "lesson": 6, "ar": "سَرِيع", "translit": "saree", "nl": "snel", "en": "fast"}, {"id": "l6-20", "lesson": 6, "ar": "نَافِذَة", "translit": "naafidhah", "nl": "raam", "en": "window"}, {"id": "l6-21", "lesson": 6, "ar": "جِدًّا", "translit": "jiddan", "nl": "heel / erg", "en": "very"}, {"id": "l7-1", "lesson": 7, "ar": "نَاقَة", "translit": "naaqah", "nl": "kameel (vrouwelijk)", "en": "she-camel"}, {"id": "l7-2", "lesson": 7, "ar": "بَطَّة", "translit": "battah", "nl": "eend", "en": "duck"}, {"id": "l7-3", "lesson": 7, "ar": "مُمَرِّض", "translit": "mumarrid", "nl": "verpleger", "en": "nurse (m)"}, {"id": "l7-4", "lesson": 7, "ar": "بَيْضَة", "translit": "baydah", "nl": "ei", "en": "egg"}, {"id": "l7-5", "lesson": 7, "ar": "مُؤَذِّن", "translit": "mu'adhdhin", "nl": "muezzin", "en": "muezzin"}, {"id": "l7-6", "lesson": 7, "ar": "دَجَاجَة", "translit": "dajaajah", "nl": "kip", "en": "hen"}, {"id": "l7-7", "lesson": 7, "ar": "مُمَرِّضَة", "translit": "mumarridah", "nl": "verpleegster", "en": "nurse (f)"}, {"id": "l7-8", "lesson": 7, "ar": "هَذَا", "translit": "haadhaa", "nl": "deze / dit (m)", "en": "this (m)"}, {"id": "l7-9", "lesson": 7, "ar": "هَذِهِ", "translit": "haadhihi", "nl": "deze / dit (v)", "en": "this (f)"}, {"id": "l7-10", "lesson": 7, "ar": "ذَلِكَ", "translit": "dhaalika", "nl": "die / dat (m)", "en": "that (m)"}, {"id": "l7-11", "lesson": 7, "ar": "تِلْكَ", "translit": "tilka", "nl": "die / dat (v)", "en": "that (f)"}, {"id": "l8-1", "lesson": 8, "ar": "أَمْرِيكَا", "translit": "amreekaa", "nl": "Amerika", "en": "America"}, {"id": "l8-2", "lesson": 8, "ar": "أَلْمَانِيَا", "translit": "almaanyaa", "nl": "Duitsland", "en": "Germany"}, {"id": "l8-3", "lesson": 8, "ar": "الْعِرَاق", "translit": "al-'iraaq", "nl": "Irak", "en": "Iraq"}, {"id": "l8-4", "lesson": 8, "ar": "إِنْجِلْتِرَا", "translit": "injiltaraa", "nl": "Engeland", "en": "England"}, {"id": "l8-5", "lesson": 8, "ar": "سْوِيسْرَا", "translit": "sweesraa", "nl": "Zwitserland", "en": "Switzerland"}, {"id": "l8-6", "lesson": 8, "ar": "سِكِّين", "translit": "sikkeen", "nl": "mes", "en": "knife"}, {"id": "l8-7", "lesson": 8, "ar": "مُسْتَشْفَى", "translit": "mustashfaa", "nl": "ziekenhuis", "en": "hospital"}, {"id": "l9-1", "lesson": 9, "ar": "فَاكِهَة", "translit": "faakihah", "nl": "fruit", "en": "fruit"}, {"id": "l9-2", "lesson": 9, "ar": "عُصْفُور", "translit": "usfoor", "nl": "mus", "en": "sparrow"}, {"id": "l9-3", "lesson": 9, "ar": "طَائِر", "translit": "taa'ir", "nl": "vogel", "en": "bird"}, {"id": "l9-4", "lesson": 9, "ar": "عَرَبِيّ", "translit": "arabiy", "nl": "Arabisch", "en": "Arabic"}, {"id": "l9-5", "lesson": 9, "ar": "لُغَة", "translit": "lughah", "nl": "taal", "en": "language"}, {"id": "l9-6", "lesson": 9, "ar": "سَهْل", "translit": "sahl", "nl": "makkelijk", "en": "easy"}, {"id": "l9-7", "lesson": 9, "ar": "مُجْتَهِد", "translit": "mujtahid", "nl": "ijverig", "en": "hardworking"}, {"id": "l9-8", "lesson": 9, "ar": "مَشْهُور", "translit": "mash-hoor", "nl": "beroemd", "en": "famous"}, {"id": "l9-9", "lesson": 9, "ar": "الْإِنْجِلِيزِيَّة", "translit": "al-injileeziyyah", "nl": "Engels (taal)", "en": "English (language)"}, {"id": "l9-10", "lesson": 9, "ar": "صَعْب", "translit": "sa'b", "nl": "moeilijk", "en": "difficult"}, {"id": "l9-11", "lesson": 9, "ar": "مَدِينَة", "translit": "madeenah", "nl": "stad", "en": "city"}, {"id": "l9-12", "lesson": 9, "ar": "الْقَاهِرَة", "translit": "al-qaahirah", "nl": "Caïro", "en": "Cairo"}, {"id": "l9-13", "lesson": 9, "ar": "الْيَوْم", "translit": "al-yawm", "nl": "vandaag", "en": "today"}, {"id": "l9-14", "lesson": 9, "ar": "لِمَاذَا", "translit": "limaadhaa", "nl": "waarom", "en": "why"}, {"id": "l9-15", "lesson": 9, "ar": "فِنْجَان", "translit": "finjaan", "nl": "kopje", "en": "cup"}, {"id": "l9-16", "lesson": 9, "ar": "جَائِع", "translit": "jaa'i", "nl": "hongerig", "en": "hungry"}, {"id": "l9-17", "lesson": 9, "ar": "عَطْشَان", "translit": "atshaan", "nl": "dorstig", "en": "thirsty"}, {"id": "l9-18", "lesson": 9, "ar": "شَبْعَان", "translit": "shab'aan", "nl": "verzadigd", "en": "full"}, {"id": "l9-19", "lesson": 9, "ar": "غَضْبَان", "translit": "ghadbaan", "nl": "boos", "en": "angry"}, {"id": "l9-20", "lesson": 9, "ar": "مَكْتَبَة", "translit": "maktabah", "nl": "bibliotheek", "en": "library"}, {"id": "l9-21", "lesson": 9, "ar": "الْآن", "translit": "al-aan", "nl": "nu", "en": "now"}, {"id": "l9-22", "lesson": 9, "ar": "عِيَادَة", "translit": "iyaadah", "nl": "kliniek", "en": "clinic"}, {"id": "l9-23", "lesson": 9, "ar": "مِرْوَحَة", "translit": "mirwahah", "nl": "ventilator", "en": "fan"}, {"id": "l9-24", "lesson": 9, "ar": "الْكُوَيْت", "translit": "al-kuwayt", "nl": "Koeweit", "en": "Kuwait"}, {"id": "l9-25", "lesson": 9, "ar": "مَدْرَسَة ثَانَوِيَّة", "translit": "madrasah thaanawiyyah", "nl": "middelbare school", "en": "secondary school"}, {"id": "l9-26", "lesson": 9, "ar": "وَزِير", "translit": "wazeer", "nl": "minister", "en": "minister"}, {"id": "l9-27", "lesson": 9, "ar": "حَادّ", "translit": "haadd", "nl": "scherp", "en": "sharp"}, {"id": "l9-28", "lesson": 9, "ar": "إِنْدُونِيسِيَا", "translit": "indoneesyaa", "nl": "Indonesië", "en": "Indonesia"}, {"id": "l10-1", "lesson": 10, "ar": "زَمِيل", "translit": "zameel", "nl": "collega / klasgenoot", "en": "colleague / classmate"}, {"id": "l10-2", "lesson": 10, "ar": "زَوْج", "translit": "zawj", "nl": "echtgenoot", "en": "husband"}, {"id": "l10-3", "lesson": 10, "ar": "طِفْل", "translit": "tifl", "nl": "kind", "en": "child"}, {"id": "l10-4", "lesson": 10, "ar": "شَابّ", "translit": "shaabb", "nl": "jongeman", "en": "young man"}, {"id": "l10-5", "lesson": 10, "ar": "وَاحِد", "translit": "waahid", "nl": "één", "en": "one"}, {"id": "l10-6", "lesson": 10, "ar": "عِنْدَ", "translit": "inda", "nl": "bij", "en": "with / at the house of"}, {"id": "l10-7", "lesson": 10, "ar": "مَعَ", "translit": "ma'a", "nl": "met", "en": "with"}, {"id": "l10-8", "lesson": 10, "ar": "عِنْدِي", "translit": "indee", "nl": "ik heb", "en": "I have"}];
+const LESSON_META = {
+  "1": ["Dit is… / Wat is dit?", "هَذَا · tanwien · vragen met أَ"],
+  "2": ["Dit en dat · en", "ذَلِكَ · وَ"],
+  "3": ["De en het · al-", "ال · zonne- en maanletters"],
+  "4": ["In, op, naar · hij en ik", "Voorzetsels · هُوَ هِيَ · أَنَا أَنْتَ"],
+  "5": ["Het boek van…", "Bezitsconstructie · تَحْتَ · يَا"],
+  "6": ["Dit (vrouwelijk)", "هَذِهِ · tāʾ marbūṭa"],
+  "7": ["Die / dat (vrouwelijk)", "تِلْكَ · overzicht aanwijzers"],
+  "8": ["Dit boek is…", "Aanwijzer + bepaald lidwoord"],
+  "9": ["Een nieuw huis", "Bijvoeglijk naamwoord (naʿt)"],
+  "10": ["Mijn / jouw boek", "Bezittelijke achtervoegsels"]
+};
+const GRAMMAR = {"1":{"title":"هَذَا · tanwien · vragen met أَ","summary":"Je leert zeggen wat iets is («dit is…»), de -n van «een» (tanwien), en ja/nee-vragen met أَ. Dit is de basis van les 1 in het Medina-boek.","points":["هَذَا betekent «dit / deze» voor mannelijke woorden dicht bij jou.","Je schrijft هَذَا zonder alif aan het begin, maar je spreekt die alif wél uit: haa-dhaa.","In het Arabisch is er geen apart woord voor «is». Je zet de delen achter elkaar: هَذَا كِتَابٌ = dit is een boek.","Onbepaalde naamwoorden krijgen tanwien (-n) aan het eind: كِتَابٌ = een boek, بَيْتٌ = een huis. Die -n hoor je in de uitspraak.","Zet أَ vooraan de zin voor een ja/nee-vraag: أَهَذَا بَيْتٌ؟ = Is dit een huis?","Antwoorden: نَعَمْ (ja) en لَا (nee).","مَا = wat → مَا هَذَا؟ (Wat is dit?). مَنْ = wie → مَنْ هَذَا؟ (Wie is dit?).","Bij een ontkennend antwoord noem je vaak meteen het juiste woord: لَا، هَذَا مَسْجِدٌ.","Alle woorden in les 1 zijn mannelijk enkelvoud — daarom past هَذَا steeds.","Tip: leer telkens zinnetjes, niet alleen losse woorden: هَذَا قَلَمٌ، هَذَا كِتَابٌ."],"examples":[{"ar":"مَا هَذَا؟","nl":"Wat is dit?"},{"ar":"هَذَا كِتَابٌ.","nl":"Dit is een boek."},{"ar":"هَذَا قَلَمٌ.","nl":"Dit is een pen."},{"ar":"أَهَذَا بَيْتٌ؟","nl":"Is dit een huis?"},{"ar":"نَعَمْ، هَذَا بَيْتٌ.","nl":"Ja, dit is een huis."},{"ar":"لَا، هَذَا مَسْجِدٌ.","nl":"Nee, dit is een moskee."},{"ar":"مَنْ هَذَا؟","nl":"Wie is dit?"},{"ar":"هَذَا طَبِيبٌ.","nl":"Dit is een dokter."},{"ar":"أَهَذَا قَلَمٌ؟","nl":"Is dit een pen?"},{"ar":"نَعَمْ، هَذَا قَلَمٌ.","nl":"Ja, dit is een pen."}],"exercises":[{"type":"pic","emoji":"🏠","q":"مَا هَذَا؟","options":["هَذَا بَيْتٌ","هَذَا مَسْجِدٌ","هَذَا بَابٌ","هَذَا كِتَابٌ"],"answer":0,"explain":"هَذَا بَيْتٌ = Dit is een huis."},{"type":"pic","emoji":"🕌","q":"مَا هَذَا؟","options":["هَذَا بَيْتٌ","هَذَا مَسْجِدٌ","هَذَا قَلَمٌ","هَذَا كُرْسِيّ"],"answer":1,"explain":"هَذَا مَسْجِدٌ = Dit is een moskee."},{"type":"pic","emoji":"🚪","q":"مَا هَذَا؟","options":["هَذَا مِفْتَاحٌ","هَذَا بَابٌ","هَذَا سَرِيرٌ","هَذَا نَجْم"],"answer":1,"explain":"هَذَا بَابٌ = Dit is een deur."},{"type":"pic","emoji":"📖","q":"مَا هَذَا؟","options":["هَذَا قَلَمٌ","هَذَا كِتَابٌ","هَذَا مَكْتَبٌ","هَذَا قَمِيص"],"answer":1,"explain":"هَذَا كِتَابٌ = Dit is een boek."},{"type":"pic","emoji":"🖊️","q":"مَا هَذَا؟","options":["هَذَا مِفْتَاحٌ","هَذَا قَلَمٌ","هَذَا كِتَابٌ","هَذَا نَجْم"],"answer":1,"explain":"هَذَا قَلَمٌ = Dit is een pen."},{"type":"pic","emoji":"🔑","q":"مَا هَذَا؟","options":["هَذَا مِفْتَاحٌ","هَذَا بَابٌ","هَذَا قَلَمٌ","هَذَا كُرْسِيّ"],"answer":0,"explain":"هَذَا مِفْتَاحٌ = Dit is een sleutel."},{"type":"pic","emoji":"🪑","q":"مَا هَذَا؟","options":["هَذَا سَرِيرٌ","هَذَا كُرْسِيّ","هَذَا مَكْتَبٌ","هَذَا بَيْت"],"answer":1,"explain":"هَذَا كُرْسِيٌّ = Dit is een stoel."},{"type":"pic","emoji":"🛏️","q":"مَا هَذَا؟","options":["هَذَا سَرِيرٌ","هَذَا كُرْسِيّ","هَذَا مَكْتَبٌ","هَذَا بَاب"],"answer":0,"explain":"هَذَا سَرِيرٌ = Dit is een bed."},{"type":"pic","emoji":"⭐","q":"مَا هَذَا؟","options":["هَذَا نَجْمٌ","هَذَا قَمَر","هَذَا بَيْت","هَذَا كِتَاب"],"answer":0,"explain":"هَذَا نَجْمٌ = Dit is een ster."},{"type":"pic","emoji":"🕌","q":"أَهَذَا بَيْتٌ؟","options":["نَعَمْ، هَذَا بَيْتٌ","لَا، هَذَا مَسْجِدٌ","نَعَمْ، هَذَا مَسْجِدٌ","لَا، هَذَا بَيْت"],"answer":1,"explain":"Het is een moskee → لَا، هَذَا مَسْجِدٌ."},{"type":"pic","emoji":"🖊️","q":"أَهَذَا مِفْتَاحٌ؟","options":["نَعَمْ، هَذَا مِفْتَاحٌ","لَا، هَذَا قَلَمٌ","نَعَمْ، هَذَا قَلَمٌ","لَا، هَذَا كِتَاب"],"answer":1,"explain":"Het is een pen → لَا، هَذَا قَلَمٌ."},{"type":"pic","emoji":"👕","q":"أَهَذَا قَمِيصٌ؟","options":["نَعَمْ، هَذَا قَمِيصٌ","لَا، هَذَا كِتَابٌ","لَا، هَذَا سَرِيرٌ","نَعَمْ، هَذَا بَاب"],"answer":0,"explain":"نَعَمْ، هَذَا قَمِيصٌ."},{"type":"pic","emoji":"🐕","q":"أَهَذَا كَلْبٌ؟","options":["نَعَمْ، هَذَا كَلْبٌ","لَا، هَذَا قِطّ","نَعَمْ، هَذَا قِطّ","لَا، هَذَا حِمَار"],"answer":0,"explain":"نَعَمْ، هَذَا كَلْبٌ."},{"type":"pic","emoji":"🐈","q":"أَهَذَا كَلْبٌ؟","options":["نَعَمْ، هَذَا كَلْبٌ","لَا، هَذَا قِطٌّ","نَعَمْ، هَذَا قِطّ","لَا، هَذَا جَمَل"],"answer":1,"explain":"لَا، هَذَا قِطٌّ."},{"type":"pic","emoji":"🐴","q":"أَهَذَا حِمَارٌ؟","options":["نَعَمْ، هَذَا حِمَارٌ","لَا، هَذَا فَرَسٌ / حِصَانٌ","نَعَمْ، هَذَا جَمَل","لَا، هَذَا كَلْب"],"answer":1,"explain":"لَا، هَذَا حِصَانٌ (paard)."},{"type":"pic","emoji":"🐪","q":"مَا هَذَا؟","options":["هَذَا جَمَلٌ","هَذَا حِمَارٌ","هَذَا كَلْبٌ","هَذَا قِطّ"],"answer":0,"explain":"هَذَا جَمَلٌ = Dit is een kameel."},{"type":"pic","emoji":"👨‍⚕️","q":"مَنْ هَذَا؟","options":["هَذَا طَبِيبٌ","هَذَا وَلَدٌ","هَذَا كِتَابٌ","هَذَا مَسْجِد"],"answer":0,"explain":"مَنْ = wie → هَذَا طَبِيبٌ."},{"type":"pic","emoji":"👦","q":"مَنْ هَذَا؟","options":["هَذَا وَلَدٌ","هَذَا كِتَابٌ","هَذَا بَيْتٌ","هَذَا قَلَم"],"answer":0,"explain":"هَذَا وَلَدٌ = Dit is een jongen."},{"q":"Welk woord betekent «dit» (mannelijk, dichtbij)?","options":["هَذَا","ذَلِكَ","مَا","نَعَمْ"],"answer":0,"explain":"هَذَا = dit/deze (m, dichtbij)."},{"q":"Hoe maak je van «هَذَا بَيْتٌ» een vraag?","options":["Voeg مَا toe","Zet أَ vooraan","Voeg نَعَمْ toe","Haal de tanwien weg"],"answer":1,"explain":"أَ vooraan maakt een ja/nee-vraag."},{"q":"Wat betekent de -n (tanwien) in كِتَابٌ?","options":["de / het","een","mijn","groot"],"answer":1,"explain":"Tanwien = «een»."},{"q":"Heeft Arabisch een apart woord voor «is»?","options":["Ja","Nee"],"answer":1,"explain":"Nee. Je zet de delen gewoon achter elkaar."},{"q":"مَا هَذَا؟ betekent…","options":["Wie is dit?","Wat is dit?","Is dit een huis?","Ja, dit is een boek"],"answer":1,"explain":"مَا = wat → Wat is dit?"},{"q":"نَعَمْ betekent…","options":["nee","ja","wie","wat"],"answer":1,"explain":"نَعَمْ = ja."},{"q":"لَا betekent…","options":["ja","wat","nee","dit"],"answer":2,"explain":"لَا = nee."},{"q":"Welke zin is correct voor «Dit is een moskee»?","options":["هَذَا مَسْجِدٌ","مَسْجِدٌ هَذَا","أَهَذَا مَسْجِدٌ","مَا مَسْجِدٌ"],"answer":0,"explain":"هَذَا + naamwoord met tanwien."},{"q":"مَنْ هَذَا؟ vraag je als je…","options":["naar een ding wijst","naar een persoon vraagt","een ja/nee-vraag stelt","«en» wilt zeggen"],"answer":1,"explain":"مَنْ = wie."}]},"2":{"title":"ذَلِكَ · وَ (dit en dat · en)","summary":"Je leert het verschil tussen «dit» (dichtbij) en «dat» (verder weg), en hoe je twee dingen met وَ verbindt.","points":["ذَلِكَ betekent «die / dat» voor mannelijke woorden die verder weg zijn.","Onthoud het paar: هَذَا = dichtbij, ذَلِكَ = verder weg.","Net als هَذَا schrijf je ذَلِكَ zonder de eerste alif, maar spreek je die wél uit (dhaa-li-ka).","وَ betekent «en». Je schrijft het vast tegen het volgende woord: وَذَلِكَ (niet: وَ  ذَلِكَ).","Voorbeeld: هَذَا بَيْتٌ وَذَلِكَ مَسْجِدٌ = Dit is een huis en dat is een moskee.","Je kunt ook twee «dit»-zinnen koppelen: هَذَا قَلَمٌ وَهَذَا كِتَابٌ.","Bij vragen blijft أَ vooraan: أَذَلِكَ بَيْتٌ؟ = Is dat een huis?","Kies altijd op afstand: iets in je hand → هَذَا; iets aan de overkant → ذَلِكَ."],"examples":[{"ar":"هَذَا بَيْتٌ وَذَلِكَ مَسْجِدٌ.","nl":"Dit is een huis en dat is een moskee."},{"ar":"هَذَا قَلَمٌ وَذَلِكَ كِتَابٌ.","nl":"Dit is een pen en dat is een boek."},{"ar":"أَذَلِكَ مِفْتَاحٌ؟","nl":"Is dat een sleutel?"},{"ar":"نَعَمْ، ذَلِكَ مِفْتَاحٌ.","nl":"Ja, dat is een sleutel."},{"ar":"هَذَا وَلَدٌ وَذَلِكَ رَجُلٌ.","nl":"Dit is een jongen en dat is een man."},{"ar":"مَا ذَلِكَ؟","nl":"Wat is dat?"}],"exercises":[{"type":"pic","emoji":"🏠🕌","q":"هَذَا بَيْتٌ وَ… مَسْجِدٌ. Wat past?","options":["هَذَا","ذَلِكَ","مَا","نَعَمْ"],"answer":1,"explain":"Verder weg → ذَلِكَ مَسْجِدٌ."},{"type":"pic","emoji":"🖊️📖","q":"«Dit is een pen en dat is een boek»","options":["هَذَا قَلَمٌ وَذَلِكَ كِتَابٌ","هَذَا كِتَابٌ وَذَلِكَ قَلَمٌ","ذَلِكَ قَلَمٌ وَهَذَا كِتَابٌ","هَذَا قَلَمٌ هَذَا كِتَابٌ"],"answer":0,"explain":"هَذَا قَلَمٌ وَذَلِكَ كِتَابٌ."},{"q":"Welk woord gebruik je voor «dat» (verder weg, mannelijk)?","options":["هَذَا","ذَلِكَ","هَذِهِ","تِلْكَ"],"answer":1,"explain":"ذَلِكَ = die/dat (m, verder)."},{"q":"Hoe schrijf je «en» in het Arabisch?","options":["Los woord met spaties eromheen","وَ vast tegen het volgende woord","Alleen aan het eind van de zin","Met tanwien"],"answer":1,"explain":"وَ plakt vast aan het volgende woord."},{"q":"هَذَا is voor iets…","options":["verder weg","dichtbij","vrouwelijks","meervoud"],"answer":1,"explain":"هَذَا = dichtbij (m)."},{"q":"ذَلِكَ is voor iets…","options":["dichtbij","verder weg","alleen mensen","alleen vragen"],"answer":1,"explain":"ذَلِكَ = verder weg (m)."},{"q":"Welke zin klopt?","options":["هَذَا بَيْتٌ وَ ذَلِكَ مَسْجِدٌ (met spatie na وَ)","هَذَا بَيْتٌ وَذَلِكَ مَسْجِدٌ","هَذَا بَيْتٌ ذَلِكَ مَسْجِدٌ","وَهَذَا بَيْتٌ ذَلِكَ"],"answer":1,"explain":"وَ plakt vast: وَذَلِكَ."},{"q":"وَ betekent…","options":["of","maar","en","in"],"answer":2,"explain":"وَ = en."},{"q":"Wat betekent: هَذَا بَيْتٌ وَذَلِكَ مَسْجِدٌ.?","options":["Dit is een huis en dat is een moskee.","Ik weet het niet","Dat klopt niet","Geen van deze"],"answer":0,"explain":"هَذَا بَيْتٌ وَذَلِكَ مَسْجِدٌ. = Dit is een huis en dat is een moskee."},{"q":"Wat betekent: هَذَا قَلَمٌ وَذَلِكَ كِتَابٌ.?","options":["Dit is een pen en dat is een boek.","Ik weet het niet","Dat klopt niet","Geen van deze"],"answer":0,"explain":"هَذَا قَلَمٌ وَذَلِكَ كِتَابٌ. = Dit is een pen en dat is een boek."},{"q":"Wat betekent: أَذَلِكَ مِفْتَاحٌ؟?","options":["Is dat een sleutel?","Ik weet het niet","Dat klopt niet","Geen van deze"],"answer":0,"explain":"أَذَلِكَ مِفْتَاحٌ؟ = Is dat een sleutel?"},{"q":"Wat betekent: نَعَمْ، ذَلِكَ مِفْتَاحٌ.?","options":["Ja, dat is een sleutel.","Ik weet het niet","Dat klopt niet","Geen van deze"],"answer":0,"explain":"نَعَمْ، ذَلِكَ مِفْتَاحٌ. = Ja, dat is een sleutel."}]},"3":{"title":"ال · zonne- en maanletters","summary":"Je leert «de / het» (ال), wat er met tanwien gebeurt, en waarom sommige woorden na al- anders klinken.","points":["ال (al-) is het bepaald lidwoord: de / het.","Zet je ال voor een woord, dan verdwijnt de tanwien: بَيْتٌ → الْبَيْتُ (het huis).","Er zijn 14 zonneletters en 14 maanletters.","Bij een zonneletter smelt de ل van ال samen met de volgende letter (shaddah). Voorbeeld: الشَّمْسُ = ash-shams (niet al-shams).","Bij een maanletter blijft de ل hoorbaar: الْقَمَرُ = al-qamar.","Zonneletters: ت ث د ذ ر ز س ش ص ض ط ظ ل ن.","Maanletters: أ ب ج ح خ ع غ ف ق ك م و ه ي.","Na een woord als وَ valt de a van ال in de uitspraak weg: وَ + الْبَيْتُ → wal-bayt. Dit heet hamzat al-waṣl.","Bepaalde woorden gebruik je als het duidelijk is wélk huis, wélk boek, enz.","Oefen hardop: الرَّجُلُ (ar-rajul), الْكِتَابُ (al-kitaab), الدَّرْسُ (ad-dars)."],"examples":[{"ar":"الْبَيْتُ جَدِيدٌ.","nl":"Het huis is nieuw."},{"ar":"الشَّمْسُ","nl":"de zon (ash-shams)"},{"ar":"الْقَمَرُ","nl":"de maan (al-qamar)"},{"ar":"الرَّجُلُ","nl":"de man (ar-rajul)"},{"ar":"الْكِتَابُ","nl":"het boek (al-kitaab)"},{"ar":"الْقَلَمُ عَلَى الْمَكْتَبِ.","nl":"De pen is op het bureau."},{"ar":"هَذَا الْبَيْتُ كَبِيرٌ.","nl":"Dit huis is groot."}],"exercises":[{"type":"pic","emoji":"🏠","q":"«een huis» → «het huis»","options":["بَيْتٌ → الْبَيْتُ","بَيْتٌ → بَيْتُ ال","الْبَيْتُ → بَيْتٌ","بَيْت → بَيْتٌ"],"answer":0,"explain":"ال + tanwien weg."},{"type":"pic","emoji":"☀️","q":"الشَّمْسُ spreek je uit als…","options":["al-shams","ash-shams","as-shams zonder sh","shams"],"answer":1,"explain":"Zonneletter ش → ash-shams."},{"type":"pic","emoji":"🌙","q":"الْقَمَرُ spreek je uit als…","options":["aq-qamar","al-qamar","ar-qamar","qamar"],"answer":1,"explain":"Maanletter → al-qamar."},{"q":"Wat gebeurt er met de tanwien als je ال zet?","options":["Niets","De tanwien verdwijnt","De tanwien verdubbelt","Hij wordt een fathah"],"answer":1,"explain":"ال vervangt de tanwien: بَيْتٌ → الْبَيْتُ."},{"q":"Bij een zonneletter…","options":["blijft de ل hoorbaar","smelt de ل samen (shaddah)","valt ال helemaal weg","komt er tanwien bij"],"answer":1,"explain":"Bij zonneletters assimileert ل: ash-shams."},{"q":"Hoe spreek je الشَّمْسُ uit?","options":["al-shams","ash-shams","shams zonder al-","as-shamsu zonder sh"],"answer":1,"explain":"Zonneletter ش → ash-shams."},{"q":"بَيْتٌ met ال wordt…","options":["بَيْتٌ ال","الْبَيْتُ","الْبَيْتٌ","بَيْتُ ال"],"answer":1,"explain":"ال + woord, tanwien weg: الْبَيْتُ."},{"q":"الْقَمَرُ (maanletter) spreek je uit als…","options":["aq-qamar","al-qamar","ar-qamar","qamar zonder al"],"answer":1,"explain":"Maanletter: ل blijft hoorbaar → al-qamar."},{"q":"الرَّجُلُ (zonneletter ر) spreek je uit als…","options":["al-rajul","ar-rajul","a-rajul","rajul"],"answer":1,"explain":"Zonneletter ر → ar-rajul."},{"q":"Na وَ valt de a van ال in de uitspraak weg. Klopt dat?","options":["Ja","Nee"],"answer":0,"explain":"Ja: wal-bayt, niet wa al-bayt."},{"q":"Welke letter is een zonneletter?","options":["ب","م","ش","ك"],"answer":2,"explain":"ش is een zonneletter (ash-…)."}]},"4":{"title":"Voorzetsels · هُوَ هِيَ · أَنَا أَنْتَ","summary":"Je leert in/op/van/naar, de voornaamwoorden hij/zij/ik/jij, en eenvoudige werkwoorden zoals «ging».","points":["Belangrijke voorzetsels: فِي (in), عَلَى (op), مِنْ (van/uit), إِلَى (naar).","Na een voorzetsel krijgt het naamwoord genitief (-i): الْبَيْتُ → فِي الْبَيْتِ.","هُوَ = hij / het (mannelijk — ook voor dingen, bv. een boek).","هِيَ = zij / het (vrouwelijk — ook voor dingen, bv. een auto of kamer).","أَنَا = ik (man en vrouw). أَنْتَ = jij (mannelijk enkelvoud in deze les).","ذَهَبَ = hij ging. خَرَجَ = hij ging naar buiten.","Als het onderwerp genoemd wordt, vertaal je zonder extra «hij»: ذَهَبَ بِلَالٌ إِلَى الْمَسْجِدِ.","أَيْنَ = waar? → أَيْنَ الْكِتَابُ؟ (Waar is het boek?).","Let op de uitgang na voorzetsels: altijd -i bij bepaald naamwoord (الْمَسْجِدِ).","Oefenzin: هُوَ فِي الْفَصْلِ وَهِيَ فِي الْبَيْتِ."],"examples":[{"ar":"هُوَ فِي الْمَسْجِدِ.","nl":"Hij is in de moskee."},{"ar":"هِيَ عَلَى السَّرِيرِ.","nl":"Zij/het is op het bed."},{"ar":"ذَهَبَ إِلَى الْمَسْجِدِ.","nl":"Hij ging naar de moskee."},{"ar":"خَرَجَ مِنَ الْبَيْتِ.","nl":"Hij ging het huis uit."},{"ar":"أَنَا مُحَمَّدٌ.","nl":"Ik ben Mohammed."},{"ar":"أَيْنَ الْكِتَابُ؟","nl":"Waar is het boek?"},{"ar":"الْكِتَابُ عَلَى الْمَكْتَبِ.","nl":"Het boek is op het bureau."},{"ar":"أَنْتَ طَالِبٌ.","nl":"Jij bent student."}],"exercises":[{"type":"pic","emoji":"🕌","q":"«Hij is in de moskee»","options":["هُوَ فِي الْمَسْجِدِ","هُوَ عَلَى الْمَسْجِدِ","هِيَ فِي الْمَسْجِدِ","هُوَ إِلَى الْمَسْجِدِ"],"answer":0,"explain":"هُوَ فِي الْمَسْجِدِ."},{"type":"pic","emoji":"🛏️","q":"«Zij/het is op het bed»","options":["هِيَ عَلَى السَّرِيرِ","هُوَ فِي السَّرِيرِ","هِيَ فِي السَّرِيرِ","هُوَ عَلَى السَّرِيرِ"],"answer":0,"explain":"هِيَ عَلَى السَّرِيرِ."},{"type":"pic","emoji":"🚶🕌","q":"«Hij ging naar de moskee»","options":["ذَهَبَ إِلَى الْمَسْجِدِ","خَرَجَ مِنْ الْمَسْجِدِ","هُوَ فِي الْمَسْجِدِ","أَنَا إِلَى الْمَسْجِدِ"],"answer":0,"explain":"ذَهَبَ إِلَى الْمَسْجِدِ."},{"q":"Na فِي krijgt het naamwoord welke uitgang?","options":["-u (nominatief)","-i (genitief)","-a (accusatief)","altijd tanwien"],"answer":1,"explain":"Na een voorzetsel → genitief (-i)."},{"q":"هِيَ gebruik je voor…","options":["alleen vrouwen","alles wat grammaticaal vrouwelijk is","alleen dieren","meervoud"],"answer":1,"explain":"Ook voor vrouwelijke dingen, zoals een auto."},{"q":"«Hij ging naar de moskee» is…","options":["هُوَ الْمَسْجِدُ","ذَهَبَ إِلَى الْمَسْجِدِ","خَرَجَ مِنْ الْمَسْجِدِ","أَنَا فِي الْمَسْجِدِ"],"answer":1,"explain":"ذَهَبَ إِلَى الْمَسْجِدِ."},{"q":"فِي betekent…","options":["op","in","naar","van"],"answer":1,"explain":"فِي = in."},{"q":"عَلَى betekent…","options":["in","onder","op","met"],"answer":2,"explain":"عَلَى = op."},{"q":"إِلَى betekent…","options":["van","naar","in","onder"],"answer":1,"explain":"إِلَى = naar."},{"q":"هُوَ gebruik je voor…","options":["alleen mannen","mannelijke woorden (ook dingen)","alleen vrouwen","meervoud"],"answer":1,"explain":"Ook voor mannelijke dingen, bijv. een boek."},{"q":"أَنَا betekent…","options":["jij","hij","ik","wij"],"answer":2,"explain":"أَنَا = ik."},{"q":"ذَهَبَ إِلَى الْمَسْجِدِ = …","options":["Hij kwam uit de moskee","Hij ging naar de moskee","Hij is in de moskee","Waar is de moskee?"],"answer":1,"explain":"ذَهَبَ = ging, إِلَى = naar."}]},"5":{"title":"Bezitsconstructie · تَحْتَ · يَا","summary":"Je leert «het boek van…» (iḍāfa), het woord «onder», en hoe je iemand aanspreekt met يَا.","points":["Bezit zeg je zo: كِتَابُ بِلَالٍ = het boek van Bilāl (Bilāls boek).","Eerste woord = bezit (muḍāf). Tweede woord = bezitter (muḍāf ilayh).","Regel: de muḍāf krijgt géén ال en géén tanwien. Dus niet الْكِتَابُ بِلَالٍ.","Het tweede woord staat in de genitief (-i): بِلَالٍ، الْإِمَامِ.","تَحْتَ = onder → تَحْتَ الْمَكْتَبِ = onder het bureau.","يَا = o… (om iemand aan te spreken): يَا بِلَالُ.","Na يَا: één ḍammah (-u), geen tanwien: يَا بِلَالُ (niet يَا بِلَالٌ).","Vraag: كِتَابُ مَنْ؟ = Wiens boek?","Meer voorbeelden: بَيْتُ الْمُدَرِّسِ، قَلَمُ الطَّالِبِ.","De iḍāfa is heel frequent — oefen hem hardop in korte zinnetjes."],"examples":[{"ar":"كِتَابُ بِلَالٍ","nl":"het boek van Bilāl"},{"ar":"بَيْتُ الْإِمَامِ","nl":"het huis van de imam"},{"ar":"تَحْتَ الْمَكْتَبِ","nl":"onder het bureau"},{"ar":"يَا بِلَالُ","nl":"O Bilāl!"},{"ar":"كِتَابُ مَنْ؟","nl":"Wiens boek?"},{"ar":"قَلَمُ الطَّالِبِ عَلَى الْمَكْتَبِ.","nl":"De pen van de student is op het bureau."},{"ar":"بَابُ الْبَيْتِ","nl":"de deur van het huis"}],"exercises":[{"type":"pic","emoji":"📖","q":"«het boek van Bilāl»","options":["كِتَابُ بِلَالٍ","بِلَالُ كِتَابٍ","الْكِتَابُ بِلَالٍ","كِتَابٌ بِلَالٌ"],"answer":0,"explain":"كِتَابُ بِلَالٍ."},{"type":"pic","emoji":"⬇️🖥️","q":"«onder het bureau»","options":["تَحْتَ الْمَكْتَبِ","عَلَى الْمَكْتَبِ","فِي الْمَكْتَبِ","مِنْ الْمَكْتَبِ"],"answer":0,"explain":"تَحْتَ الْمَكْتَبِ."},{"q":"In كِتَابُ بِلَالٍ is كِتَابُ de…","options":["bezitter (muḍāf ilayh)","het bezit (muḍāf)","een voorzetsel","een werkwoord"],"answer":1,"explain":"Muḍāf = het bezit (hier: boek)."},{"q":"Mag de muḍāf ال of tanwien hebben?","options":["Ja, allebei","Alleen ال","Nee, geen van beide","Alleen tanwien"],"answer":2,"explain":"Muḍāf: geen ال en geen tanwien."},{"q":"Welke uitgang krijgt een naam na يَا?","options":["tanwien -un","één ḍammah -u","kasrah -i","sukūn"],"answer":1,"explain":"Na يَا: één ḍammah."},{"q":"كِتَابُ بِلَالٍ = …","options":["Bilāl is een boek","het boek van Bilāl","een boek en Bilāl","Bilāl las een boek"],"answer":1,"explain":"Iḍāfa: bezit + bezitter."},{"q":"Het eerste woord in de iḍāfa (muḍāf) mag…","options":["wel ال hebben","wel tanwien hebben","geen ال en geen tanwien hebben","alleen meervoud zijn"],"answer":2,"explain":"Muḍāf: geen ال, geen tanwien."},{"q":"تَحْتَ betekent…","options":["boven","naast","onder","in"],"answer":2,"explain":"تَحْتَ = onder."},{"q":"يَا بِلَالُ zeg je om…","options":["naar Bilāl te vragen","Bilāl aan te spreken","Bilāl te beschrijven","Bilāl te tellen"],"answer":1,"explain":"يَا = o… (roepvorm)."},{"q":"بَيْتُ الْإِمَامِ = …","options":["een huis en een imam","het huis van de imam","de imam is een huis","in het huis van de imam"],"answer":1,"explain":"Iḍāfa met bepaald tweede deel."}]},"6":{"title":"هَذِهِ · tāʾ marbūṭa (vrouwelijk «dit»)","summary":"Je leert de vrouwelijke vorm van «dit» en hoe je veel woorden vrouwelijk maakt met ة.","points":["هَذِهِ is de vrouwelijke vorm van هَذَا. Gebruik het bij vrouwelijke woorden.","Veel woorden maak je vrouwelijk met ة (tāʾ marbūṭa): مُدَرِّسٌ → مُدَرِّسَةٌ.","De letter vóór de ة krijgt een fathah (a-klank).","Sommige woorden hebben een eigen vrouwelijke vorm: اِبْنٌ → بِنْتٌ، أَخٌ → أُخْتٌ.","Elk Arabisch naamwoord is mannelijk of vrouwelijk — leer het geslacht meteen mee.","De meeste vrouwelijke woorden eindigen op ة, maar niet allemaal (bv. أُمّ).","Voorbeeldzin: هَذَا وَلَدٌ وَهَذِهِ بِنْتٌ.","Ook dingen kunnen vrouwelijk zijn: هَذِهِ سَيَّارَةٌ (dit is een auto).","Bij vragen: أَهَذِهِ مُدَرِّسَةٌ؟ = Is dit een lerares?"],"examples":[{"ar":"هَذَا وَلَدٌ وَهَذِهِ بِنْتٌ.","nl":"Dit is een jongen en dit is een meisje."},{"ar":"مُدَرِّسَةٌ","nl":"een lerares"},{"ar":"هَذِهِ سَيَّارَةٌ.","nl":"Dit is een auto."},{"ar":"هَذِهِ طَبِيبَةٌ.","nl":"Dit is een dokter (vrouw)."},{"ar":"أَهَذِهِ حَقِيبَةٌ؟","nl":"Is dit een tas?"},{"ar":"نَعَمْ، هَذِهِ حَقِيبَةٌ.","nl":"Ja, dit is een tas."}],"exercises":[{"type":"pic","emoji":"👦👧","q":"«Dit is een jongen en dit is een meisje»","options":["هَذَا وَلَدٌ وَهَذِهِ بِنْتٌ","هَذَا وَلَدٌ وَهَذَا بِنْتٌ","هَذِهِ وَلَدٌ وَهَذَا بِنْتٌ","هَذَا بِنْتٌ وَهَذِهِ وَلَدٌ"],"answer":0,"explain":"هَذَا (m) وَ هَذِهِ (v)."},{"type":"pic","emoji":"👩‍🏫","q":"مُدَرِّسٌ → vrouwelijk","options":["مُدَرِّسَةٌ","مُدَرِّسُونَ","مُدَرِّسِينَ","الْمُدَرِّسُ"],"answer":0,"explain":"مُدَرِّسَةٌ."},{"q":"Wat is de vrouwelijke vorm van «dit»?","options":["هَذَا","هَذِهِ","ذَلِكَ","تِلْكَ"],"answer":1,"explain":"هَذِهِ = dit (vrouwelijk)."},{"q":"مُدَرِّسٌ wordt vrouwelijk…","options":["مُدَرِّسُونَ","مُدَرِّسَةٌ","مُدَرِّسَات","مُدَرِّسِينَ"],"answer":1,"explain":"Voeg ة toe: مُدَرِّسَةٌ."},{"q":"هَذِهِ gebruik je bij…","options":["mannelijke woorden","vrouwelijke woorden","alleen meervoud","alleen vragen"],"answer":1,"explain":"هَذِهِ = dit (v)."},{"q":"Hoe maak je مُدَرِّسٌ vrouwelijk?","options":["مُدَرِّسُونَ","مُدَرِّسَةٌ","الْمُدَرِّسُ","مُدَرِّسِينَ"],"answer":1,"explain":"Voeg ة toe."},{"q":"اِبْنٌ (zoon) → vrouwelijk is…","options":["اِبْنَةٌ altijd","بِنْتٌ","أُخْتٌ","وَلَدٌ"],"answer":1,"explain":"بِنْتٌ = dochter/meisje."},{"q":"Moet je bij elk nieuw woord het geslacht leren?","options":["Nee, alleen bij mensen","Ja","Alleen bij dieren","Nee, altijd mannelijk"],"answer":1,"explain":"Ja — elk naamwoord is m of v."},{"q":"Wat betekent: هَذَا وَلَدٌ وَهَذِهِ بِنْتٌ.?","options":["Dit is een jongen en dit is een meisje.","Ik weet het niet","Dat klopt niet","Geen van deze"],"answer":0,"explain":"هَذَا وَلَدٌ وَهَذِهِ بِنْتٌ. = Dit is een jongen en dit is een meisje."},{"q":"Wat betekent: مُدَرِّسَةٌ?","options":["een lerares","Ik weet het niet","Dat klopt niet","Geen van deze"],"answer":0,"explain":"مُدَرِّسَةٌ = een lerares"},{"q":"Wat betekent: هَذِهِ سَيَّارَةٌ.?","options":["Dit is een auto.","Ik weet het niet","Dat klopt niet","Geen van deze"],"answer":0,"explain":"هَذِهِ سَيَّارَةٌ. = Dit is een auto."},{"q":"Wat betekent: هَذِهِ طَبِيبَةٌ.?","options":["Dit is een dokter (vrouw).","Ik weet het niet","Dat klopt niet","Geen van deze"],"answer":0,"explain":"هَذِهِ طَبِيبَةٌ. = Dit is een dokter (vrouw)."}]},"7":{"title":"تِلْكَ · overzicht aanwijzers","summary":"Je leert «die/dat» vrouwelijk (verder weg) en ziet het complete setje aanwijzers.","points":["تِلْكَ = die / dat voor vrouwelijke woorden die verder weg zijn.","Complete set dichtbij: هَذَا (m) en هَذِهِ (v).","Complete set verder weg: ذَلِكَ (m) en تِلْكَ (v).","Kies altijd op geslacht én afstand.","Voorbeeld: هَذِهِ آمِنَةُ وَتِلْكَ مَرْيَمُ.","Bij vragen: أَتِلْكَ سَيَّارَةٌ؟ = Is dat een auto?","Herhaal het schema hardop tot het automatisch gaat.","In latere lessen koppel je aanwijzers aan bepaalde woorden: هَذَا الْكِتَابُ."],"examples":[{"ar":"هَذَا بِلَالٌ وَذَلِكَ حَامِدٌ.","nl":"Dit is Bilāl en dat is Ḥāmid."},{"ar":"هَذِهِ آمِنَةُ وَتِلْكَ مَرْيَمُ.","nl":"Dit is Āmina en dat is Maryam."},{"ar":"تِلْكَ طَبِيبَةٌ.","nl":"Dat is een dokter (vrouw)."},{"ar":"أَتِلْكَ سَيَّارَةٌ؟","nl":"Is dat een auto?"},{"ar":"مَا تِلْكَ؟","nl":"Wat is dat (v)?"}],"exercises":[{"q":"«Die» (vrouwelijk, verder weg) is…","options":["هَذِهِ","تِلْكَ","ذَلِكَ","هَذَا"],"answer":1,"explain":"تِلْكَ = die/dat (v, verder)."},{"q":"Welk paar is mannelijk?","options":["هَذِهِ / تِلْكَ","هَذَا / ذَلِكَ","هُوَ / هِيَ","أَنَا / أَنْتَ"],"answer":1,"explain":"Mannelijk: هَذَا (dicht) / ذَلِكَ (ver)."},{"q":"تِلْكَ hoort bij…","options":["mannelijk dichtbij","vrouwelijk verder weg","mannelijk verder weg","vrouwelijk dichtbij"],"answer":1,"explain":"تِلْكَ = v, verder weg."},{"q":"هَذِهِ hoort bij…","options":["mannelijk dichtbij","vrouwelijk dichterbij","mannelijk verder","alleen dieren"],"answer":1,"explain":"هَذِهِ = v, dichtbij."},{"q":"Complete set mannelijk is…","options":["هَذَا / ذَلِكَ","هَذِهِ / تِلْكَ","هُوَ / هِيَ","أَنَا / أَنْتَ"],"answer":0,"explain":"m: هَذَا (dicht) / ذَلِكَ (ver)."},{"q":"Complete set vrouwelijk is…","options":["هَذَا / ذَلِكَ","هَذِهِ / تِلْكَ","مَا / مَنْ","فِي / عَلَى"],"answer":1,"explain":"v: هَذِهِ (dicht) / تِلْكَ (ver)."},{"q":"Wat betekent: هَذَا بِلَالٌ وَذَلِكَ حَامِدٌ.?","options":["Dit is Bilāl en dat is Ḥāmid.","Ik weet het niet","Dat klopt niet","Geen van deze"],"answer":0,"explain":"هَذَا بِلَالٌ وَذَلِكَ حَامِدٌ. = Dit is Bilāl en dat is Ḥāmid."},{"q":"Wat betekent: هَذِهِ آمِنَةُ وَتِلْكَ مَرْيَمُ.?","options":["Dit is Āmina en dat is Maryam.","Ik weet het niet","Dat klopt niet","Geen van deze"],"answer":0,"explain":"هَذِهِ آمِنَةُ وَتِلْكَ مَرْيَمُ. = Dit is Āmina en dat is Maryam."},{"q":"Wat betekent: تِلْكَ طَبِيبَةٌ.?","options":["Dat is een dokter (vrouw).","Ik weet het niet","Dat klopt niet","Geen van deze"],"answer":0,"explain":"تِلْكَ طَبِيبَةٌ. = Dat is een dokter (vrouw)."},{"q":"Wat betekent: أَتِلْكَ سَيَّارَةٌ؟?","options":["Is dat een auto?","Ik weet het niet","Dat klopt niet","Geen van deze"],"answer":0,"explain":"أَتِلْكَ سَيَّارَةٌ؟ = Is dat een auto?"}]},"8":{"title":"Aanwijzer + bepaald lidwoord","summary":"Je leert het verschil tussen «dit is een boek» en «dit boek», en hoe je een complete zin maakt.","points":["هَذَا كِتَابٌ = Dit is een boek (volledige zin, tanwien op كِتَابٌ).","هَذَا الْكِتَابُ = dit boek (bepaald; nog geen complete zin zonder predicaat).","Volledig: هَذَا الْكِتَابُ جَدِيدٌ = Dit boek is nieuw.","Hetzelfde patroon met ذَلِكَ، هَذِهِ، تِلْكَ.","Kort: zonder ال + tanwien ≈ «dit is een…». Met ال ≈ «dit …» (aanvullen).","Voorbeeld vrouwelijk: هَذِهِ السَّيَّارَةُ جَمِيلَةٌ.","Vraag: أَهَذَا الْقَلَمُ لَكَ؟ = Is deze pen van jou?","Let op: na de aanwijzer komt het bepaalde woord, daarna het predicaat."],"examples":[{"ar":"هَذَا الْكِتَابُ جَدِيدٌ.","nl":"Dit boek is nieuw."},{"ar":"ذَلِكَ الرَّجُلُ مُهَنْدِسٌ.","nl":"Die man is een ingenieur."},{"ar":"هَذِهِ السَّاعَةُ جَمِيلَةٌ.","nl":"Dit horloge is mooi."},{"ar":"تِلْكَ الْبِنْتُ طَالِبَةٌ.","nl":"Dat meisje is studente."},{"ar":"هَذَا الْبَيْتُ كَبِيرٌ.","nl":"Dit huis is groot."},{"ar":"أَهَذَا الْقَلَمُ جَدِيدٌ؟","nl":"Is deze pen nieuw?"}],"exercises":[{"q":"هَذَا كِتَابٌ is…","options":["alleen een woordgroep","een volledige zin","fout Arabisch","alleen een vraag"],"answer":1,"explain":"Met tanwien: «Dit is een boek» = zin."},{"q":"هَذَا الْكِتَابُ betekent…","options":["Dit is een boek","Dit boek (nog geen complete zin)","Dat boek","Mijn boek"],"answer":1,"explain":"Aanwijzend + bepaald = «dit boek»."},{"q":"هَذَا كِتَابٌ betekent…","options":["dit boek (woordgroep)","Dit is een boek (zin)","dat boek","mijn boek"],"answer":1,"explain":"Tanwien → «dit is een…»."},{"q":"هَذَا الْكِتَابُ betekent…","options":["Dit is een boek","dit boek","dat is een boek","welk boek"],"answer":1,"explain":"Met ال: «dit boek»."},{"q":"Maak een complete zin: هَذَا الْكِتَابُ …","options":["فقط","جَدِيدٌ","مَا","وَ"],"answer":1,"explain":"Bijv. هَذَا الْكِتَابُ جَدِيدٌ."},{"q":"ذَلِكَ الرَّجُلُ مُهَنْدِسٌ = …","options":["Deze man is student","Die man is ingenieur","Dit is een man","Waar is de man?"],"answer":1,"explain":"ذَلِكَ + bepaald + predicaat."},{"q":"Wat betekent: هَذَا الْكِتَابُ جَدِيدٌ.?","options":["Dit boek is nieuw.","Ik weet het niet","Dat klopt niet","Geen van deze"],"answer":0,"explain":"هَذَا الْكِتَابُ جَدِيدٌ. = Dit boek is nieuw."},{"q":"Wat betekent: ذَلِكَ الرَّجُلُ مُهَنْدِسٌ.?","options":["Die man is een ingenieur.","Ik weet het niet","Dat klopt niet","Geen van deze"],"answer":0,"explain":"ذَلِكَ الرَّجُلُ مُهَنْدِسٌ. = Die man is een ingenieur."},{"q":"Wat betekent: هَذِهِ السَّاعَةُ جَمِيلَةٌ.?","options":["Dit horloge is mooi.","Ik weet het niet","Dat klopt niet","Geen van deze"],"answer":0,"explain":"هَذِهِ السَّاعَةُ جَمِيلَةٌ. = Dit horloge is mooi."},{"q":"Wat betekent: تِلْكَ الْبِنْتُ طَالِبَةٌ.?","options":["Dat meisje is studente.","Ik weet het niet","Dat klopt niet","Geen van deze"],"answer":0,"explain":"تِلْكَ الْبِنْتُ طَالِبَةٌ. = Dat meisje is studente."}]},"9":{"title":"Bijvoeglijk naamwoord (naʿt)","summary":"Je leert dat het bijvoeglijk naamwoord ná het zelfstandig naamwoord komt en moet overeenkomen.","points":["In het Nederlands: «een nieuw huis». In het Arabisch: بَيْتٌ جَدِيدٌ (adj ná het noun).","Bijvoeglijk naamwoord = naʿt (نَعْت). Het omschreven woord = manʿūt.","Het naʿt komt overeen in vier dingen: geslacht, getal, bepaaldheid en naamval.","Onbepaald: بِنْتٌ صَغِيرَةٌ — beide vrouwelijk, beide tanwien.","Bepaald: الْبَيْتُ الْكَبِيرُ = het grote huis (beide met ال).","Vrouwelijk adj krijgt vaak ة: جَدِيدٌ → جَدِيدَةٌ.","Voorbeeld: سَيَّارَةٌ جَدِيدَةٌ = een nieuwe auto.","Fout om te vermijden: جَدِيدٌ بَيْتٌ (volgorde omdraaien zoals in het Nederlands).","Oefen paren: كِتَابٌ قَدِيمٌ، قَلَمٌ جَمِيلٌ، بَيْتٌ صَغِيرٌ."],"examples":[{"ar":"بَيْتٌ جَدِيدٌ","nl":"een nieuw huis"},{"ar":"بِنْتٌ صَغِيرَةٌ","nl":"een klein meisje"},{"ar":"سَيَّارَةٌ جَدِيدَةٌ","nl":"een nieuwe auto"},{"ar":"الْبَيْتُ الْكَبِيرُ","nl":"het grote huis"},{"ar":"هَذَا كِتَابٌ مُفِيدٌ.","nl":"Dit is een nuttig boek."},{"ar":"تِلْكَ بِنْتٌ جَمِيلَةٌ.","nl":"Dat is een mooi meisje."}],"exercises":[{"q":"Waar staat het bijvoeglijk naamwoord in het Arabisch?","options":["Voor het zelfstandig naamwoord","Na het zelfstandig naamwoord","Alleen aan het eind van de zin","Met أَ ervoor"],"answer":1,"explain":"Altijd ná: بَيْتٌ جَدِيدٌ."},{"q":"Waarom heeft صَغِيرَةٌ een ة in بِنْتٌ صَغِيرَةٌ?","options":["Toeval","Het komt overeen in geslacht (vrouwelijk)","Omdat het een vraag is","Verplicht bij alle bijvoeglijke naamwoorden"],"answer":1,"explain":"Naʿt komt overeen in geslacht."},{"q":"In het Arabisch staat het bijvoeglijk naamwoord…","options":["vóór het zelfstandig naamwoord","ná het zelfstandig naamwoord","alleen in vragen","met أَ ervoor"],"answer":1,"explain":"بَيْتٌ جَدِيدٌ — adj komt na."},{"q":"بَيْتٌ جَدِيدٌ = …","options":["nieuw is een huis","een nieuw huis","het nieuwe huis","grote huis"],"answer":1,"explain":"Onbepaald + adj met tanwien."},{"q":"الْبَيْتُ الْكَبِيرُ = …","options":["een groot huis","het grote huis","groot is het huis","huis groot"],"answer":1,"explain":"Beide met ال = bepaald."},{"q":"بِنْتٌ صَغِيرَةٌ — waarom ة bij صَغِيرَةٌ?","options":["Verplicht bij alle woorden","Overeenkomst in geslacht (v)","Omdat het meervoud is","Toeval"],"answer":1,"explain":"Naʿt komt overeen in geslacht."},{"q":"Het bijvoeglijk naamwoord moet overeenkomen in…","options":["alleen geslacht","geslacht, getal, bepaaldheid en naamval","alleen bepaaldheid","alleen uitspraak"],"answer":1,"explain":"Vier punten van overeenkomst."},{"q":"Wat betekent: بَيْتٌ جَدِيدٌ?","options":["een nieuw huis","Ik weet het niet","Dat klopt niet","Geen van deze"],"answer":0,"explain":"بَيْتٌ جَدِيدٌ = een nieuw huis"},{"q":"Wat betekent: بِنْتٌ صَغِيرَةٌ?","options":["een klein meisje","Ik weet het niet","Dat klopt niet","Geen van deze"],"answer":0,"explain":"بِنْتٌ صَغِيرَةٌ = een klein meisje"},{"q":"Wat betekent: سَيَّارَةٌ جَدِيدَةٌ?","options":["een nieuwe auto","Ik weet het niet","Dat klopt niet","Geen van deze"],"answer":0,"explain":"سَيَّارَةٌ جَدِيدَةٌ = een nieuwe auto"},{"q":"Wat betekent: الْبَيْتُ الْكَبِيرُ?","options":["het grote huis","Ik weet het niet","Dat klopt niet","Geen van deze"],"answer":0,"explain":"الْبَيْتُ الْكَبِيرُ = het grote huis"}]},"10":{"title":"Bezittelijke achtervoegsels","summary":"Je leert «mijn / jouw / zijn / haar» als uitgang die vast aan het woord zit.","points":["In plaats van een los woord plak je een uitgang achter het naamwoord.","كِتَابِي = mijn boek. كِتَابُكَ = jouw boek (m). كِتَابُهُ = zijn boek. كِتَابُهَا = haar boek.","Het zijn achtervoegsels, geen losse woorden.","Bij أَبٌ en أَخٌ komt er een extra و: أَبُوكَ = jouw vader, أَخُوهُ = zijn broer.","De klinker net voor de uitgang kan veranderen — leer de vormen met voorbeelden.","Vraag: أَهَذَا كِتَابُكَ؟ = Is dit jouw boek?","Antwoord: نَعَمْ، هَذَا كِتَابِي.","Meer: بَيْتُهَا، قَلَمُهُ، اسْمِي، اسْمُكَ.","Let op: كِتَابِي (mijn) eindigt op -ī; كِتَابُكَ (jouw m) op -uka."],"examples":[{"ar":"كِتَابِي","nl":"mijn boek"},{"ar":"كِتَابُكَ","nl":"jouw boek"},{"ar":"كِتَابُهُ","nl":"zijn boek"},{"ar":"كِتَابُهَا","nl":"haar boek"},{"ar":"أَخُوكَ","nl":"jouw broer"},{"ar":"أَهَذَا كِتَابُكَ؟","nl":"Is dit jouw boek?"},{"ar":"نَعَمْ، هَذَا كِتَابِي.","nl":"Ja, dit is mijn boek."},{"ar":"مَا اسْمُكَ؟","nl":"Wat is jouw naam?"}],"exercises":[{"q":"«Mijn boek» is…","options":["كِتَابُكَ","كِتَابِي","كِتَابُهُ","كِتَابُهَا"],"answer":1,"explain":"ـِي = mijn."},{"q":"«Haar boek» is…","options":["كِتَابُهُ","كِتَابُهَا","كِتَابُكَ","كِتَابِي"],"answer":1,"explain":"ـهَا = haar."},{"q":"كِتَابِي = …","options":["jouw boek","mijn boek","zijn boek","haar boek"],"answer":1,"explain":"ـِي = mijn."},{"q":"كِتَابُكَ = …","options":["mijn boek","jouw boek","zijn boek","haar boek"],"answer":1,"explain":"ـُكَ = jouw (m)."},{"q":"كِتَابُهُ = …","options":["mijn boek","jouw boek","zijn boek","haar boek"],"answer":2,"explain":"ـُهُ = zijn."},{"q":"كِتَابُهَا = …","options":["mijn boek","jouw boek","zijn boek","haar boek"],"answer":3,"explain":"ـهَا = haar."},{"q":"أَخُوكَ = …","options":["mijn broer","jouw broer","zijn broer","haar broer"],"answer":1,"explain":"أَخ + و + كَ = jouw broer."},{"q":"Wat betekent: كِتَابِي?","options":["mijn boek","Ik weet het niet","Dat klopt niet","Geen van deze"],"answer":0,"explain":"كِتَابِي = mijn boek"},{"q":"Wat betekent: كِتَابُكَ?","options":["jouw boek","Ik weet het niet","Dat klopt niet","Geen van deze"],"answer":0,"explain":"كِتَابُكَ = jouw boek"},{"q":"Wat betekent: كِتَابُهُ?","options":["zijn boek","Ik weet het niet","Dat klopt niet","Geen van deze"],"answer":0,"explain":"كِتَابُهُ = zijn boek"},{"q":"Wat betekent: كِتَابُهَا?","options":["haar boek","Ik weet het niet","Dat klopt niet","Geen van deze"],"answer":0,"explain":"كِتَابُهَا = haar boek"}]}};
+const WORD_EMOJI = {"بَيْت": "🏠", "مَسْجِد": "🕌", "بَاب": "🚪", "كِتَاب": "📖", "قَلَم": "🖊️", "مِفْتَاح": "🔑", "مَكْتَب": "🖥️", "سَرِير": "🛏️", "كُرْسِيّ": "🪑", "نَجْم": "⭐", "قَمِيص": "👕", "طَبِيب": "👨‍⚕️", "وَلَد": "👦", "طَالِب": "🎓", "رَجُل": "👨", "تَاجِر": "🛒", "كَلْب": "🐕", "قِطّ": "🐈", "حِمَار": "🫏", "فَرَس": "🐴", "جَمَل": "🐪", "دِيك": "🐓", "مُدَرِّس": "👨‍🏫", "مِنْدِيل": "🧻", "زَعِيم": "👑", "حَجَر": "🪨", "سُكَّر": "🍬", "لَبَن": "🥛", "غَنِيّ": "💰", "فَقِير": "😔", "طَوِيل": "📏", "قَصِير": "📐", "بَارِد": "❄️", "حَارّ": "🔥", "جَالِس": "🪑", "وَاقِف": "🧍", "جَدِيد": "✨", "قَدِيم": "📜", "قَرِيب": "📍", "بَعِيد": "🔭", "نَظِيف": "✨", "وَسِخ": "🧹", "صَغِير": "🔹", "كَبِير": "⬛", "خَفِيف": "🪶", "ثَقِيل": "🏋️", "وَرَقَة": "📄", "مَكْسُور": "💔", "مَاء": "💧", "مَفْتُوح": "🔓", "تُفَّاحَة": "🍎", "حُلْو": "🍯", "جَمِيل": "🌸", "مَرِيض": "🤒", "دُكَّان": "🏪", "أَيْنَ": "❓", "حُجْرَة": "🚪", "سَمَاء": "🌌", "حَمَّام": "🛁", "فَصْل": "🏫", "مَطْبَخ": "🍳", "مِرْحَاض": "🚽", "مَدْرَسَة": "🏫", "جَامِعَة": "🎓", "سُوق": "🛍️", "سَيَّارَة": "🚗", "بِنْت": "👧", "يَد": "✋", "رَأْس": "🗣️", "أَنْف": "👃", "رِجْل": "🦵", "فَم": "👄", "عَيْن": "👁️", "وَجْه": "🙂", "أُذُن": "👂", "شَاي": "🍵", "أُمّ": "👩", "قَهْوَة": "☕", "نَافِذَة": "🪟", "هَذَا": "👆", "هَذِهِ": "👆", "ذَلِكَ": "👉", "تِلْكَ": "👉"};
+function emojiFor(w){
+  if(!w)return '📝';
+  if(WORD_EMOJI[w.ar])return WORD_EMOJI[w.ar];
+  // fallback by dutch keywords
+  const n=(w.nl||'').toLowerCase();
+  const map=[['huis','🏠'],['boek','📖'],['pen','🖊️'],['deur','🚪'],['moskee','🕌'],
+    ['stoel','🪑'],['bed','🛏️'],['sleutel','🔑'],['hond','🐕'],['kat','🐈'],
+    ['paard','🐴'],['kameel','🐪'],['jongen','👦'],['meisje','👧'],['man','👨'],
+    ['auto','🚗'],['school','🏫'],['water','💧'],['appel','🍎'],['hand','✋'],
+    ['oog','👁️'],['mond','👄'],['neus','👃'],['oor','👂'],['hoofd','🗣️']];
+  for(const [k,e] of map){if(n.includes(k))return e}
+  return '📝';
+}
+
+const PIC_SVG = {"house": "<svg viewBox=\"0 0 80 80\" width=\"72\" height=\"72\" fill=\"none\" stroke=\"#2c4a3a\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 36 L40 14 L68 36\"/><path d=\"M18 34 V66 H62 V34\"/><rect x=\"34\" y=\"44\" width=\"12\" height=\"22\" rx=\"1\"/><rect x=\"22\" y=\"42\" width=\"10\" height=\"10\" rx=\"1\"/><rect x=\"48\" y=\"42\" width=\"10\" height=\"10\" rx=\"1\"/></svg>", "mosque": "<svg viewBox=\"0 0 80 80\" width=\"72\" height=\"72\" fill=\"none\" stroke=\"#2c4a3a\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M20 68 V40 Q40 22 60 40 V68 Z\"/><path d=\"M36 40 Q40 28 44 40\"/><line x1=\"40\" y1=\"28\" x2=\"40\" y2=\"12\"/><circle cx=\"40\" cy=\"10\" r=\"2.5\" fill=\"#2c4a3a\" stroke=\"none\"/><path d=\"M28 68 V52 H52 V68\"/><path d=\"M16 68 H64\"/></svg>", "door": "<svg viewBox=\"0 0 80 80\" width=\"72\" height=\"72\" fill=\"none\" stroke=\"#2c4a3a\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"22\" y=\"12\" width=\"36\" height=\"56\" rx=\"2\"/><rect x=\"28\" y=\"18\" width=\"24\" height=\"16\" rx=\"1\"/><circle cx=\"48\" cy=\"44\" r=\"2.5\" fill=\"#2c4a3a\" stroke=\"none\"/><line x1=\"22\" y1=\"68\" x2=\"58\" y2=\"68\"/></svg>", "book": "<svg viewBox=\"0 0 80 80\" width=\"72\" height=\"72\" fill=\"none\" stroke=\"#2c4a3a\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M18 18 H52 L62 28 V62 H18 Z\"/><path d=\"M52 18 V28 H62\"/><line x1=\"26\" y1=\"36\" x2=\"50\" y2=\"36\"/><line x1=\"26\" y1=\"44\" x2=\"50\" y2=\"44\"/><line x1=\"26\" y1=\"52\" x2=\"42\" y2=\"52\"/></svg>", "pen": "<svg viewBox=\"0 0 80 80\" width=\"72\" height=\"72\" fill=\"none\" stroke=\"#2c4a3a\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M14 52 L50 16 L64 30 L28 66 Z\"/><path d=\"M50 16 L58 8 L72 22 L64 30\"/><path d=\"M14 52 L10 70 L28 66\"/><line x1=\"22\" y1=\"60\" x2=\"32\" y2=\"50\"/></svg>", "key": "<svg viewBox=\"0 0 80 80\" width=\"72\" height=\"72\" fill=\"none\" stroke=\"#2c4a3a\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"28\" cy=\"32\" r=\"12\"/><circle cx=\"28\" cy=\"32\" r=\"5\"/><path d=\"M38 38 L68 58\"/><path d=\"M58 52 L64 62\"/><path d=\"M52 48 L58 58\"/></svg>", "chair": "<svg viewBox=\"0 0 80 80\" width=\"72\" height=\"72\" fill=\"none\" stroke=\"#2c4a3a\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M22 36 H58 V48 H22 Z\"/><path d=\"M26 48 V66\"/><path d=\"M54 48 V66\"/><path d=\"M22 36 V18 H42\"/><path d=\"M18 66 H30\"/><path d=\"M50 66 H62\"/></svg>", "bed": "<svg viewBox=\"0 0 80 80\" width=\"72\" height=\"72\" fill=\"none\" stroke=\"#2c4a3a\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 48 H68\"/><path d=\"M16 48 V62\"/><path d=\"M64 48 V62\"/><path d=\"M12 48 V36 Q20 28 32 36 H68 V48\"/><path d=\"M10 62 H22\"/><path d=\"M58 62 H70\"/></svg>", "desk": "<svg viewBox=\"0 0 80 80\" width=\"72\" height=\"72\" fill=\"none\" stroke=\"#2c4a3a\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"14\" y=\"28\" width=\"52\" height=\"28\" rx=\"2\"/><line x1=\"14\" y1=\"40\" x2=\"66\" y2=\"40\"/><path d=\"M20 56 V68\"/><path d=\"M60 56 V68\"/><rect x=\"30\" y=\"32\" width=\"20\" height=\"6\" rx=\"1\"/></svg>", "star": "<svg viewBox=\"0 0 80 80\" width=\"72\" height=\"72\" fill=\"none\" stroke=\"#2c4a3a\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M40 12 L46 32 H66 L50 44 L56 64 L40 52 L24 64 L30 44 L14 32 H34 Z\"/><line x1=\"40\" y1=\"8\" x2=\"40\" y2=\"4\"/><line x1=\"40\" y1=\"72\" x2=\"40\" y2=\"76\"/><line x1=\"8\" y1=\"40\" x2=\"4\" y2=\"40\"/><line x1=\"72\" y1=\"40\" x2=\"76\" y2=\"40\"/></svg>", "shirt": "<svg viewBox=\"0 0 80 80\" width=\"72\" height=\"72\" fill=\"none\" stroke=\"#2c4a3a\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M28 18 L40 26 L52 18 L62 28 V68 H18 V28 Z\"/><path d=\"M28 18 Q40 12 52 18\"/><line x1=\"40\" y1=\"26\" x2=\"40\" y2=\"40\"/></svg>", "dog": "<svg viewBox=\"0 0 80 80\" width=\"72\" height=\"72\" fill=\"none\" stroke=\"#2c4a3a\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><ellipse cx=\"42\" cy=\"40\" rx=\"20\" ry=\"12\"/><circle cx=\"24\" cy=\"32\" r=\"10\"/><path d=\"M18 26 L14 18\"/><path d=\"M26 26 L30 18\"/><circle cx=\"21\" cy=\"30\" r=\"1.5\" fill=\"#2c4a3a\" stroke=\"none\"/><path d=\"M30 48 V60\"/><path d=\"M38 50 V62\"/><path d=\"M48 50 V62\"/><path d=\"M56 48 V60\"/><path d=\"M58 36 Q68 28 66 40\"/></svg>", "cat": "<svg viewBox=\"0 0 80 80\" width=\"72\" height=\"72\" fill=\"none\" stroke=\"#2c4a3a\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><ellipse cx=\"42\" cy=\"44\" rx=\"16\" ry=\"12\"/><circle cx=\"30\" cy=\"32\" r=\"11\"/><path d=\"M22 24 L20 14 L28 22\"/><path d=\"M38 24 L40 14 L32 22\"/><circle cx=\"27\" cy=\"30\" r=\"1.5\" fill=\"#2c4a3a\" stroke=\"none\"/><path d=\"M34 50 V60\"/><path d=\"M42 52 V62\"/><path d=\"M50 50 V60\"/><path d=\"M56 40 Q66 34 64 46\"/></svg>", "horse": "<svg viewBox=\"0 0 80 80\" width=\"72\" height=\"72\" fill=\"none\" stroke=\"#2c4a3a\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><ellipse cx=\"44\" cy=\"42\" rx=\"18\" ry=\"12\"/><path d=\"M28 36 Q22 22 30 18 Q38 16 36 30\"/><path d=\"M30 18 Q26 10 32 8\"/><path d=\"M32 50 V64\"/><path d=\"M40 52 V66\"/><path d=\"M52 52 V66\"/><path d=\"M58 50 V64\"/><path d=\"M60 38 Q70 32 68 44\"/></svg>", "donkey": "<svg viewBox=\"0 0 80 80\" width=\"72\" height=\"72\" fill=\"none\" stroke=\"#2c4a3a\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><ellipse cx=\"44\" cy=\"44\" rx=\"16\" ry=\"11\"/><path d=\"M30 38 Q24 26 28 20\"/><path d=\"M26 22 L20 12\"/><path d=\"M30 22 L34 12\"/><path d=\"M34 50 V62\"/><path d=\"M42 52 V64\"/><path d=\"M50 52 V64\"/><path d=\"M56 50 V62\"/><path d=\"M58 40 Q68 34 66 46\"/></svg>", "camel": "<svg viewBox=\"0 0 80 80\" width=\"72\" height=\"72\" fill=\"none\" stroke=\"#2c4a3a\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M20 50 Q28 28 40 36 Q48 20 58 36 Q66 40 68 50\"/><path d=\"M20 50 Q30 56 40 52 Q55 56 68 50\"/><path d=\"M22 20 Q18 28 22 36\"/><path d=\"M24 52 V66\"/><path d=\"M36 54 V68\"/><path d=\"M50 54 V68\"/><path d=\"M62 52 V66\"/></svg>", "doctor": "<svg viewBox=\"0 0 80 80\" width=\"72\" height=\"72\" fill=\"none\" stroke=\"#2c4a3a\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"40\" cy=\"22\" r=\"10\"/><path d=\"M24 68 V48 Q24 36 40 36 Q56 36 56 48 V68\"/><path d=\"M36 48 V58 H44 V48\"/><circle cx=\"40\" cy=\"52\" r=\"3\"/></svg>", "boy": "<svg viewBox=\"0 0 80 80\" width=\"72\" height=\"72\" fill=\"none\" stroke=\"#2c4a3a\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"40\" cy=\"22\" r=\"10\"/><path d=\"M26 68 V48 Q26 38 40 38 Q54 38 54 48 V68\"/><line x1=\"40\" y1=\"38\" x2=\"40\" y2=\"52\"/></svg>", "girl": "<svg viewBox=\"0 0 80 80\" width=\"72\" height=\"72\" fill=\"none\" stroke=\"#2c4a3a\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"40\" cy=\"20\" r=\"9\"/><path d=\"M40 29 Q28 32 24 48 L20 68 H60 L56 48 Q52 32 40 29\"/><path d=\"M28 18 Q40 10 52 18\"/></svg>", "sun": "<svg viewBox=\"0 0 80 80\" width=\"72\" height=\"72\" fill=\"none\" stroke=\"#2c4a3a\" stroke-width=\"2.2\" stroke-linecap=\"round\"><circle cx=\"40\" cy=\"40\" r=\"12\"/><path d=\"M40 12 V20 M40 60 V68 M12 40 H20 M60 40 H68 M20 20 L26 26 M54 54 L60 60 M60 20 L54 26 M26 54 L20 60\"/></svg>", "moon": "<svg viewBox=\"0 0 80 80\" width=\"72\" height=\"72\" fill=\"none\" stroke=\"#2c4a3a\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M48 16 A22 22 0 1 0 48 64 A16 16 0 1 1 48 16\"/></svg>", "walk": "<svg viewBox=\"0 0 80 80\" width=\"72\" height=\"72\" fill=\"none\" stroke=\"#2c4a3a\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"42\" cy=\"16\" r=\"8\"/><path d=\"M42 24 V44\"/><path d=\"M42 32 L28 40\"/><path d=\"M42 32 L56 38\"/><path d=\"M42 44 L30 64\"/><path d=\"M42 44 L54 64\"/></svg>", "teacher": "<svg viewBox=\"0 0 80 80\" width=\"72\" height=\"72\" fill=\"none\" stroke=\"#2c4a3a\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"40\" cy=\"20\" r=\"9\"/><path d=\"M26 68 V46 Q26 36 40 36 Q54 36 54 46 V68\"/><path d=\"M30 50 H50\"/><path d=\"M22 28 L18 18 M58 28 L62 18\"/></svg>"};
+const EMOJI_PIC = {"🏠": "house", "🕌": "mosque", "🚪": "door", "📖": "book", "🖊️": "pen", "🔑": "key", "🪑": "chair", "🛏️": "bed", "⭐": "star", "👕": "shirt", "🐕": "dog", "🐈": "cat", "🐴": "horse", "🐪": "camel", "👨‍⚕️": "doctor", "👦": "boy", "☀️": "sun", "🌙": "moon", "👩‍🏫": "teacher", "🖥️": "desk"};
+
+function picHtml(emoji){
+  if(!emoji) return '';
+  // single emoji
+  if(EMOJI_PIC[emoji] && PIC_SVG[EMOJI_PIC[emoji]])
+    return `<div class="pic-frame">${PIC_SVG[EMOJI_PIC[emoji]]}</div>`;
+  // compound like 🏠🕌 or ⬇️🖥️ — show side by side
+  const parts=[];
+  // try to split known multi-emoji strings
+  let rest=emoji;
+  const keys=Object.keys(EMOJI_PIC).sort((a,b)=>b.length-a.length);
+  while(rest.length){
+    let hit=false;
+    for(const k of keys){
+      if(rest.startsWith(k)){
+        if(PIC_SVG[EMOJI_PIC[k]]) parts.push(PIC_SVG[EMOJI_PIC[k]]);
+        rest=rest.slice(k.length);
+        hit=true; break;
+      }
+    }
+    if(!hit){
+      // skip unknown char / variation selectors
+      rest=rest.slice(1);
+    }
+  }
+  if(!parts.length) return `<div class="pic-frame" style="font-size:48px">${emoji}</div>`;
+  return `<div class="pic-frame" style="display:flex;gap:12px;justify-content:center;align-items:center">${parts.join('')}</div>`;
+}
+
+const MASTERY = 2;
+const SESSION = 10;
+const LS = {p:'am-progress-v2',c:'am-custom-v2',a:'am-autospeak-v2',o:'am-onboard-v2',s:'am-streak-v2'};
+
+let customWords = [];
+let progress = {};
+let autoSpeak = true;
+let onboarded = false;
+let streak = {count:0,last:null};
+let ALL = [];
+
+const state = {
+  view:'home',
+  lesson:1,
+  pool:[],
+  idx:0,
+  flipped:false,
+  queue:[],
+  current:null,
+  q:null,
+  asked:0,
+  correct:0,
+  answered:false,
+  sessionLen:0,
+  review:false,
+  bookLesson:null,
+  bookTab:'uitleg',
+  searchQ:'',
+  path:'home',
+};
+
+function load(){
+  try{progress=JSON.parse(localStorage.getItem(LS.p)||'{}')}catch(e){progress={}}
+  try{customWords=JSON.parse(localStorage.getItem(LS.c)||'[]')}catch(e){customWords=[]}
+  try{const a=localStorage.getItem(LS.a);if(a!==null)autoSpeak=a==='true'}catch(e){}
+  try{onboarded=localStorage.getItem(LS.o)==='1'}catch(e){}
+  try{streak=JSON.parse(localStorage.getItem(LS.s)||'{"count":0,"last":null}')}catch(e){streak={count:0,last:null}}
+  ALL = BASE_WORDS.concat(customWords);
+}
+function saveP(){try{localStorage.setItem(LS.p,JSON.stringify(progress))}catch(e){}}
+function saveC(){try{localStorage.setItem(LS.c,JSON.stringify(customWords))}catch(e){}}
+function saveA(){try{localStorage.setItem(LS.a,String(autoSpeak))}catch(e){}}
+function saveO(){try{localStorage.setItem(LS.o,onboarded?'1':'0')}catch(e){}}
+function saveS(){try{localStorage.setItem(LS.s,JSON.stringify(streak))}catch(e){}}
+
+function getP(id){if(!progress[id])progress[id]={box:0,seen:0,correct:0};return progress[id]}
+function wordsFor(sel){if(sel==='all')return ALL.slice();return ALL.filter(w=>w.lesson===sel)}
+function mastered(ws){return ws.filter(w=>getP(w.id).box>=MASTERY).length}
+function lessonNums(){return [...new Set(ALL.map(w=>w.lesson))].sort((a,b)=>a-b)}
+function shuffle(a){const x=a.slice();for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]]}return x}
+function today(){const d=new Date();return d.toISOString().slice(0,10)}
+function normalize(s){return(s||'').toLowerCase().normalize('NFD').replace(/\p{M}/gu,'').replace(/\([^)]*\)/g,'').replace(/[^\p{L}\p{N}\s/]/gu,'').trim().replace(/\s+/g,' ')}
+function stripAr(s){
+  return String(s||'').replace(/[\u064B-\u065F\u0670\u0640]/g,'').replace(/[أإآٱ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/\s+/g,'').trim();
+}
+function matchAns(typed,...acc){
+  const t=normalize(typed);if(!t)return false;
+  // Dutch/English path
+  if(acc.flatMap(s=>String(s).split('/')).map(normalize).filter(Boolean).includes(t))return true;
+  // Arabic path (ignore harakat / alef variants)
+  const ta=stripAr(typed);
+  if(!ta)return false;
+  return acc.some(s=>stripAr(s)===ta);
+}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+/* ===== AUDIO ===== */
+let activeAudio=null, arabicVoice=null, voicesReady=false, unlocked=false, audioCtx=null;
+
+function primeVoices(){
+  if(!('speechSynthesis' in window))return;
+  const pick=()=>{
+    try{
+      const v=speechSynthesis.getVoices()||[];
+      if(!v.length)return;
+      voicesReady=true;
+      const ar=v.filter(x=>/^ar(?:[-_]|$)/i.test(x.lang||'')||/arabic/i.test(x.name||''));
+      if(ar.length){
+        const pref=[/google/i,/microsoft/i,/enhanced/i,/premium/i,/natural/i,/maged/i,/tarik/i,/naayf/i];
+        for(const re of pref){const f=ar.find(x=>re.test(x.name||''));if(f){arabicVoice=f;return}}
+        arabicVoice=ar[0];
+      }
+    }catch(e){}
+  };
+  pick();
+  try{speechSynthesis.onvoiceschanged=pick;speechSynthesis.getVoices()}catch(e){}
+}
+
+function unlockAudio(){
+  try{
+    const C=window.AudioContext||window.webkitAudioContext;
+    if(C){
+      if(!audioCtx)audioCtx=new C();
+      if(audioCtx.state==='suspended')audioCtx.resume();
+    }
+  }catch(e){}
+  try{
+    if('speechSynthesis' in window){
+      speechSynthesis.cancel();
+      if(speechSynthesis.resume)speechSynthesis.resume();
+    }
+  }catch(e){}
+  if(!unlocked){
+    unlocked=true;
+    try{
+      const a=new Audio('data:audio/wav;base64,UklGRiwAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQgAAACAgICAgICAgICAgA==');
+      a.volume=0.01;
+      a.play().catch(()=>{});
+    }catch(e){}
+    primeVoices();
+  }
+}
+
+function stopAudio(){
+  try{if(activeAudio){activeAudio.pause();activeAudio.removeAttribute('src');activeAudio.load();activeAudio=null}}catch(e){}
+  try{if('speechSynthesis' in window)speechSynthesis.cancel()}catch(e){}
+}
+
+function speakWeb(text){
+  if(!('speechSynthesis' in window))return false;
+  try{
+    primeVoices();
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    if(arabicVoice){
+      u.voice=arabicVoice;
+      u.lang=arabicVoice.lang||'ar-SA';
+    }else{
+      u.lang='ar-SA';
+    }
+    u.rate=0.85;u.pitch=1;u.volume=1;
+    let started=false;
+    u.onstart=()=>{started=true};
+    speechSynthesis.speak(u);
+    // Some browsers report speak() ok but never start (no Arabic voice)
+    setTimeout(()=>{if(!started&&speechSynthesis.speaking===false){/* silent fail handled by caller */}},800);
+    return true;
+  }catch(e){return false}
+}
+
+function playUrl(src,done){
+  try{
+    stopAudio();
+    const a=new Audio();
+    activeAudio=a;
+    try{a.referrerPolicy='no-referrer'}catch(e){}
+    a.setAttribute('referrerpolicy','no-referrer');
+    a.setAttribute('playsinline','');
+    a.setAttribute('webkit-playsinline','');
+    a.preload='auto';
+    let settled=false;
+    const finish=ok=>{if(settled)return;settled=true;if(done)done(ok)};
+    a.onended=()=>finish(true);
+    a.onerror=()=>finish(false);
+    a.src=src;
+    const p=a.play();
+    if(p&&p.catch)p.catch(()=>finish(false));
+    setTimeout(()=>{if(!settled&&a.paused)finish(false)},4000);
+  }catch(e){if(done)done(false)}
+}
+
+function playBlob(blob,done){
+  try{
+    const url=URL.createObjectURL(blob);
+    playUrl(url,ok=>{
+      try{URL.revokeObjectURL(url)}catch(e){}
+      if(done)done(ok);
+    });
+  }catch(e){if(done)done(false)}
+}
+
+/* CORS-friendly Google TTS proxy (works on GitHub Pages) */
+function speakProxy(text,done){
+  const q=encodeURIComponent(text);
+  const url='https://tts-api.netlify.app/?text='+q+'&lang=ar';
+  fetch(url,{mode:'cors',credentials:'omit',cache:'force-cache'})
+    .then(r=>{if(!r.ok)throw new Error('http');return r.blob()})
+    .then(blob=>{
+      if(!blob||blob.size<400)throw new Error('empty');
+      playBlob(blob,done);
+    })
+    .catch(()=>{
+      // direct play of proxy URL (also has CORS + audio/mp3)
+      playUrl(url,done);
+    });
+}
+
+function speakGoogle(text,done){
+  const q=encodeURIComponent(text);
+  const urls=[
+    'https://translate.googleapis.com/translate_tts?ie=UTF-8&client=gtx&tl=ar&q='+q,
+    'https://translate.google.com/translate_tts?ie=UTF-8&tl=ar&client=tw-ob&q='+q
+  ];
+  let i=0;
+  function next(){
+    if(i>=urls.length){if(done)done(false);return}
+    const src=urls[i++];
+    fetch(src,{referrerPolicy:'no-referrer',mode:'cors',credentials:'omit'})
+      .then(r=>{if(!r.ok)throw new Error('http');return r.blob()})
+      .then(blob=>{
+        if(!blob||blob.size<400)throw new Error('empty');
+        playBlob(blob,done);
+      })
+      .catch(()=>{
+        playUrl(src,ok=>{if(ok){if(done)done(true)}else next()});
+      });
+  }
+  next();
+}
+
+function speakWord(word){
+  const t=String(word&&word.ar||word||'').trim();
+  if(!t)return;
+  unlockAudio();
+  stopAudio();
+
+  // 1) CORS proxy (works on GitHub Pages HTTPS)
+  // 2) Direct Google TTS
+  // 3) Web Speech API (device voices)
+  speakProxy(t,ok1=>{
+    if(ok1)return;
+    speakGoogle(t,ok2=>{
+      if(ok2)return;
+      speakWeb(t);
+    });
+  });
+}
+
+function tone(type,from,to,g,dur){
+  unlockAudio();
+  if(!audioCtx)return;
+  try{
+    const now=audioCtx.currentTime,o=audioCtx.createOscillator(),gn=audioCtx.createGain();
+    o.type=type;o.frequency.setValueAtTime(from,now);o.frequency.exponentialRampToValueAtTime(to,now+dur*.7);
+    gn.gain.setValueAtTime(.0001,now);gn.gain.exponentialRampToValueAtTime(g,now+.01);gn.gain.exponentialRampToValueAtTime(.0001,now+dur);
+    o.connect(gn);gn.connect(audioCtx.destination);o.start(now);o.stop(now+dur+.02);
+  }catch(e){}
+}
+function playOk(){tone('sine',880,1320,.14,.2)}
+function playNo(){tone('sawtooth',280,180,.1,.18)}
+
+/* ===== RENDER ===== */
+function currentPath(){
+  if(['flash','learn','summary','words','add'].includes(state.view))return 'vocab';
+  if(['book','book-lesson'].includes(state.view))return 'grammar';
+  return state.path||'home';
+}
+
+function appHeader(){
+  const path=currentPath();
+  let badge='', title='', sub='', showBack=false, backAct='nav', backV='home';
+
+  if(state.view==='home'){
+    badge=''; title='Al-Mufrodat'; sub='Kies je leerpad';
+  }else if(path==='vocab'){
+    badge='<span class="path-badge vocab">Woordenschat</span>';
+    if(state.view==='flash'){
+      showBack=true;
+      const n=state.lesson==='all'?'Alle lessen':'Les '+state.lesson;
+      title=n+' · Kaarten';
+      sub=(state.idx+1)+' / '+(state.pool?state.pool.length:0);
+    }else if(state.view==='learn'){
+      showBack=true;
+      const n=state.lesson==='all'?'Alle lessen':'Les '+state.lesson;
+      title=n+' · Oefenen';
+      sub=Math.min(state.asked+1,state.sessionLen)+' van '+state.sessionLen;
+    }else if(state.view==='summary'){
+      showBack=true; title='Ronde klaar'; sub='Woordenschat';
+    }else if(state.view==='words'){
+      showBack=true; title='Woordenlijst'; sub=ALL.length+' woorden';
+    }else if(state.view==='add'){
+      showBack=true; title='Eigen woord'; sub='Toevoegen';
+    }else{
+      title='Woordenschat'; sub='Kaarten & oefenen';
+    }
+  }else if(path==='grammar'){
+    badge='<span class="path-badge grammar">Grammatica</span>';
+    if(state.view==='book-lesson'&&state.bookLesson){
+      showBack=true; backAct='book-list'; backV='';
+      const meta=LESSON_META[state.bookLesson]||['',''];
+      title='Les '+state.bookLesson+' · '+(meta[0]||'');
+      const tab={uitleg:'Uitleg',voorbeelden:'Voorbeelden',oefenen:'Oefenen'}[state.bookTab]||'';
+      sub=tab;
+    }else{
+      title='Grammatica'; sub='Medina Boek · uitleg & oefenen';
+    }
+  }
+
+  const back=showBack
+    ? (backAct==='book-list'
+        ? `<button class="hdr-back" data-act="book-list" aria-label="Terug">←</button>`
+        : `<button class="hdr-back" data-act="nav" data-v="${backV}" aria-label="Terug">←</button>`)
+    : `<span class="brand" lang="ar">المفردات</span>`;
+
+  const speakBtn=(state.view==='flash'||state.view==='learn')
+    ? `<button class="btn btn-secondary btn-sm" data-act="toggle-auto" style="min-height:34px;padding:0 10px;font-size:12px">${autoSpeak?'🔊':'🔇'}</button>`
+    : '';
+
+  return`<div class="app-header"><div class="app-header-inner">
+    ${back}
+    <div class="ctx">${badge}<div class="title">${esc(title)}</div>${sub?`<div class="sub">${esc(sub)}</div>`:''}</div>
+    <div class="hdr-actions">${speakBtn}</div>
+  </div></div>`;
+}
+
+function tabbar(){
+  // Always visible — fixed bottom (mobile) / under header (desktop)
+  const path=currentPath();
+  const items=[
+    {v:'home',l:'Home',svg:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/>',active:state.view==='home'},
+    {v:'vocab',l:'Woorden',svg:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',active:path==='vocab'&&state.view!=='home'},
+    {v:'book',l:'Grammatica',svg:'<path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>',active:path==='grammar'},
+    {v:'words',l:'Lijst',svg:'<path d="M4 6h16M4 12h16M4 18h10"/>',active:state.view==='words'||state.view==='add'},
+  ];
+  return`<div class="tabbar"><div class="tabbar-inner">${items.map(i=>`
+    <button class="tab ${i.active?'active':''}" data-act="nav" data-v="${i.v}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${i.svg}</svg>
+      ${i.l}
+    </button>`).join('')}</div></div>`;
+}
+
+function nextLesson(){
+  for(const n of lessonNums()){
+    const ws=wordsFor(n);
+    if(mastered(ws)<ws.length)return n;
+  }
+  return 'all';
+}
+
+
+function renderVocabHub(){
+  const total=ALL.length, m=mastered(ALL), pct=total?Math.round(100*m/total):0;
+  const next=nextLesson();
+  const nws=wordsFor(next); const nm=mastered(nws);
+  const meta=next==='all'?['Alle lessen','Herhaal']:LESSON_META[next]||['Les '+next,''];
+  let lessons='';
+  for(const n of lessonNums()){
+    const ws=wordsFor(n); const mm=mastered(ws); const p=ws.length?Math.round(100*mm/ws.length):0;
+    const stt=p>=100?'done':p>0?'busy':'new';
+    const lab=p>=100?'Beheerst':p>0?'Bezig':'Nieuw';
+    const title=(LESSON_META[n]||['',''])[0];
+    lessons+=`<div class="lesson">
+      <div class="status ${stt}">${lab}</div>
+      <h3>Les ${n} · ${esc(title)}</h3>
+      <div class="blurb">${mm} / ${ws.length} woorden</div>
+      <div class="progress"><i style="width:${p}%"></i></div>
+      <div class="row">
+        <button class="btn btn-primary btn-sm" data-act="start-learn" data-l="${n}">${p>=100?'Herhalen':'Oefenen'}</button>
+        <button class="btn btn-secondary btn-sm" data-act="start-flash" data-l="${n}">Kaarten</button>
+      </div>
+    </div>`;
+  }
+  return`
+    <div style="margin-bottom:12px">
+      <div class="path-badge vocab" style="display:inline-flex;margin-bottom:8px">Leerpad · Woordenschat</div>
+      <p style="font-size:13px;color:var(--muted);line-height:1.45">Leer en oefen de woorden per les met kaarten en korte rondes.</p>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:end">
+        <div><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Voortgang woorden</div>
+        <div style="font-size:20px;font-weight:700;margin-top:2px">${m}<span style="color:var(--muted);font-weight:500"> / ${total}</span></div></div>
+        <div style="font-weight:700;color:var(--forest)">${pct}%</div>
+      </div>
+      <div class="progress" style="margin-top:10px"><i style="width:${pct}%"></i></div>
+    </div>
+    <div class="continue">
+      <div class="lbl">${next==='all'?'Herhalen':'Ga verder'}</div>
+      <h2>${next==='all'?'Alle lessen':`Les ${next} · ${esc(meta[0])}`}</h2>
+      <div class="meta">${nm} / ${nws.length} beheerst</div>
+      <div class="row">
+        <button class="btn" data-act="start-learn" data-l="${next}">Oefenen</button>
+        <button class="btn ghost" data-act="start-flash" data-l="${next}">Kaarten</button>
+      </div>
+    </div>
+    <div class="section-h"><h2>Lessen</h2><span>${lessonNums().length}</span></div>
+    ${lessons}
+    <div class="card" style="margin-top:8px">
+      <h3 style="font-size:15px;margin-bottom:4px">Mix alle woorden</h3>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px">${total} woorden door elkaar</p>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary btn-sm" style="flex:1" data-act="start-learn" data-l="all">Mix oefenen</button>
+        <button class="btn btn-secondary btn-sm" style="flex:1" data-act="start-flash" data-l="all">Mix kaarten</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn btn-secondary btn-sm" style="flex:1" data-act="nav" data-v="words">Woordenlijst</button>
+      <button class="btn btn-secondary btn-sm" style="flex:1" data-act="nav" data-v="add">+ Eigen woord</button>
+    </div>`;
+}
+
+function renderHome(){
+  if(!onboarded){
+    return`<div class="welcome">
+      <div class="header">
+        <div class="logo ar" lang="ar">المفردات</div>
+        <h1>Al-Mufrodat</h1>
+        <p>Medina I · woordenschat én grammatica (aparte paden)</p>
+      </div>
+      <div class="steps">
+        <div class="step" data-act="start-onboard" data-mode="flash" style="cursor:pointer">
+          <div class="n">1</div>
+          <div><b>Woordenschat</b><span>Kaarten + oefenen per les</span></div>
+        </div>
+        <div class="step" data-act="start-onboard" data-mode="book" style="cursor:pointer">
+          <div class="n">2</div>
+          <div><b>Grammatica</b><span>Uitleg, voorbeelden, oefeningen</span></div>
+        </div>
+        <div class="step" data-act="start-onboard" data-mode="learn" style="cursor:pointer">
+          <div class="n">3</div>
+          <div><b>Herhaal in rondes</b><span>10 vragen, met voortgang</span></div>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-block" data-act="start-onboard" data-mode="flash">Begin met les 1</button>
+      <button class="btn btn-ghost btn-block" style="margin-top:8px" data-act="start-onboard" data-mode="learn">Direct oefenen</button>
+    </div>`;
+  }
+  const total=ALL.length, m=mastered(ALL), pct=total?Math.round(100*m/total):0;
+  const next=nextLesson();
+  const nws=wordsFor(next); const nm=mastered(nws);
+  const meta=next==='all'?['Alle lessen','Herhaal']:LESSON_META[next]||['Les '+next,''];
+  const st=streak.last===today()||streak.last===new Date(Date.now()-864e5).toISOString().slice(0,10)?streak.count:0;
+  const gCount=Object.keys(GRAMMAR).length;
+  return`
+    <div class="header" style="padding-bottom:8px">
+      <div class="logo ar" lang="ar">المفردات</div>
+      <h1>Al-Mufrodat</h1>
+      <p>Medina I · twee aparte leerpaden</p>
+      <div class="stats">
+        <span class="chip">${m}/${total} woorden</span>
+        <span class="chip">🔥 ${st}</span>
+      </div>
+    </div>
+
+    <div class="path-cards">
+      <button class="path-card vocab" data-act="nav" data-v="vocab">
+        <div class="pc-icon">📚</div>
+        <h3>Woordenschat</h3>
+        <p>Kaarten, oefenen en herhalen van woorden per les.</p>
+        <div class="pc-meta">${m}/${total} beheerst · ${pct}%</div>
+      </button>
+      <button class="path-card grammar" data-act="nav" data-v="book">
+        <div class="pc-icon">📖</div>
+        <h3>Grammatica</h3>
+        <p>Uitleg, voorbeelden en oefeningen uit het Medina-boek.</p>
+        <div class="pc-meta">${gCount} lessen · regels & zinnen</div>
+      </button>
+    </div>
+
+    <div class="continue">
+      <div class="lbl">Snel verder · woordenschat</div>
+      <h2>${next==='all'?'Alle lessen':`Les ${next} · ${esc(meta[0])}`}</h2>
+      <div class="meta">${nm} / ${nws.length} woorden beheerst</div>
+      <div class="row">
+        <button class="btn" data-act="start-learn" data-l="${next}">Oefenen</button>
+        <button class="btn ghost" data-act="start-flash" data-l="${next}">Kaarten</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <h3 style="font-size:15px;margin-bottom:4px">Snel naar grammatica</h3>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Lees de regels en maak de oefeningen per les.</p>
+      <button class="btn btn-secondary btn-block" data-act="nav" data-v="book">Open grammatica-pad</button>
+    </div>`;
+}
+
+function renderFlash(){
+  const pool=state.pool; if(!pool.length)return`<div class="empty">Geen woorden.</div>`;
+  const w=pool[state.idx]; const f=state.flipped;
+  return`
+    <div class="card flash-card" data-act="flip">
+      <div class="tag">Les ${w.lesson}</div>
+      <button class="icon-btn speak" data-act="speak" data-id="${w.id}" aria-label="Beluister">🔊</button>
+      ${!f?`
+        <div style="font-size:52px;line-height:1;margin-bottom:10px">${emojiFor(w)}</div>
+        <div class="big-ar" lang="ar">${w.ar}</div>
+        <div class="translit">${esc(w.translit)}</div>
+        <div class="hint">Tik voor de betekenis</div>
+      `:`
+        <div style="font-size:52px;line-height:1;margin-bottom:10px">${emojiFor(w)}</div>
+        <div class="nl">${esc(w.nl)}</div>
+        <div class="translit">${esc(w.translit)}</div>
+        <div style="font-size:14px;color:var(--muted);font-style:italic;margin-top:4px">${esc(w.en)}</div>
+        <div class="big-ar" style="font-size:36px;margin-top:16px;color:var(--forest)" lang="ar">${w.ar}</div>
+      `}
+    </div>
+    <div class="flash-controls">
+      <button class="icon-btn" data-act="flash-prev" ${state.idx===0?'disabled':''}>←</button>
+      <button class="btn btn-secondary" data-act="flip">${f?'Verberg':'Toon betekenis'}</button>
+      <button class="icon-btn" data-act="flash-next" ${state.idx>=pool.length-1?'disabled':''}>→</button>
+    </div>
+    ${state.idx>=pool.length-1?`
+      <div class="card" style="margin-top:18px;text-align:center">
+        <b>Einde van de kaarten</b>
+        <p style="font-size:13px;color:var(--muted);margin:6px 0 12px">Oefen ze nu in een korte ronde.</p>
+        <button class="btn btn-primary btn-block" data-act="start-learn" data-l="${state.lesson}">Nu oefenen</button>
+      </div>`:''}`;
+}
+
+function startLearn(sel){
+  unlockAudio();
+  state.path='vocab';
+  state.lesson=sel==='all'?'all':parseInt(sel);
+  const all=wordsFor(state.lesson);
+  const fresh=all.filter(w=>getP(w.id).box<MASTERY);
+  state.review=fresh.length===0;
+  const src=state.review?all:fresh;
+  state.queue=shuffle(src).slice(0,Math.min(SESSION,src.length));
+  state.sessionLen=state.queue.length;
+  state.asked=0;state.correct=0;state.answered=false;
+  state.view='learn';
+  if(!state.queue.length){state.view='summary';render();return}
+  nextQ();
+  if(autoSpeak&&state.current)speakWord(state.current);
+}
+
+function nextQ(){
+  if(state.asked>=state.sessionLen||!state.queue.length){
+    const t=today();
+    if(streak.last!==t){
+      const y=new Date(Date.now()-864e5).toISOString().slice(0,10);
+      streak.count=streak.last===y?streak.count+1:1;
+      streak.last=t;saveS();
+    }
+    state.view='summary';render();return;
+  }
+  const w=state.queue[0];
+  const box=getP(w.id).box;
+  // Mix directions every session: NL→AR and AR→NL (MC + typed)
+  // box 0: mostly MC, box 1+: more typed
+  const dirs=['nl2ar','ar2nl'];
+  const dir=dirs[Math.floor(Math.random()*dirs.length)];
+  let type, options=null;
+  if(box===0 || Math.random()<0.55){
+    type = dir==='nl2ar' ? 'mc-nl2ar' : 'mc-ar2nl';
+    const pool=wordsFor(state.lesson);
+    const src=pool.length>=4?pool:ALL;
+    const dist=shuffle(src.filter(x=>x.id!==w.id)).slice(0,3);
+    options=shuffle([w,...dist]);
+  }else{
+    type = dir==='nl2ar' ? 'typed-nl2ar' : 'typed-ar2nl';
+  }
+  state.current=w;
+  state.q={type,options,dir};
+  state.answered=false;
+  render();
+}
+
+function renderLearn(){
+  const w=state.current,q=state.q;if(!w||!q)return`<div class="empty">Laden…</div>`;
+  const box=getP(w.id).box;
+  let body='';
+  if(q.type==='mc-nl2ar'){
+    body=`<div class="qlabel">Nederlands → Arabisch · Kies het juiste woord</div>
+      <div style="font-size:48px;line-height:1;margin:8px 0">${emojiFor(w)}</div>
+      <div class="qmain">${esc(w.nl)}</div>
+      <div style="font-size:13px;color:var(--muted);font-style:italic">${esc(w.en)}</div>
+      <div class="options">${q.options.map(o=>`<button class="opt" data-act="answer" data-id="${o.id}" data-ok="${o.id===w.id}">${o.ar}</button>`).join('')}</div>`;
+  }else if(q.type==='mc-ar2nl'){
+    body=`<div class="qlabel">Arabisch → Nederlands · Wat betekent dit?</div>
+      <div style="font-size:48px;line-height:1;margin:8px 0">${emojiFor(w)}</div>
+      <div class="qar" lang="ar">${w.ar}</div>
+      <div class="translit" style="color:var(--muted);font-size:13px">${esc(w.translit)}</div>
+      <div class="options">${q.options.map(o=>`<button class="opt" data-act="answer" data-id="${o.id}" data-ok="${o.id===w.id}" style="font-family:var(--font);font-size:16px;direction:ltr">${esc(o.nl)}</button>`).join('')}</div>`;
+  }else if(q.type==='typed-nl2ar'){
+    body=`<div class="qlabel">Nederlands → Arabisch · Typ het Arabische woord</div>
+      <div style="font-size:48px;line-height:1;margin:8px 0">${emojiFor(w)}</div>
+      <div class="qmain">${esc(w.nl)}</div>
+      <div style="font-size:13px;color:var(--muted);font-style:italic">${esc(w.en)} · tip: ${esc(w.translit)}</div>
+      <div class="type-row"><input id="type-in" class="ar-in" lang="ar" dir="rtl" autocomplete="off" placeholder="اكتب هنا…"><button class="btn btn-primary" data-act="submit-typed">Check</button></div>`;
+  }else{
+    // typed-ar2nl
+    body=`<div class="qlabel">Arabisch → Nederlands · Typ de betekenis</div>
+      <div style="font-size:48px;line-height:1;margin:8px 0">${emojiFor(w)}</div>
+      <div class="qar" lang="ar">${w.ar}</div>
+      <div class="translit" style="color:var(--muted);font-size:13px">${esc(w.translit)}</div>
+      <div class="type-row"><input id="type-in" autocomplete="off" placeholder="Typ Nederlands…"><button class="btn btn-primary" data-act="submit-typed">Check</button></div>`;
+  }
+  return`
+    <div style="text-align:center;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px">
+      <span class="path-badge vocab" style="display:inline-flex;margin-bottom:6px">Woordenschat</span><br>
+      ${state.review?'Herhalen · ':''}${state.lesson==='all'?'Alle lessen':'Les '+state.lesson}
+    </div>
+    <div style="text-align:center;font-size:14px;font-weight:600;margin-bottom:8px">${Math.min(state.asked+1,state.sessionLen)} van ${state.sessionLen}</div>
+    <div class="progress" style="margin-bottom:14px"><i style="width:${state.sessionLen?Math.round(100*state.asked/state.sessionLen):0}%"></i></div>
+    <div class="card qcard">
+      <button class="icon-btn" style="position:absolute;top:10px;right:10px" data-act="speak" data-id="${w.id}">🔊</button>
+      ${body}
+      <button class="dont-know" data-act="dont-know">Ik weet het niet</button>
+      <div class="dots">${[0,1].map(i=>`<span class="dot ${i<box?'on':''}"></span>`).join('')}</div>
+    </div>
+    <div class="feedback" id="fb">
+      <div class="feedback-inner">
+        <div class="txt" id="fb-txt"></div>
+        <button class="btn btn-primary btn-sm" data-act="continue-learn" id="fb-btn">Volgende</button>
+      </div>
+    </div>`;
+}
+
+function showFb(ok,text){
+  const bar=document.getElementById('fb');const txt=document.getElementById('fb-txt');const btn=document.getElementById('fb-btn');
+  if(!bar)return;
+  txt.textContent=text;
+  bar.className='feedback show '+(ok?'ok':'no');
+  if(ok){btn.style.display='none';setTimeout(()=>continueLearn(),750)}
+  else{btn.style.display='inline-flex'}
+}
+
+function handleAnswer(ok){
+  if(state.answered)return;state.answered=true;
+  const w=state.current;const p=getP(w.id);p.seen++;
+  document.querySelectorAll('.opt').forEach(b=>{
+    if(b.dataset.id===w.id)b.classList.add('correct');
+    b.disabled=true;
+  });
+  if(ok){p.box=Math.min(MASTERY,p.box+1);p.correct++;state.correct++;playOk()}
+  else{p.box=Math.max(0,p.box-1);playNo()}
+  saveP();
+  const msg = ok
+    ? (p.box>=MASTERY?'Goed — woord beheerst!':'Goed zo!')
+    : `Juist: ${w.ar} · ${w.nl}`;
+  showFb(ok,msg);
+}
+
+function handleTyped(){
+  if(state.answered)return;
+  const input=document.getElementById('type-in');if(!input)return;
+  state.answered=true;input.disabled=true;
+  const w=state.current;
+  const qtype=(state.q&&state.q.type)||'';
+  const ok = qtype==='typed-nl2ar'
+    ? matchAns(input.value,w.ar,w.translit)
+    : matchAns(input.value,w.nl,w.en);
+  const p=getP(w.id);p.seen++;
+  if(ok){p.box=Math.min(MASTERY,p.box+1);p.correct++;state.correct++;playOk()}
+  else{p.box=Math.max(0,p.box-1);playNo()}
+  saveP();
+  showFb(ok,ok?(p.box>=MASTERY?'Goed — woord beheerst!':'Goed zo!'):`Juist: ${w.ar} · ${w.nl}`);
+}
+
+function handleDontKnow(){
+  if(state.answered)return;state.answered=true;
+  const w=state.current;const p=getP(w.id);p.seen++;p.box=Math.max(0,p.box-1);saveP();
+  document.querySelectorAll('.opt').forEach(b=>{if(b.dataset.id===w.id)b.classList.add('correct');b.disabled=true});
+  const input=document.getElementById('type-in');if(input)input.disabled=true;
+  playNo();
+  showFb(false,`Juist: ${w.ar} · ${w.nl}`);
+}
+
+function continueLearn(){
+  const bar=document.getElementById('fb');if(bar)bar.classList.remove('show');
+  state.queue.shift();state.asked++;
+  nextQ();
+  if(autoSpeak&&state.current&&state.view==='learn')speakWord(state.current);
+}
+
+function renderSummary(){
+  const acc=state.sessionLen?Math.round(100*state.correct/state.sessionLen):0;
+  return`
+    <div class="card summary">
+      <div style="font-size:40px">✓</div>
+      <h2>Ronde klaar</h2>
+      <p>${state.correct} van ${state.sessionLen} goed${state.review?' · herhaling':''}</p>
+      <div class="badge">${acc}% nauwkeurig</div>
+      <button class="btn btn-primary btn-block" data-act="start-learn" data-l="${state.lesson}">Nog een ronde</button>
+      <button class="btn btn-ghost btn-block" style="margin-top:8px" data-act="nav" data-v="home">Terug naar overzicht</button>
+    </div>`;
+}
+
+function renderWords(){
+  const q=(state.searchQ||'').trim().toLowerCase();
+  let html=`<div class="path-badge vocab" style="display:inline-flex;margin-bottom:8px">Woordenschat</div>
+    <h2 style="font-size:22px;font-weight:700">Woordenlijst</h2>
+    <p style="font-size:13px;color:var(--muted);margin-top:4px">${ALL.length} woorden · tik 🔊 voor uitspraak</p>
+    <input class="search" id="wl-q" placeholder="Zoek Nederlands, Arabisch…" value="${esc(state.searchQ||'')}">`;
+  for(const n of lessonNums()){
+    const ws=wordsFor(n).filter(w=>{
+      if(!q)return true;
+      return `${w.nl} ${w.en} ${w.translit} ${w.ar}`.toLowerCase().includes(q);
+    });
+    if(!ws.length)continue;
+    html+=`<div class="wl-group"><div class="wl-h">Les ${n} · ${esc((LESSON_META[n]||[''])[0])}</div>`;
+    for(const w of ws){
+      html+=`<div class="wl-row">
+        <button class="icon-btn" style="width:36px;height:36px;font-size:14px" data-act="speak" data-id="${w.id}">🔊</button>
+        <span style="font-size:22px;width:32px;text-align:center">${emojiFor(w)}</span>
+        <div class="nl">${esc(w.nl)}<div style="font-size:11px;color:var(--muted);font-weight:500">${esc(w.translit)}</div></div>
+        <div class="ar" lang="ar">${w.ar}</div>
+      </div>`;
+    }
+    html+=`</div>`;
+  }
+  if(q && !html.includes('wl-group')){
+    html+=`<div class="empty" style="margin-top:24px">Geen woorden gevonden voor «${esc(state.searchQ)}».</div>`;
+  }
+  return html;
+}
+
+function renderAdd(){
+  let list=customWords.map(w=>`
+    <div class="wl-row">
+      <div class="nl"><span class="ar" style="font-size:20px">${w.ar}</span><div style="font-size:12px;color:var(--muted)">${esc(w.nl)} · les ${w.lesson}</div></div>
+      <button style="color:var(--clay);font-size:12px;font-weight:600" data-act="del-custom" data-id="${w.id}">verwijder</button>
+    </div>`).join('')||`<div class="empty">Nog geen eigen woorden.</div>`;
+  const opts=lessonNums().map(n=>`<option value="${n}">Les ${n}</option>`).join('');
+  return`
+    <div class="path-badge vocab" style="display:inline-flex;margin-bottom:8px">Woordenschat</div>
+    <h2 style="font-size:22px;font-weight:700">Eigen woord</h2>
+    <p style="font-size:13px;color:var(--muted);margin:4px 0 12px">Mis je iets? Voeg het toe aan een les.</p>
+    <div class="card form">
+      <label>Arabisch</label><input class="ar-in" id="f-ar" placeholder="كِتَاب">
+      <label>Transcriptie</label><input id="f-tr" placeholder="kitaab">
+      <label>Nederlands</label><input id="f-nl" placeholder="boek">
+      <label>Engels</label><input id="f-en" placeholder="book">
+      <label>Les</label><select id="f-ls">${opts}</select>
+      <button class="btn btn-primary btn-block" style="margin-top:16px" data-act="add-word">Toevoegen</button>
+    </div>
+    <h3 style="margin:22px 0 8px;font-size:15px">Jouw woorden</h3>
+    <div class="card">${list}</div>`;
+}
+
+function renderBook(){
+  let items='';
+  for(const n of lessonNums()){
+    const g=GRAMMAR[n];
+    const title=(LESSON_META[n]||['',''])[0];
+    const sub=g?(g.summary||g.title):(LESSON_META[n]||['',''])[1];
+    const nEx=g&&g.exercises?g.exercises.length:0;
+    items+=`<div class="book-lesson" data-act="open-book" data-l="${n}">
+      <h3>Les ${n} · ${esc(title)}</h3>
+      <p>${esc(sub||'Grammatica-uitleg')}</p>
+      ${nEx?`<p style="font-size:11px;color:var(--forest);font-weight:700;margin-top:4px">${nEx} grammatica-vragen</p>`:''}
+    </div>`;
+  }
+  return`
+    <div class="path-badge grammar" style="display:inline-flex;margin-bottom:8px">Leerpad · Grammatica</div>
+    <h2 style="font-size:20px;font-weight:700;margin-bottom:4px">Medina Boek</h2>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.45">
+      Uitleg en oefeningen over de regels — apart van woordenschat.
+    </p>
+    ${items}`;
+}
+
+function renderBookLesson(){
+  const n=state.bookLesson;
+  const g=GRAMMAR[n];
+  const title=(LESSON_META[n]||['Les '+n,''])[0];
+  if(!g)return`<div class="empty">Geen uitleg voor deze les.</div>`;
+  const tab=state.bookTab||'uitleg';
+  const points=(g.points||[]).map(p=>`<li>${esc(p)}</li>`).join('');
+  const examples=g.examples||[];
+  const exercises=g.exercises||[];
+  const ex=(examples).map(e=>`
+    <div class="ex">
+      <div>
+        <div class="ar" lang="ar">${e.ar}</div>
+        <div class="nl">${esc(e.nl)}</div>
+      </div>
+      <button class="icon-btn" style="width:36px;height:36px;flex-shrink:0" data-act="speak-text" data-text="${esc(e.ar)}">🔊</button>
+    </div>`).join('');
+
+  const exCards=exercises.map((ex,i)=>{
+    const opts=ex.options.map((o,j)=>
+      `<button class="opt" data-act="gram-answer" data-qi="${i}" data-oi="${j}" data-ok="${j===ex.answer}" style="font-size:16px;direction:rtl;font-family:var(--ar)">${esc(o)}</button>`
+    ).join('');
+    const pic = ex.type==='pic' && ex.emoji ? picHtml(ex.emoji) : '';
+    return`<div class="card" style="margin-bottom:12px" id="gq-${i}">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px">${ex.type==='pic'?'Plaatje':'Vraag '+(i+1)}</div>
+      ${pic}
+      <div class="ar" style="font-size:18px;font-weight:700;text-align:center;margin-bottom:10px;line-height:1.5" lang="ar">${esc(ex.q)}</div>
+      <div class="options" style="grid-template-columns:1fr">${opts}</div>
+      <div class="gram-fb" style="display:none;margin-top:10px;font-size:13px;font-weight:600"></div>
+    </div>`;
+  }).join('');
+
+  return`
+  <div class="path-badge grammar" style="display:inline-flex;margin-bottom:8px">Grammatica</div>
+  <h2 style="font-size:20px;font-weight:700;margin-bottom:4px">Les ${n} · ${esc(title)}</h2>
+  <p style="color:var(--forest);font-weight:600;font-size:14px;margin-bottom:6px">${esc(g.title||'')}</p>
+  <p style="font-size:13px;color:var(--muted);margin-bottom:4px;line-height:1.45">${esc(g.summary||'')}</p>
+
+  <div class="lesson-tabs" role="tablist">
+    <button class="lesson-tab ${tab==='uitleg'?'active':''}" data-act="book-tab" data-tab="uitleg" role="tab">
+      Uitleg
+      <span class="tab-count">${(g.points||[]).length} punten</span>
+    </button>
+    <button class="lesson-tab ${tab==='voorbeelden'?'active':''}" data-act="book-tab" data-tab="voorbeelden" role="tab">
+      Voorbeelden
+      <span class="tab-count">${examples.length}</span>
+    </button>
+    <button class="lesson-tab ${tab==='oefenen'?'active':''}" data-act="book-tab" data-tab="oefenen" role="tab">
+      Oefenen
+      <span class="tab-count">${exercises.length} vragen</span>
+    </button>
+  </div>
+
+  <div class="lesson-pane ${tab==='uitleg'?'active':''}" data-pane="uitleg">
+    <div class="grammar-block">
+      <h3>Uitleg stap voor stap</h3>
+      <ul>${points}</ul>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+      <button class="btn btn-primary" data-act="book-tab" data-tab="voorbeelden" style="flex:1;min-width:140px">Naar voorbeelden →</button>
+    </div>
+  </div>
+
+  <div class="lesson-pane ${tab==='voorbeelden'?'active':''}" data-pane="voorbeelden">
+    <div class="grammar-block">
+      <h3 style="margin-bottom:8px">Voorbeelden (tik 🔊 om te beluisteren)</h3>
+      ${ex||'<p style="color:var(--muted);font-size:14px">Geen voorbeelden.</p>'}
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost" data-act="book-tab" data-tab="uitleg" style="flex:1;min-width:120px">← Uitleg</button>
+      <button class="btn btn-primary" data-act="book-tab" data-tab="oefenen" style="flex:1;min-width:120px">Naar oefenen →</button>
+    </div>
+  </div>
+
+  <div class="lesson-pane ${tab==='oefenen'?'active':''}" data-pane="oefenen">
+    <div class="card" style="background:var(--forest);color:var(--paper);margin-bottom:12px;padding:14px 16px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.8">Oefenen</div>
+      <div style="font-size:16px;font-weight:700;margin-top:2px">${exercises.length} vragen over deze les</div>
+      <div style="font-size:13px;opacity:.85;margin-top:4px">Plaatjes en grammatica — zoals in het Madina-boek.</div>
+    </div>
+    ${exCards||'<p style="color:var(--muted)">Nog geen oefeningen.</p>'}
+    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost" data-act="book-tab" data-tab="voorbeelden" style="flex:1;min-width:120px">← Voorbeelden</button>
+      <button class="btn btn-ghost" data-act="book-list" style="flex:1;min-width:120px">Alle lessen</button>
+    </div>
+  </div>`;
+}
+
+
+function render(){
+  const app=document.getElementById('app');
+  document.body.classList.remove('hide-tab');
+  let html='';
+  if(state.view==='home')html=renderHome();
+  else if(state.view==='flash')html=renderFlash();
+  else if(state.view==='learn')html=renderLearn();
+  else if(state.view==='summary')html=renderSummary();
+  else if(state.view==='words')html=renderWords();
+  else if(state.view==='add')html=renderAdd();
+  else if(state.view==='book')html=renderBook();
+  else if(state.view==='book-lesson')html=renderBookLesson();
+  else if(state.view==='vocab')html=renderVocabHub();
+  app.innerHTML=appHeader()+html+tabbar();
+  // Remove leftover focus/caret from previous view
+  try{if(document.activeElement&&document.activeElement.blur)document.activeElement.blur()}catch(e){}
+  if(state.view==='learn'){
+    const input=document.getElementById('type-in');
+    if(input && !state.answered){
+      // only focus when user should type — prevents caret flash on MC questions
+      setTimeout(()=>{try{input.focus()}catch(e){}},30);
+      input.addEventListener('keydown',e=>{if(e.key==='Enter')handleTyped()});
+    }
+  }
+  if(state.view==='words'){
+    const s=document.getElementById('wl-q');
+    if(s){
+      s.addEventListener('input',()=>{
+        state.searchQ=s.value;
+        clearTimeout(window._wlT);
+        window._wlT=setTimeout(()=>{
+          const keep=document.getElementById('wl-q');
+          const pos=keep?keep.selectionStart:null;
+          render();
+          const s2=document.getElementById('wl-q');
+          if(s2){
+            s2.focus();
+            if(pos!=null){try{s2.setSelectionRange(pos,pos)}catch(e){}}
+          }
+        },180);
+      });
+    }
+  }
+}
+
+document.addEventListener('click',e=>{
+  unlockAudio();
+  const btn=e.target.closest('[data-act]');
+  if(!btn)return;
+  const act=btn.dataset.act;
+  if(act==='nav'){
+    const v=btn.dataset.v;
+    if(v==='vocab'){state.path='vocab';state.view='vocab';state.bookLesson=null}
+    else if(v==='book'){state.path='grammar';state.view='book';state.bookLesson=null;state.bookTab='uitleg'}
+    else if(v==='home'){state.path='home';state.view='home';state.bookLesson=null}
+    else{state.view=v;if(v==='words'||v==='add')state.path='vocab'}
+    render();window.scrollTo(0,0);
+  }
+  else if(act==='start-onboard'){
+    onboarded=true;saveO();
+    const mode=btn.dataset.mode;
+    if(mode==='flash'){state.path='vocab';state.lesson=1;state.pool=shuffle(wordsFor(1));state.idx=0;state.flipped=false;state.view='flash';if(autoSpeak&&state.pool[0])speakWord(state.pool[0])}
+    else if(mode==='book'){state.path='grammar';state.view='book'}
+    else startLearn(1);
+    render();
+  }
+  else if(act==='start-flash'){
+    const l=btn.dataset.l==='all'?'all':parseInt(btn.dataset.l);
+    state.path='vocab';state.lesson=l;state.pool=shuffle(wordsFor(l));state.idx=0;state.flipped=false;state.view='flash';render();
+    if(autoSpeak&&state.pool[0])speakWord(state.pool[0]);
+  }
+  else if(act==='start-learn'){startLearn(btn.dataset.l)}
+  else if(act==='flip'){state.flipped=!state.flipped;render()}
+  else if(act==='flash-prev'){
+    state.idx=Math.max(0,state.idx-1);state.flipped=false;render();
+    if(autoSpeak&&state.pool[state.idx])speakWord(state.pool[state.idx]);
+  }
+  else if(act==='flash-next'){
+    state.idx=Math.min(state.pool.length-1,state.idx+1);state.flipped=false;render();
+    if(autoSpeak&&state.pool[state.idx])speakWord(state.pool[state.idx]);
+  }
+  else if(act==='speak'){
+    e.stopPropagation();e.preventDefault();
+    unlockAudio();
+    const w=ALL.find(x=>x.id===btn.dataset.id);if(w)speakWord(w);
+  }
+  else if(act==='speak-text'){e.stopPropagation();const t=btn.getAttribute('data-text')||btn.dataset.text||'';speakWord({ar:t})}
+  else if(act==='toggle-auto'){autoSpeak=!autoSpeak;saveA();render()}
+  else if(act==='answer'){
+    if(state.answered)return;
+    const ok=btn.dataset.ok==='true';
+    if(!ok)btn.classList.add('wrong');
+    document.querySelectorAll('.opt').forEach(b=>{if(b.dataset.ok==='true')b.classList.add('correct');b.disabled=true});
+    handleAnswer(ok);
+  }
+  else if(act==='submit-typed'){handleTyped()}
+  else if(act==='dont-know'){handleDontKnow()}
+  else if(act==='continue-learn'){continueLearn()}
+  else if(act==='book-list'){
+    state.path='grammar';state.view='book';state.bookLesson=null;state.bookTab='uitleg';render();window.scrollTo(0,0);
+  }
+  else if(act==='open-book'){
+    state.path='grammar';state.bookLesson=parseInt(btn.dataset.l,10);state.bookTab='uitleg';state.view='book-lesson';render();window.scrollTo(0,0);
+  }
+  else if(act==='book-tab'){
+    const tab=btn.getAttribute('data-tab')||btn.dataset.tab||'uitleg';
+    state.bookTab=tab;
+    state.view='book-lesson';
+    render();
+    window.scrollTo(0,0);
+  }
+  else if(act==='gram-answer'){
+    const qi=+btn.dataset.qi, oi=+btn.dataset.oi, ok=btn.dataset.ok==='true';
+    const g=GRAMMAR[state.bookLesson]; if(!g||!g.exercises||!g.exercises[qi])return;
+    const card=document.getElementById('gq-'+qi); if(!card)return;
+    card.querySelectorAll('.opt').forEach(b=>{
+      b.disabled=true;
+      if(b.dataset.ok==='true')b.classList.add('correct');
+      if(b===btn&&!ok)b.classList.add('wrong');
+    });
+    const fb=card.querySelector('.gram-fb');
+    if(fb){fb.style.display='block';fb.style.color=ok?'var(--ok)':'var(--clay)';
+      fb.textContent=(ok?'✓ Goed! ':'✗ ')+g.exercises[qi].explain}
+    if(ok)playOk(); else playNo();
+  }
+  else if(act==='add-word'){
+    const ar=document.getElementById('f-ar').value.trim();
+    const nl=document.getElementById('f-nl').value.trim();
+    const tr=document.getElementById('f-tr').value.trim();
+    const en=document.getElementById('f-en').value.trim();
+    const lesson=parseInt(document.getElementById('f-ls').value);
+    if(!ar||!nl){toast('Vul Arabisch en Nederlands in.');return}
+    customWords.push({id:'c-'+Date.now(),ar,nl,en:en||nl,translit:tr,lesson,custom:true});
+    ALL=BASE_WORDS.concat(customWords);saveC();toast('Woord toegevoegd!');render();
+  }
+  else if(act==='del-custom'){
+    customWords=customWords.filter(w=>w.id!==btn.dataset.id);
+    delete progress[btn.dataset.id];
+    ALL=BASE_WORDS.concat(customWords);saveC();saveP();render();
+  }
+});
+
+document.addEventListener('keydown',e=>{
+  if(e.target.matches('input,textarea,select'))return;
+  if(state.view==='flash'){
+    if(e.key===' '||e.key==='Enter'){e.preventDefault();state.flipped=!state.flipped;render()}
+    if(e.key==='ArrowRight'){state.idx=Math.min(state.pool.length-1,state.idx+1);state.flipped=false;render()}
+    if(e.key==='ArrowLeft'){state.idx=Math.max(0,state.idx-1);state.flipped=false;render()}
+  }
+  if(e.key==='Enter'){
+    const bar=document.getElementById('fb');
+    if(bar&&bar.classList.contains('show'))continueLearn();
+  }
+});
+
+load();primeVoices();render();
+</script>
+</body>
+</html>
