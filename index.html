@@ -1908,12 +1908,13 @@ function textHeardEnd(said, expected, word){
 function audioHeardEnd(f, gold, expectedCls){
   if(!f) return {cls:'', conf:0, src:''};
   const nas=+f.nas||0;
-  const fam=endingFamily(expectedCls||'');
-  const gN=gold?gold.n:50;
-  const nasRel=nas/(gN+1);
-  if(nas>=14 || nasRel>=0.12){
-    return {cls:'un', conf:(nas>=28||nasRel>=0.22)?0.8:0.66, src:'mic'};
-  }
+  const ratio=+(f.ratio)||0;
+  const f1a=+f.f1a||0;
+  // Coda /n/ vs klinker van DEZELFDE opname — niet vs Google-TTS.
+  // TTS un: nas~135 ratio~10. Mens un: lagere nas, ratio blijft hoog als de n er is.
+  if(nas>=8 && ratio>=2.2) return {cls:'un', conf:(nas>=16 && ratio>=3)?0.86:0.72, src:'mic'};
+  if(nas>=22 && ratio>=1.2) return {cls:'un', conf:0.74, src:'mic'};
+  if(nas<4.5 && f1a>=0.08) return {cls:'a', conf:f1a>=0.12?0.7:0.56, src:'mic'};
   return {cls:'', conf:0.2, src:'mic'};
 }
 function heardEnding(said, expected, f, gold, word){
@@ -1921,8 +1922,9 @@ function heardEnding(said, expected, f, gold, word){
   const a=audioHeardEnd(f, gold, endingClass(expected));
   const tan=c=>c==='un'||c==='in'||c==='an';
   if(tan(t.cls) && t.conf>=0.7) return t;
-  if(tan(a.cls) && a.conf>=0.66) return a;
-  if(t.conf>=0.75 && t.cls && t.cls!=='a') return t;
+  if(tan(a.cls) && a.conf>=0.7) return a;
+  if(t.cls && a.cls && t.cls===a.cls && t.conf>=0.5) return {cls:t.cls, conf:Math.min(1,(t.conf+a.conf)/1.4), src:'both'};
+  if(tan(a.cls) && a.conf>=0.62) return a;
   return {cls:'', conf:Math.max(t.conf||0, a.conf||0), src:''};
 }
 function endAgree(heard, expected){
@@ -2157,9 +2159,16 @@ function featVec(x0, sr0){
   let t2=t;
   while(t2>0 && envt[t2]>=0.08*emx) t2--;
   const tail=(t-t2)*(hop/sr);
-  const lastN=Math.min(y.length, Math.floor(sr*0.18));
-  const w=y.subarray(y.length-lastN);
-  const nas=bandE(w,sr,220,400)/(bandE(w,sr,500,1400)+1e-12);
+  const lastN=Math.min(y.length, Math.floor(sr*0.12));
+  const coda=y.subarray(y.length-lastN);
+  const nNuc=Math.min(y.length-lastN, Math.floor(sr*0.08));
+  const nuc=nNuc>24?y.subarray(y.length-lastN-nNuc, y.length-lastN):coda;
+  const nas=bandE(coda,sr,220,400)/(bandE(coda,sr,500,1400)+1e-12);
+  const nasN=bandE(nuc,sr,220,400)/(bandE(nuc,sr,500,1400)+1e-12);
+  const ratio=nas/(nasN+1e-6);
+  const totC=bandE(coda,sr,80,4000)+1e-12;
+  const f1a=bandE(coda,sr,600,950)/totC;
+  const w=coda;
   const bands=[[80,150],[150,250],[250,350],[350,500],[500,700],[700,1000],[1000,1400],[1400,1800],[1800,2400],[2400,3200]];
   const es=bands.map(b=>bandE(w,sr,b[0],b[1]));
   const tot=es.reduce((p,q)=>p+q,0)+1e-12;
@@ -2169,12 +2178,12 @@ function featVec(x0, sr0){
   const f2a=(es[6]+es[7])/tot;
   const f2i=(es[8]+es[9])/tot;
   const f1=(es[2]+es[3]+es[4])/tot;
-  return {dur, tail, nas, cen, f2u, f2a, f2i, f1, cnas:nas, ccen:cen};
+  return {dur, tail, nas, nasN, ratio, f1a, cen, f2u, f2a, f2i, f1, cnas:nas, ccen:cen};
 }
 function endingScoreFromRoll(expected, said, wordId, snap0){
   const cls=endingClass(expected);
   const fam=endingFamily(cls);
-  if(!fam) return {ok:true, score:1, cls:'', heard:'', hint:'', skipped:true, conf:1, src:'', agree:'yes'};
+  if(!fam) return {ok:true, score:1, cls:'', heard:'', hint:'', skipped:true, conf:1, src:'', agree:'yes', why:'none'};
   const word=(wordId && typeof ALL!=='undefined' && ALL)?ALL.find(x=>x.id===wordId):null;
   const gold=goldOf(wordId);
   const snap=snap0||rollSamples(wordId?2.3:1.05);
@@ -2182,49 +2191,49 @@ function endingScoreFromRoll(expected, said, wordId, snap0){
   const h=heardEnding(said, expected, f, gold, word||{ar:expected, translit:romanizeAr(expected)});
   const agree=endAgree(h.cls, cls);
   let ok=true, why='';
-  if(agree==='yes'){ ok=true; why=h.src||'match'; }
-  else if(agree==='no' && h.conf>=0.8 && h.cls!=='a'){ ok=false; why=h.cls||'mismatch'; }
-  else { ok=true; why=h.cls?'maybe':'no-end'; }
+  if(agree==='yes' && h.conf>=0.6){ ok=true; why=h.src||'match'; }
+  else if(agree==='no' && h.conf>=0.8){ ok=false; why=h.cls||'mismatch'; }
+  else { ok=true; why='onzeker'; }
 
   let hint='';
   if(!ok){
-    if(h.cls==='a') hint='Gehoord **'+endLabel('a')+'**, juist is **'+endLabel(cls)+'**. '+endingHint(cls);
-    else if(h.cls==='u' && fam==='tan') hint='Gehoord **-u** zonder tanwīn. Zeg de **-n**: **'+endLabel(cls)+'**.';
-    else if((h.cls==='un'||h.cls==='in'||h.cls==='an') && fam==='short') hint='Te veel **-n**. Dit woord heeft **'+endLabel(cls)+'**.';
-    else if(h.cls==='drop') hint='De uitgang ontbrak. '+endingHint(cls);
-    else hint='Gehoord **'+endLabel(h.cls)+'**, juist **'+endLabel(cls)+'**. '+endingHint(cls);
-  } else if(why==='no-end' && fam==='tan'){
-    hint='';
-  } else if(why==='maybe' && fam==='tan'){
-    hint='';
+    hint='Gehoord **'+endLabel(h.cls)+'**, juist **'+endLabel(cls)+'**. '+endingHint(cls);
+  } else if(why==='onzeker' && fam==='tan'){
+    hint='Zeg de uitgang duidelijk: **'+endLabel(cls)+'**.';
   }
-  const heard=h.cls||'';
-  return {ok, score:ok?(agree==='yes'?1:0.8):0.3, cls, heard, hint, why, feats:f, gold, conf:h.conf, src:h.src, agree};
+  return {ok, score:ok?(agree==='yes'?1:0.8):0.3, cls, heard:h.cls||'', hint, why, feats:f, gold, conf:h.conf, src:h.src, agree};
+}
+function oordeel(expected, said, wordId, snap){
+  const word=(wordId && typeof ALL!=='undefined' && ALL)?ALL.find(x=>x.id===wordId):null;
+  const cons=arScore(said, expected, word||{ar:expected});
+  let dur=0, f=null;
+  try{
+    if(snap&&snap.x){ f=featVec(snap.x, snap.sr); dur=f?f.dur:0; }
+  }catch(e){}
+  const want=endingClass(expected);
+  const fam=endingFamily(want);
+  const end=(!checkHarakat || !fam)
+    ? {ok:true, score:1, cls:want, heard:'', skipped:!fam, hint:'', agree:'yes', conf:1, why:'none'}
+    : endingScoreFromRoll(expected, said, wordId, snap);
+  let uitspraak='onzeker';
+  if(cons<0.36){
+    uitspraak=(String(said||'').trim() || dur>=0.25)?'fout-woord':'wacht';
+  }
+  else if(!fam || !checkHarakat) uitspraak='juist';
+  else if(end.agree==='yes' && end.conf>=0.6) uitspraak='juist';
+  else if(end.agree==='no' && end.conf>=0.8) uitspraak='fout-klank';
+  else uitspraak='onzeker';
+  const ok=uitspraak==='juist';
+  const needEnd=uitspraak==='fout-klank';
+  return {ok, cons, end, needEnd, dur, uitspraak, want, heard:end.heard};
 }
 function gradeUtterance(expected, said, wordId, snap){
-  const word=(wordId && typeof ALL!=='undefined' && ALL)?ALL.find(x=>x.id===wordId):null;
-  const isolated=!!word;
-  const cons=arScore(said, expected, word||{ar:expected});
-  let dur=0;
-  try{
-    if(snap&&snap.x){ const fv=featVec(snap.x, snap.sr); dur=fv?fv.dur:0; }
-  }catch(e){}
-  const end=checkHarakat
-    ? endingScoreFromRoll(expected, said, wordId, snap)
-    : {ok:true, score:1, cls:'', skipped:true, hint:'', heard:'', agree:'yes'};
-  if(isolated){ end.ok=true; }
-  const consOk=isolated
-    ? (cons>=0.36 || (dur>=0.28 && cons>=0.18) || dur>=0.38)
-    : cons>=0.62;
-  const harakaFail=!isolated && cons>=0.62 && checkHarakat && !end.skipped && !end.ok;
-  const ok=consOk && !harakaFail;
-  return {ok, cons, end, needEnd:harakaFail, dur};
+  return oordeel(expected, said, wordId, snap);
 }
 function zegOkHtml(g){
-  const heard=g&&g.end&&g.end.heard;
-  const agree=g&&g.end&&g.end.agree;
-  if(heard && agree==='yes') return '✓ Juist — gehoord <b>'+esc(endLabel(heard))+'</b>';
-  return '✓ Woord goed';
+  if(!g||g.uitspraak!=='juist') return '✓ Woord goed';
+  if(g.heard && g.end && g.end.agree==='yes') return '✓ Juist — gehoord <b>'+esc(endLabel(g.heard))+'</b>';
+  return '✓ Juist';
 }
 /** Align expected tokens vs said tokens → HTML with red errors */
 
@@ -3101,7 +3110,7 @@ function startZegListen(w, resultEl){
     const snap=rollSamples(2.4);
     freezeClip().then(()=>{
       const g=gradeUtterance(w.ar, said, w.id, snap);
-      if(g.ok || (g.dur||0)>=0.28){ window._zegDone=false; succeed(g.ok?g:Object.assign({},g,{ok:true})); return; }
+      if(g.uitspraak==='juist'){ window._zegDone=false; succeed(g); return; }
       if(said && g.needEnd){
         if(mush) mush.innerHTML=wrapTash(w.ar,'haraka');
         logMistake(w,'haraka', said);
@@ -3149,13 +3158,15 @@ function startZegListen(w, resultEl){
         lastSaid=said;
         const snap=rollSamples(2.4);
         const g=gradeUtterance(w.ar, said, w.id, snap);
-        if(mush) mush.innerHTML=wrapTash(w.ar, g.ok?'ok':'now');
+        if(mush) mush.innerHTML=wrapTash(w.ar, g.uitspraak==='juist'?'ok':g.uitspraak==='fout-klank'?'haraka':g.uitspraak==='fout-woord'?'bad':'now');
         const live=document.querySelector('.said-live');
-        if(live) live.textContent=g.ok?'herkend':'🎤 nog '+left()+'s';
-        if(g.ok){ succeed(g); return; }
+        if(live) live.textContent=g.uitspraak==='juist'?'klank goed':(g.heard?('gehoord '+endLabel(g.heard)):('🎤 nog '+left()+'s'));
+        if(g.uitspraak==='juist'){ succeed(g); return; }
         if(resultEl){
           resultEl.className='speak-result hint';
-          resultEl.textContent='🎤 Nog '+left()+'s — zeg '+ (w.translit||'het woord') +' met de uitgang';
+          if(g.uitspraak==='fout-klank') resultEl.innerHTML='Nog '+left()+'s · gehoord <b>'+esc(endLabel(g.heard))+'</b>, juist <b>'+esc(endLabel(g.want))+'</b>';
+          else if(g.uitspraak==='fout-woord') resultEl.textContent='Nog '+left()+'s · zeg '+(w.translit||'het woord');
+          else resultEl.textContent='Nog '+left()+'s · zeg '+(w.translit||'het woord')+' met de uitgang';
         }
       };
       rec.onerror=(ev)=>{
@@ -3171,7 +3182,7 @@ function startZegListen(w, resultEl){
         const said=lastSaid||'';
         const snap=rollSamples(2.4);
         const g=gradeUtterance(w.ar, said, w.id, snap);
-        if(g.ok){ succeed(g); return; }
+        if(g.uitspraak==='juist'){ succeed(g); return; }
         if(!stillOn()){
           if(!window._zegDone && state.view==='zeg' && !state.answered) timeoutFail();
           return;
@@ -3253,7 +3264,7 @@ function renderZeg(){
     <button type="button" class="btn btn-sm ${hideText?'btn-primary':'btn-secondary'}" data-act="toggle-hide">${hideText?'👁 Verborgen':'👁 Tekst'}</button>
     <button type="button" class="btn btn-sm ${autoSpeak?'btn-primary':'btn-secondary'}" data-act="toggle-speak">${autoSpeak?'🔊 Aan':'🔇 Uit'}</button></div>
     <h2 class="mvp-h">${hideText?'Zeg uit het hoofd':'Lees voor'}</h2>
-    <p class="mvp-sub">${hideText?'Tekst is verborgen — zeg het woord inclusief de uitgang. Tik <b>Kijk</b> voor een glimp. De microfoon blijft tot 1 minuut luisteren tot het groen is.':'Zeg het woord <strong>inclusief de uitgang</strong>. De microfoon blijft tot 1 minuut luisteren tot het groen is.'}</p>
+    <p class="mvp-sub">${hideText?'Tekst is verborgen — zeg het woord inclusief de uitgang.':'Zeg het woord met de uitgang. Groen alleen als de klank klopt — niet als de telefoon alleen de stam hoort.'}</p>
     <div class="q-pic">${wordPic(w)}</div>
     <div class="zeg-target ${hideText?'hide-ar':''}">
       <div class="zeg-mushaf ar-mark" lang="ar">${wrapTash(w.ar,'wait')}</div>
