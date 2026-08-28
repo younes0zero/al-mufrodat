@@ -1894,6 +1894,12 @@ function textHeardEnd(said, expected, word){
     if(wantLat && saidLat===wantLat && wantLat.length>=3 && want){
       return {cls:want, conf:0.9, src:'lat-full'};
     }
+    if(wantLat && saidLat && (wantLat.endsWith('un')||wantLat.endsWith('in')||wantLat.endsWith('an'))){
+      const stem=wantLat.replace(/(un|in|an)$/,'');
+      if(stem.length>=2 && (saidLat===stem+'n' || saidLat===stem+'un' || saidLat===stem+'in' || saidLat===stem+'an')){
+        return {cls:want, conf:0.88, src:'lat-n'};
+      }
+    }
   }
   const last=(normAr(said).split(/\s+/).pop()||'');
   const expLast=(normAr(expected).split(/\s+/).pop()||'');
@@ -1917,14 +1923,16 @@ function textHeardEnd(said, expected, word){
 function audioHeardEnd(f, gold, expectedCls){
   if(!f) return {cls:'', conf:0, src:''};
   const nas=+f.nas||0;
+  const ratio=+(f.ratio)||0;
   const dur=+f.dur||0;
   if(dur<0.12) return {cls:'', conf:0.1, src:'mic'};
-  // Contrast TTS, same stem: un cnas≥80 (10/10), u median 9, a median 1.4.
-  // nas≥22: un 10/10, a 0/10. Never name -a/-u/-i from spectrum
-  // (/i/ F1 sits in the 220–400 Hz “nasal” band).
+  // Human -un on a phone is much quieter than Google TTS (TTS un ~80–160).
+  // nas≥14 still sits above contrast -a (≤2) and the three -u test stems (6–8).
+  // Never name -a/-u/-i from spectrum.
   if(nas>=40) return {cls:'tan', conf:nas>=80?0.88:0.78, src:'mic'};
-  if(nas>=22) return {cls:'tan', conf:0.70, src:'mic'};
-  if(nas>=12) return {cls:'tan', conf:0.55, src:'mic'};
+  if(nas>=14) return {cls:'tan', conf:0.72, src:'mic'};
+  if(nas>=8 && ratio>=1.25) return {cls:'tan', conf:0.66, src:'mic'};
+  if(nas>=8) return {cls:'tan', conf:0.55, src:'mic'};
   return {cls:'', conf:0.12, src:'mic'};
 }
 function heardEnding(said, expected, f, gold, word, alts){
@@ -1938,6 +1946,7 @@ function heardEnding(said, expected, f, gold, word, alts){
     return {cls:t.cls, conf:Math.min(1,(t.conf+a.conf)/1.4), src:'both'};
   }
   if(isTan(a.cls) && a.conf>=0.62) return a;
+  if(isTan(a.cls) && a.conf>=0.54 && fam==='tan') return a;
   if(t.cls==='a' && fam==='tan') return {cls:'', conf:t.conf, src:t.src};
   return {cls:'', conf:Math.max(t.conf||0, a.conf||0), src:''};
 }
@@ -2219,7 +2228,7 @@ function featVec(x0, sr0){
     if(env[i]>mx) mx=env[i];
   }
   if(mx<1e-6) return null;
-  const thr=0.008*mx;
+  const thr=0.005*mx;
   let a=0,b=nEnv-1;
   while(a<b && env[a]<thr) a++;
   while(b>a && env[b]<thr) b--;
@@ -2288,6 +2297,9 @@ function oordeel(expected, said, wordId, snap, alts){
   }
   else if(!fam || !checkHarakat) uitspraak='juist';
   else if(end.agree==='yes' && end.conf>=0.62) uitspraak='juist';
+  else if(fam==='tan' && cons>=0.5 && end.agree==='yes' && isTan(end.heard) && end.conf>=0.5 && f && (+f.nas||0)>=8){
+    uitspraak='juist';
+  }
   else if(end.agree==='no' && end.conf>=0.8) uitspraak='fout-klank';
   else uitspraak='onzeker';
   const ok=uitspraak==='juist';
@@ -3152,6 +3164,7 @@ function startZegListen(w, resultEl){
   const succeed=(g)=>{
     if(window._zegDone) return;
     window._zegDone=true;
+    try{clearTimeout(window._zegRegrade)}catch(e){}
     window._zegLock=wordId;
     state.answered=true;
     if(mush) mush.innerHTML=wrapTash(w.ar,'ok');
@@ -3176,7 +3189,7 @@ function startZegListen(w, resultEl){
     const said=lastSaid||'';
     const snap=rollSamples(2.4);
     freezeClip().then(()=>{
-      const g=gradeUtterance(w.ar, said, w.id, snap);
+      const g=gradeUtterance(w.ar, said, w.id, snap, window._zegAlts||null);
       if(g.uitspraak==='juist'){ window._zegDone=false; succeed(g); return; }
       if(said && g.needEnd){
         if(mush) mush.innerHTML=wrapTash(w.ar,'haraka');
@@ -3215,33 +3228,34 @@ function startZegListen(w, resultEl){
       rec.onresult=(ev)=>{
         if(!stillOn()) return;
         const alts=collectAlts(ev);
-        let interim='';
-        let lastFinal='';
-        for(let i=0;i<ev.results.length;i++){
-          const t=pickSaid({results:[ev.results[i]]}, w.ar, w) || ev.results[i][0].transcript||'';
-          if(ev.results[i].isFinal) lastFinal=t;
-          else interim=t;
-        }
-        const said=(lastFinal||interim||'').trim();
+        const said=(pickSaid(ev, w.ar, w) || (ev.results[ev.results.length-1]&&ev.results[ev.results.length-1][0]&&ev.results[ev.results.length-1][0].transcript) || '').trim();
         lastSaid=said;
-        const snap=rollSamples(2.4);
-        const g=gradeUtterance(w.ar, said, w.id, snap, alts);
-        if(mush) mush.innerHTML=wrapTash(w.ar, g.uitspraak==='juist'?'ok':g.uitspraak==='fout-klank'?'haraka':g.uitspraak==='fout-woord'?'bad':'now');
-        const live=document.querySelector('.said-live');
-        if(live){
-          if(g.uitspraak==='juist') live.textContent='klank goed';
-          else if(g.uitspraak==='fout-klank' && g.heard) live.textContent='gehoord '+endLabel(g.heard);
-          else if(g.uitspraak==='onzeker') live.textContent='nog niet zeker van de uitgang';
-          else live.textContent='🎤 nog '+left()+'s';
-        }
-        if(g.uitspraak==='juist'){ succeed(g); return; }
-        if(resultEl){
-          resultEl.className='speak-result hint';
-          const tip=esc(w.translit||'het woord');
-          if(g.uitspraak==='fout-klank') resultEl.innerHTML='Nog '+left()+'s · gehoord <b>'+esc(endLabel(g.heard))+'</b>, juist <b>'+esc(endLabel(g.want))+'</b>';
-          else if(g.uitspraak==='fout-woord') resultEl.innerHTML='Nog '+left()+'s · zeg <b>'+tip+'</b>';
-          else resultEl.innerHTML='Nog '+left()+'s · ik hoor het woord nog niet met de uitgang. Zeg <b>'+tip+'</b>';
-        }
+        window._zegAlts=alts;
+        const apply=()=>{
+          if(!stillOn() || window._zegDone) return false;
+          const snap=rollSamples(2.4);
+          const g=gradeUtterance(w.ar, lastSaid, w.id, snap, window._zegAlts||alts);
+          if(mush) mush.innerHTML=wrapTash(w.ar, g.uitspraak==='juist'?'ok':g.uitspraak==='fout-klank'?'haraka':g.uitspraak==='fout-woord'?'bad':'now');
+          const live=document.querySelector('.said-live');
+          if(live){
+            if(g.uitspraak==='juist') live.textContent='klank goed';
+            else if(g.uitspraak==='fout-klank' && g.heard) live.textContent='gehoord '+endLabel(g.heard);
+            else if(g.uitspraak==='onzeker') live.textContent='nog niet zeker van de uitgang';
+            else live.textContent='🎤 nog '+left()+'s';
+          }
+          if(g.uitspraak==='juist'){ succeed(g); return true; }
+          if(resultEl){
+            resultEl.className='speak-result hint';
+            const tip=esc(w.translit||'het woord');
+            if(g.uitspraak==='fout-klank') resultEl.innerHTML='Nog '+left()+'s · gehoord <b>'+esc(endLabel(g.heard))+'</b>, juist <b>'+esc(endLabel(g.want))+'</b>';
+            else if(g.uitspraak==='fout-woord') resultEl.innerHTML='Nog '+left()+'s · zeg <b>'+tip+'</b>';
+            else resultEl.innerHTML='Nog '+left()+'s · ik hoor het woord. Zeg de uitgang nog eens: <b>'+tip+'</b>';
+          }
+          return false;
+        };
+        if(apply()) return;
+        try{clearTimeout(window._zegRegrade)}catch(e){}
+        window._zegRegrade=setTimeout(()=>{ apply(); }, 380);
       };
       rec.onerror=(ev)=>{
         if(resultEl && ev.error==='not-allowed'){
@@ -3253,19 +3267,24 @@ function startZegListen(w, resultEl){
       rec.onend=()=>{
         recActive=null;
         if(window._zegDone) return;
-        const said=lastSaid||'';
-        const snap=rollSamples(2.4);
-        const g=gradeUtterance(w.ar, said, w.id, snap);
-        if(g.uitspraak==='juist'){ succeed(g); return; }
-        if(!stillOn()){
-          if(!window._zegDone && state.view==='zeg' && !state.answered) timeoutFail();
-          return;
-        }
-        if(resultEl){
-          resultEl.className='speak-result hint';
-          resultEl.textContent='🎤 Nog '+left()+'s — zeg opnieuw tot het groen is';
-        }
-        setTimeout(()=>{ if(stillOn()) bind(); }, 60);
+        const finishEnd=()=>{
+          if(window._zegDone) return;
+          const said=lastSaid||'';
+          const snap=rollSamples(2.4);
+          const g=gradeUtterance(w.ar, said, w.id, snap, window._zegAlts||null);
+          if(g.uitspraak==='juist'){ succeed(g); return; }
+          if(!stillOn()){
+            if(!window._zegDone && state.view==='zeg' && !state.answered) timeoutFail();
+            return;
+          }
+          if(resultEl){
+            resultEl.className='speak-result hint';
+            resultEl.textContent='🎤 Nog '+left()+'s — zeg het woord met de uitgang';
+          }
+          setTimeout(()=>{ if(stillOn()) bind(); }, 60);
+        };
+        try{clearTimeout(window._zegRegrade)}catch(e){}
+        window._zegRegrade=setTimeout(finishEnd, 220);
       };
       recActive=rec;
       safeRecStart(rec);
