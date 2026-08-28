@@ -253,10 +253,9 @@ input,select,textarea{font:inherit;color:inherit}
 .path-card.vocab{border-color:var(--forest);background:linear-gradient(160deg,var(--forest-soft),var(--surface))}
 .path-card.grammar{border-color:#9B7AB8;background:linear-gradient(160deg,#F3EDF8,var(--surface))}
 .path-card .pc-icon{font-size:28px;margin-bottom:6px}
-.path-card h3{font-size:16px;font-weight:700;margin-bottom:4px}
-.path-card p{font-size:12px;color:var(--muted);line-height:1.4;margin:0}
-.path-card .pc-meta{font-size:11px;font-weight:700;margin-top:10px;color:var(--forest)}
-.path-card.grammar .pc-meta{color:#5B3A7A}
+.path-card h3{font-size:16px;font-weight:700;margin:0;flex-shrink:0}
+.path-card p{font-size:12px;color:var(--muted);line-height:1.4;margin:0;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.path-card .pc-meta{font-size:11px;font-weight:700;margin:0;flex-shrink:0;white-space:nowrap;color:var(--ink-soft)}
 
 
 .pic-frame{background:var(--paper);border:1.5px solid var(--line);border-radius:16px;padding:16px 18px;margin:8px auto 14px;display:flex;justify-content:center;align-items:center;max-width:200px;box-shadow:0 2px 8px rgba(44,74,58,.06)}.pic-frame svg{display:block;width:72px;height:72px}.pic-photo{padding:0;overflow:hidden;max-width:200px;border-radius:16px}.pic-photo img{display:block;width:160px;height:160px;object-fit:cover;background:var(--paper-deep)}.flash-card .pic-frame{margin-bottom:12px}
@@ -2225,8 +2224,8 @@ function renderHome(){
         <div class="pc-meta">${gCount} lessen</div>
       </button>
       <button class="path-card talk" data-act="nav" data-v="conv">
-        <h3>Praten</h3>
-        <p>Dialogen beluisteren en nazeggen</p>
+        <h3>Dialogen</h3>
+        <p>Beluisteren en nazeggen</p>
         <div class="pc-meta">${Object.keys(CONVERSATIONS).length} eenheden</div>
       </button>
     </div>
