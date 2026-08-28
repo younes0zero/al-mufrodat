@@ -1886,7 +1886,7 @@ function textHeardEnd(said, expected, word){
       const fam=endingFamily(want);
       // Phone latin often drops tanween-n (talibun → talibu). Don't treat that as proof.
       if(fam==='tan' && (got.end==='u'||got.end==='i')) conf=0.42;
-      else if(fam==='tan' && got.end==='a') conf=0.58;
+      else if(fam==='tan' && got.end==='a') conf=0.35;
       return {cls:got.end, conf, src:'lat'};
     }
   }
@@ -1909,38 +1909,41 @@ function textHeardEnd(said, expected, word){
 function audioHeardEnd(f, gold, expectedCls){
   if(!f) return {cls:'', conf:0, src:''};
   const nas=+f.nas||0, cen=+f.cen||0, tail=+f.tail||0, dur=+f.dur||0;
-  const gN=gold?gold.n:50, gC=gold?gold.c:200;
-  const nasRel=nas/(gN+1);
+  const f2a=+f.f2a||0, f2u=+f.f2u||0, f2i=+f.f2i||0;
   const fam=endingFamily(expectedCls||'');
-  const saidA=nas<8 && (cen>380 || (cen>320 && (cen-gC)>120));
-  if(saidA) return {cls:'a', conf:cen>400?0.82:0.66, src:'mic'};
+  const gN=gold?gold.n:50;
+  const nasRel=nas/(gN+1);
+  // Phone mics always look "bright" (cen>380). Do not treat that as /a/.
+  const strongA=nas<3 && f2a>0.32 && f2a>f2u*2 && f2a>f2i && cen>480;
   if(fam==='tan'){
-    if(nas>=10 || nasRel>=0.08 || (tail>=0.12 && nas>=5)){
-      return {cls:expectedCls||'un', conf:(nas>=18||nasRel>=0.15)?0.8:0.7, src:'mic'};
-    }
-    if(dur>=0.26) return {cls:expectedCls||'un', conf:0.64, src:'mic'};
+    if(strongA) return {cls:'a', conf:0.7, src:'mic'};
+    if(dur>=0.16) return {cls:expectedCls||'un', conf:0.8, src:'mic'};
     return {cls:'', conf:0.2, src:'mic'};
   }
   if(fam==='short'){
     if(nas>=50 || nasRel>=0.45) return {cls:'un', conf:0.72, src:'mic'};
-    return {cls:expectedCls||'', conf:0.55, src:'mic'};
+    return {cls:expectedCls||'', conf:0.6, src:'mic'};
   }
+  if(strongA) return {cls:'a', conf:0.68, src:'mic'};
   return {cls:'', conf:0.2, src:'mic'};
 }
 function heardEnding(said, expected, f, gold, word){
   const want=endingClass(expected);
+  const fam=endingFamily(want);
   const t=textHeardEnd(said, expected, word);
   const a=audioHeardEnd(f, gold, want);
-  if(t.conf>=0.75) return t;
-  if(a.conf>=0.62) return a;
-  if(t.conf>=0.62) return t;
+  if(t.conf>=0.75 && !(fam==='tan' && t.cls==='a')) return t;
+  if(fam==='tan' && a.cls && a.cls!=='a' && a.conf>=0.6) return a;
+  if(a.conf>=0.75 && a.cls!=='a') return a;
+  if(t.conf>=0.62 && t.cls!=='a') return t;
   if(t.cls && a.cls && t.cls===a.cls) return {cls:t.cls, conf:Math.min(1, t.conf+a.conf), src:'both'};
-  if(t.cls && endingFamily(want)==='tan' && (t.cls==='u'||t.cls==='i')){
-    return a.cls?a:{cls:'', conf:t.conf, src:'lat'};
+  if(fam==='tan' && (t.cls==='a'||t.cls==='u'||t.cls==='i')){
+    return (a.cls && a.cls!=='a')?a:{cls:'', conf:t.conf, src:t.src||'lat'};
   }
-  if(a.cls) return a;
-  if(t.cls) return t;
-  return {cls:'', conf:Math.max(t.conf,a.conf), src:a.src||t.src||''};
+  if(a.cls && a.cls!=='a') return a;
+  if(t.cls && t.cls!=='a') return t;
+  if(fam==='tan' && a.cls===want) return a;
+  return {cls:a.cls&&a.cls!=='a'?a.cls:(t.cls&&t.cls!=='a'?t.cls:''), conf:Math.max(t.conf,a.conf), src:a.src||t.src||''};
 }
 function endAgree(heard, expected){
   if(!expected) return 'yes';
@@ -2201,7 +2204,11 @@ function endingScoreFromRoll(expected, said, wordId, snap0){
   const confident=h.conf>=0.62;
   let ok=true, why='';
   if(agree==='yes'){ ok=true; why=h.src||'match'; }
-  else if(agree==='no' && confident){ ok=false; why=h.cls||'mismatch'; }
+  else if(agree==='no' && confident && !(fam==='tan' && h.cls==='a' && h.conf<0.86)){
+    if(fam==='tan' && h.cls==='a'){ ok=false; why='a'; }
+    else if(fam==='tan' && (h.cls==='u'||h.cls==='i'||h.cls==='drop')){ ok=true; why='maybe'; }
+    else { ok=false; why=h.cls||'mismatch'; }
+  }
   else { ok=true; why='maybe'; }
 
   let hint='';
