@@ -1175,20 +1175,20 @@ function speakWeb(text){
 // Unieke stem-profielen per spreker (vast voor die naam)
 const SPEAKER_PROFILES = {};
 const MALE_PROFILES = [
-  {rate:0.82, label:'m1'},
-  {rate:0.88, label:'m2'},
-  {rate:0.78, label:'m3'},
-  {rate:0.92, label:'m4'},
-  {rate:0.85, label:'m5'},
-  {rate:0.75, label:'m6'},
+  {rate:0.72, label:'m1'},
+  {rate:0.95, label:'m2'},
+  {rate:0.80, label:'m3'},
+  {rate:1.08, label:'m4'},
+  {rate:0.76, label:'m5'},
+  {rate:1.00, label:'m6'},
 ];
 const FEMALE_PROFILES = [
-  {rate:1.12, label:'f1'},
-  {rate:1.22, label:'f2'},
-  {rate:1.08, label:'f3'},
-  {rate:1.28, label:'f4'},
-  {rate:1.16, label:'f5'},
-  {rate:1.32, label:'f6'},
+  {rate:0.92, label:'f1'},
+  {rate:1.18, label:'f2'},
+  {rate:1.02, label:'f3'},
+  {rate:1.32, label:'f4'},
+  {rate:0.96, label:'f5'},
+  {rate:1.24, label:'f6'},
 ];
 function profileForSpeaker(who, gender){
   const key=String(who||'onbekend');
@@ -1218,10 +1218,10 @@ function playBlobPitched(blob, gender, done, who){
   try{a.pause()}catch(e){}
   a.onended=null;a.onerror=null;
   a.src=url;
-  // Duidelijk andere snelheid per spreker (fallback als lokale MP3 ontbreekt)
-  const base=prof.gender==='f'?1.08:0.90;
-  const tweak=(prof.idx%6)*0.045;
-  a.playbackRate=Math.min(1.28, Math.max(0.78, base+(prof.gender==='f'?tweak:-tweak)));
+  // Grote contrasten per spreker (fallback)
+  const maleRates=[0.78,0.92,1.08,0.84,1.00,1.16];
+  const femaleRates=[0.94,1.10,1.28,1.02,1.18,1.34];
+  a.playbackRate=prof.gender==='f'?femaleRates[prof.idx%6]:maleRates[prof.idx%6];
   a.onended=()=>{try{URL.revokeObjectURL(url)}catch(e){}; if(myGen===audioGen&&done)done(true)};
   a.onerror=()=>{try{URL.revokeObjectURL(url)}catch(e){}; if(myGen===audioGen&&done)done(false)};
   activeAudio=a;
@@ -1403,18 +1403,19 @@ function localWordSrc(word){
   if(word&&word.id) return 'audio/w/'+word.id+'.mp3';
   return '';
 }
+const AUDIO_VER='v3';
 function localLineSrc(text, who){
   const t=String(text||'').trim();
   if(!t) return '';
   const w=String(who||'').trim();
   // unieke stem per persoon (naam + zin)
-  if(w) return 'audio/l/'+fnv1a(w+'\t'+t)+'.mp3';
-  return 'audio/l/'+fnv1a(genderOf(w)+'\t'+t)+'.mp3';
+  if(w) return 'audio/l/'+fnv1a(w+'\t'+t)+'.mp3?'+AUDIO_VER;
+  return 'audio/l/'+fnv1a(genderOf(w)+'\t'+t)+'.mp3?'+AUDIO_VER;
 }
 function localLineSrcLegacy(text, who){
   const t=String(text||'').trim();
   if(!t) return '';
-  return 'audio/l/'+fnv1a(genderOf(who||'')+'\t'+t)+'.mp3';
+  return 'audio/l/'+fnv1a(genderOf(who||'')+'\t'+t)+'.mp3?'+AUDIO_VER;
 }
 function speakFile(src, done, onStart){
   if(!src){if(done)done(false);return}
@@ -2043,9 +2044,9 @@ function speakWebWithVoice(text, voice, gender, who){
     }
     if(v){u.voice=v;u.lang=v.lang||'ar-SA'}
     else u.lang='ar-SA';
-    // Map playbackRate profile → speechSynthesis rate/pitch (elk personage uniek)
-    u.rate = Math.min(1.3, Math.max(0.6, prof.rate * 0.85));
-    u.pitch = gender==='f' ? (1.1 + prof.idx*0.08) : (0.65 + prof.idx*0.06);
+    // Elk personage: tempo + toonhoogte ver uit elkaar
+    u.rate = Math.min(1.35, Math.max(0.55, prof.rate));
+    u.pitch = gender==='f' ? (0.95 + (prof.idx%6)*0.22) : (0.45 + (prof.idx%6)*0.20);
     u.volume=1;
     speechSynthesis.speak(u);
     return true;
