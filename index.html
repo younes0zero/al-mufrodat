@@ -544,6 +544,52 @@ img.conv-side-img{
 .dlg-score .pct{font-size:20px}
 
 .ar-mark .tok-wait{color:var(--muted)!important;opacity:.55}
+.ar-mark .tok-plain{color:inherit}
+.ar-mark .tok-plain .tash{
+  color:var(--forest);font-weight:800;
+  border-bottom:2px dotted var(--forest);padding:0 1px
+}
+.hide-ar .tok-wait,
+.hide-ar .tok-now{
+  color:transparent!important;
+  background:var(--paper-deep)!important;
+  box-shadow:none;
+  border-radius:8px;
+  min-width:2.4ch;
+  display:inline-block;
+  user-select:none
+}
+.hide-ar .tok-wait .tash,
+.hide-ar .tok-now .tash{visibility:hidden}
+.hide-ar.peek .tok-wait,
+.hide-ar.peek .tok-now{
+  color:inherit!important;
+  background:rgba(61,155,134,.14)!important
+}
+.hide-ar.peek .tok-wait .tash,
+.hide-ar.peek .tok-now .tash{visibility:visible}
+.hide-ar .zeg-tr{filter:blur(10px);user-select:none}
+.hide-ar.peek .zeg-tr{filter:none}
+.cmp-sheet{
+  position:fixed;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom));
+  z-index:70;margin:0 auto;max-width:560px;width:100%;
+  background:var(--surface);border:1.5px solid var(--line);border-radius:18px 18px 0 0;
+  padding:14px 16px 18px;box-shadow:0 -10px 32px rgba(0,0,0,.14)
+}
+.cmp-sheet .cmp-k{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.cmp-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.cmp-lab{font-size:11px;font-weight:700;color:var(--muted);margin-bottom:2px}
+.cmp-ar{font-family:var(--ar);font-size:28px;font-weight:700;direction:rtl;line-height:1.35}
+.cmp-hint{font-size:13px;color:var(--ink-soft);margin:8px 0 4px;line-height:1.4}
+.mk-heat{display:inline-block;width:8px;height:8px;border-radius:50%;margin-inline-start:6px;vertical-align:middle;background:var(--line)}
+.mk-heat.warm{background:#D4A017}
+.mk-heat.hot{background:#C45C26}
+.wl-row.warm{box-shadow:inset -3px 0 0 #D4A017}
+.wl-row.hot{box-shadow:inset -3px 0 0 #C45C26}
+.said-live{font-size:13px;color:var(--muted);min-height:18px;text-align:center;margin:2px 0 4px}
+.flash-mushaf{font-family:var(--ar);font-size:clamp(36px,10vw,56px);font-weight:700;line-height:1.45;direction:rtl;text-align:center}
+.tok-ok,.tok-bad,.tok-haraka,.tok-now,.tok-wait,.tok-plain{cursor:pointer}
+
 .dlg-practice-result{display:block!important;min-height:28px;margin-top:8px;padding:10px 12px;border-radius:12px}
 .speak-result.ok{background:var(--ok-soft)!important;color:var(--ok)!important}
 .speak-result.bad{background:rgba(196,92,38,.12)!important;color:#C45C26!important}
@@ -879,6 +925,7 @@ html,body{
 </head>
 <body>
 <div id="app"></div>
+<div id="cmp-host"></div>
 <div id="tabbar-host"></div>
 <div class="toast" id="toast"></div>
 <script>
@@ -981,7 +1028,7 @@ function picFromText(text, force){
 
 
 /* ===== APP STATE ===== */
-const LS = {p:'alm_progress', c:'alm_custom', a:'alm_autoSpeak', o:'alm_onboarded', s:'alm_streak', g:'alm_grammar', d:'alm_quizDir', f:'alm_flashDir', i:'alm_showPics', cv:'alm_lastConv', th:'alm_theme', nm:'alm_name', ars:'alm_arSize', mk:'alm_mistakes'};
+const LS = {p:'alm_progress', c:'alm_custom', a:'alm_autoSpeak', o:'alm_onboarded', s:'alm_streak', g:'alm_grammar', d:'alm_quizDir', f:'alm_flashDir', i:'alm_showPics', cv:'alm_lastConv', th:'alm_theme', nm:'alm_name', ars:'alm_arSize', mk:'alm_mistakes', hd:'alm_hide', hk:'alm_harakat'};
 const MASTERY = 2;
 const SESSION = 10;
 let progress = {};
@@ -1000,6 +1047,11 @@ let gramProgress = {}; // {lessonNum: {idx, answers, done}}
 let lastGrammar = null; // last opened lesson number
 let lastConv = null; // {u, di}
 let mistakes = [];
+let hideText = false;
+let checkHarakat = true;
+let lastCmp = {expected:'', said:'', kind:'', hint:'', word:null};
+let lastSaid = '';
+let recMr=null, recChunks=[], lastClipUrl='';
 let ALL = [];
 let state = {
   view: 'home',
@@ -1044,6 +1096,8 @@ function load(){
   try{lastConv=JSON.parse(localStorage.getItem(LS.cv)||'null')}catch(e){lastConv=null}
   try{mistakes=JSON.parse(localStorage.getItem(LS.mk)||'[]')}catch(e){mistakes=[]}
   if(!Array.isArray(mistakes)) mistakes=[];
+  try{const h=localStorage.getItem(LS.hd); if(h!==null) hideText=h==='true'}catch(e){}
+  try{const k=localStorage.getItem(LS.hk); if(k!==null) checkHarakat=k!=='false'}catch(e){}
   try{darkMode=localStorage.getItem(LS.th)==='dark'}catch(e){}
   applyTheme();
   ALL = BASE_WORDS.concat(customWords);
@@ -1063,22 +1117,41 @@ function saveArSize(){try{localStorage.setItem(LS.ars,arSize)}catch(e){}}
 function applyArSize(){document.documentElement.setAttribute('data-ar',arSize||'m')}
 function saveTheme(){try{localStorage.setItem(LS.th, darkMode?'dark':'light')}catch(e){}}
 function saveConv(){try{localStorage.setItem(LS.cv,JSON.stringify(lastConv))}catch(e){}}
-function saveMk(){try{localStorage.setItem(LS.mk,JSON.stringify(mistakes.slice(0,40)))}catch(e){}}
-function logMistake(w, kind){
+function saveMk(){try{localStorage.setItem(LS.mk,JSON.stringify(mistakes.slice(0,80)))}catch(e){}}
+function saveHide(){try{localStorage.setItem(LS.hd,String(hideText))}catch(e){}}
+function saveHk(){try{localStorage.setItem(LS.hk,String(checkHarakat))}catch(e){}}
+function logMistake(w, kind, said){
   const id=w&&w.id, ar=(w&&w.ar)||'';
   if(!ar) return;
-  mistakes.unshift({id:id||'', ar, kind:kind||'word', t:Date.now()});
-  mistakes=mistakes.slice(0,40);
+  mistakes.unshift({id:id||'', ar, kind:kind||'word', said:said||'', t:Date.now()});
+  mistakes=mistakes.slice(0,80);
   saveMk();
 }
-function topMistakes(n){
+function mistakeStats(){
   const map={};
   mistakes.forEach(m=>{
-    const k=(m.id||m.ar)+'|'+(m.kind||'word');
-    if(!map[k]) map[k]={ar:m.ar, kind:m.kind, n:0};
+    const k=m.id||m.ar;
+    if(!k) return;
+    if(!map[k]) map[k]={id:m.id||'', ar:m.ar, word:0, haraka:0, n:0, last:0, said:''};
     map[k].n++;
+    if(m.kind==='haraka') map[k].haraka++; else map[k].word++;
+    if(m.t>map[k].last) map[k].last=m.t;
+    if(m.said) map[k].said=m.said;
   });
-  return Object.values(map).sort((a,b)=>b.n-a.n).slice(0, n||5);
+  return Object.values(map).sort((a,b)=>b.n-a.n);
+}
+function heatOf(id){
+  if(!id) return '';
+  const n=mistakes.filter(m=>m.id===id).length;
+  if(n>=3) return 'hot';
+  if(n>=1) return 'warm';
+  return '';
+}
+function topMistakes(n){
+  return mistakeStats().slice(0, n||5);
+}
+function mdLite(s){
+  return esc(s||'').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
 }
 function saveI(){try{localStorage.setItem(LS.i,String(showPics))}catch(e){}}
 function saveD(){try{localStorage.setItem(LS.d,quizDir)}catch(e){}}
@@ -1172,6 +1245,7 @@ function stopAllMedia(){
   stopPlayLines();
   stopAudio();
   stopRoll();
+  hideCompare();
   window._dlgListening=false;
   try{
     const rec=window._sharedRec||recActive;
@@ -1656,7 +1730,11 @@ function wrapTash(raw, kind){
   const s=splitTash(raw);
   const inner=esc(s.stem)+(s.tash?('<span class="tash">'+esc(s.tash)+'</span>'):'')+esc(s.punct);
   const k=kind||'wait';
-  return '<span class="tok-'+k+'">'+inner+'</span>';
+  const tap=k!=='plain';
+  return '<span class="tok-'+k+'"'+(tap?(' data-act="tok-tap" data-ar="'+esc(raw)+'"'):'')+'>'+inner+'</span>';
+}
+function markAr(s, kind){
+  return arTokensRaw(s).map(t=>wrapTash(t, kind||'plain')).join(' ');
 }
 function tarteelLeg(){
   return '<div class="tarteel-leg ar-mark">'+
@@ -1751,15 +1829,80 @@ async function startRoll(){
     };
     rollGain=rollCtx.createGain(); rollGain.gain.value=0;
     rollSrc.connect(rollProc); rollProc.connect(rollGain); rollGain.connect(rollCtx.destination);
+    startClip(rollStream);
     return true;
   }catch(e){ stopRoll(); return false; }
 }
 function stopRoll(){
+  try{if(recMr && recMr.state!=='inactive') recMr.requestData()}catch(e){}
   try{if(rollProc){rollProc.onaudioprocess=null;rollProc.disconnect()}}catch(e){}
   try{if(rollSrc)rollSrc.disconnect()}catch(e){}
   try{if(rollGain)rollGain.disconnect()}catch(e){}
   try{if(rollStream)rollStream.getTracks().forEach(t=>t.stop())}catch(e){}
   rollProc=rollSrc=rollGain=rollStream=null;
+}
+function startClip(stream){
+  try{if(recMr && recMr.state!=='inactive') recMr.stop()}catch(e){}
+  recMr=null; recChunks=[];
+  if(!stream || typeof MediaRecorder==='undefined') return;
+  try{
+    const mime=['audio/webm;codecs=opus','audio/webm','audio/mp4'].find(m=>MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(m))||'';
+    recMr=mime?new MediaRecorder(stream,{mimeType:mime}):new MediaRecorder(stream);
+    recMr.ondataavailable=e=>{ if(e.data&&e.data.size) recChunks.push(e.data); };
+    recMr.start(250);
+  }catch(e){ recMr=null; }
+}
+function freezeClip(){
+  return new Promise(res=>{
+    if(!recMr || recMr.state==='inactive'){ res(lastClipUrl); return; }
+    const mr=recMr;
+    mr.onstop=()=>{
+      try{ if(lastClipUrl) URL.revokeObjectURL(lastClipUrl); }catch(e){}
+      lastClipUrl='';
+      if(recChunks.length){
+        const blob=new Blob(recChunks,{type:mr.mimeType||'audio/webm'});
+        if(blob.size>180) lastClipUrl=URL.createObjectURL(blob);
+      }
+      recMr=null;
+      res(lastClipUrl);
+    };
+    try{ mr.stop(); }catch(e){ recMr=null; res(lastClipUrl); }
+  });
+}
+function playLastClip(){
+  if(!lastClipUrl) return false;
+  try{
+    stopAudio();
+    const a=new Audio(lastClipUrl);
+    activeAudio=a;
+    a.play();
+    return true;
+  }catch(e){ return false; }
+}
+function hideCompare(){
+  const h=document.getElementById('cmp-host');
+  if(h) h.innerHTML='';
+}
+function showCompare(expected, said, kind, hint, word){
+  lastCmp={expected:expected||'', said:said||'', kind:kind||'word', hint:hint||'', word:word||null};
+  const h=document.getElementById('cmp-host');
+  if(!h) return;
+  const title=kind==='haraka'?'Harakaat fout':kind==='ok'?'Juist':'Verkeerd woord';
+  const you=said?('<span lang="ar">'+esc(said)+'</span>'):'<span style="color:var(--muted)">— niets gehoord</span>';
+  h.innerHTML='<div class="cmp-sheet" role="dialog" aria-label="Vergelijk uitspraak">'+
+    '<div class="cmp-k">'+title+' · tik om te beluisteren</div>'+
+    '<div class="cmp-row">'+
+      '<div><div class="cmp-lab">Juist</div><div class="cmp-ar ar-mark">'+markAr(expected, kind==='haraka'?'haraka':'ok')+'</div></div>'+
+      '<button type="button" class="btn btn-sm btn-secondary" data-act="cmp-gold">🔊 Juist</button>'+
+    '</div>'+
+    '<div class="cmp-row">'+
+      '<div><div class="cmp-lab">Jij zei</div><div class="cmp-ar">'+you+'</div></div>'+
+      '<button type="button" class="btn btn-sm btn-secondary" data-act="cmp-you"'+(lastClipUrl?'':' disabled')+'>▶ Jij</button>'+
+    '</div>'+
+    (hint?('<p class="cmp-hint">'+mdLite(hint)+'</p>'):'')+
+    '<div class="mvp-actions" style="justify-content:flex-end;margin-top:8px">'+
+      '<button type="button" class="btn btn-ghost btn-sm" data-act="cmp-close">Sluiten</button>'+
+    '</div></div>';
 }
 function rollSamples(sec){
   if(!rollBuf||!rollFilled)return null;
@@ -1900,7 +2043,7 @@ function endingScoreFromRoll(expected, said, wordId){
 }
 function gradeUtterance(expected, said, wordId){
   const cons=arScore(said, expected);
-  const end=endingScoreFromRoll(expected, said, wordId);
+  const end=checkHarakat ? endingScoreFromRoll(expected, said, wordId) : {ok:true, score:1, cls:'', skipped:true, hint:''};
   const needEnd=!!end.cls && !end.skipped;
   const ok= cons>=0.70 && (!needEnd || end.ok);
   return {ok, cons, end, needEnd};
@@ -1981,6 +2124,7 @@ function gradeDialogueLines(lines, said, live, lockCount){
         placedNow=true;
       }else{
         parts.push(wrapTash(raw,'bad'));
+        if(!live && localOk===0 && i===0) logMistake({ar:raw},'word', said);
       }
     }
     cursor=c;
@@ -1992,6 +2136,7 @@ function gradeDialogueLines(lines, said, live, lockCount){
         parts[parts.length-1]=wrapTash(last,'haraka');
         localOk=Math.max(0, localOk-1);
         ratio=exp.length?localOk/exp.length:0;
+        logMistake({ar:last},'haraka', said);
       }
     }
     wordsOk+=localOk;
@@ -2066,7 +2211,11 @@ function startDialoguePractice(lines, resultEl){
   unlockAudio();
   startRoll();
   document.querySelectorAll('.book-dialogue .book-line').forEach(el=>el.classList.remove('line-ok','line-bad','line-mid','line-active'));
-  document.querySelectorAll('.book-dialogue .book-line .ar').forEach((ar,idx)=>{if(lines[idx]) ar.textContent=lines[idx].ar});
+  document.querySelectorAll('.book-dialogue .book-line .ar').forEach((ar,idx)=>{
+    if(lines[idx]){ ar.classList.add('ar-mark'); ar.innerHTML=markAr(lines[idx].ar,'wait'); }
+  });
+  const dlgBox=document.querySelector('.book-dialogue');
+  if(dlgBox){ if(hideText) dlgBox.classList.add('hide-ar'); else dlgBox.classList.remove('hide-ar'); }
 
   let finalText='';
   let interim='';
@@ -2113,6 +2262,7 @@ function startDialoguePractice(lines, resultEl){
 
   const paintLive=()=>{
     if(stopped || window._dlgSession!==sessionId)return;
+    lastSaid=saidNow();
     const g=gradeDialogueLines(lines, saidNow(), true, lockCount);
     updateCheckpoints(g);
     if(!resultEl)return;
@@ -2129,14 +2279,16 @@ function startDialoguePractice(lines, resultEl){
           '<button type="button" class="btn btn-secondary btn-sm" data-act="dlg-pause">⏸ Pauze</button>'+
           '<button type="button" class="btn btn-primary btn-sm" data-act="dlg-resume">▶ Ga verder</button>'+
           '<button type="button" class="btn btn-secondary btn-sm" data-act="dlg-retry-line">↺ Deze zin opnieuw</button>'+
+          '<button type="button" class="btn btn-secondary btn-sm" data-act="dlg-peek">👁 Kijk</button>'+
+          '<button type="button" class="btn btn-secondary btn-sm" data-act="toggle-hide">'+(hideText?'Tekst aan':'Verberg')+'</button>'+
           '<button type="button" class="btn btn-secondary btn-sm" data-act="dlg-restart">↻ Helemaal opnieuw</button>'+
           '<button type="button" class="btn btn-secondary btn-sm" data-act="dlg-finish">✓ Afronden</button>'+
         '</div>';
       score=resultEl.querySelector('.dlg-score');
       status=resultEl.querySelector('.dlg-status');
     }
-    if(score) score.innerHTML='<span class="pct">'+g.pct+'%</span> · zin '+zin+'/'+lines.length;
-    if(status) status.textContent=window._dlgListening?('🎤 Zeg zin '+zin):'⏸️ Gepauzeerd';
+    if(score) score.innerHTML='<span class="pct">'+g.pct+'%</span> · zin '+zin+'/'+lines.length+' · tik een gekleurd woord';
+    if(status) status.textContent=window._dlgListening?('🎤 Zeg zin '+zin+(hideText?' · tekst verborgen':'')):'⏸️ Gepauzeerd';
     const pauseBtn=resultEl.querySelector('[data-act="dlg-pause"]');
     const resumeBtn=resultEl.querySelector('[data-act="dlg-resume"]');
     if(pauseBtn) pauseBtn.style.display=window._dlgListening?'':'none';
@@ -2160,12 +2312,15 @@ function startDialoguePractice(lines, resultEl){
     try{rec.onend=null;rec.onresult=null;rec.onerror=null}catch(e){}
     safeRecStop(rec);
     recActive=null;
-    const said=saidNow();
+    lastSaid=saidNow();
+    freezeClip().then(()=>{
+    const said=lastSaid;
     if(!said){
       if(resultEl){
         resultEl.className='speak-result bad';
         resultEl.innerHTML='Niets gehoord.<br><button type="button" class="btn btn-primary btn-sm" data-act="dlg-restart" style="margin-top:8px">↻ Helemaal opnieuw</button>';
       }
+      stopRoll();
       return;
     }
     const g=gradeDialogueLines(lines, said, false, lockCount);
@@ -2174,6 +2329,7 @@ function startDialoguePractice(lines, resultEl){
       resultEl.className='speak-result '+(g.pct>=55?'ok':'bad');
       resultEl.innerHTML=
         '<div class="dlg-score"><span class="pct">'+g.pct+'%</span> · '+g.wordsOk+'/'+g.wordsTotal+' woorden · '+g.linesOk+'/'+g.linesTotal+' zinnen</div>'+
+        '<div class="said-live">Tik een rood of oranje woord: jij vs juist</div>'+
         tarteelLeg()+
         '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">'+
           '<button type="button" class="btn btn-primary btn-sm" data-act="dlg-restart">↻ Helemaal opnieuw</button>'+
@@ -2182,6 +2338,8 @@ function startDialoguePractice(lines, resultEl){
     }
     if(g.pct>=55)try{playOk()}catch(e){}
     else try{playNo()}catch(e){}
+    stopRoll();
+    });
   };
 
   const bindAndStart=()=>{
@@ -2238,7 +2396,9 @@ function startDialoguePractice(lines, resultEl){
     lockCount=0;
     stopped=false;
     document.querySelectorAll('.book-line').forEach(el=>el.classList.remove('line-ok','line-bad','line-mid','line-active'));
-    document.querySelectorAll('.book-line .ar').forEach((ar,idx)=>{if(lines[idx]) ar.textContent=lines[idx].ar});
+    document.querySelectorAll('.book-line .ar').forEach((ar,idx)=>{
+      if(lines[idx]){ ar.classList.add('ar-mark'); ar.innerHTML=markAr(lines[idx].ar,'wait'); }
+    });
     bindAndStart();
   };
 
@@ -2259,7 +2419,7 @@ function startDialoguePractice(lines, resultEl){
       } else {
         el.classList.remove('line-ok','line-bad','line-mid','line-active');
         const ar=el.querySelector('.ar');
-        if(ar && lines[idx]){ ar.classList.remove('ar-mark'); ar.textContent=lines[idx].ar; }
+        if(ar && lines[idx]){ ar.classList.add('ar-mark'); ar.innerHTML=markAr(lines[idx].ar,'wait'); }
       }
     });
     window._dlgListening=false;
@@ -2306,6 +2466,7 @@ function startSpeakPractice(expected, who, resultEl){
         else interim+=(interim?' ':'')+t;
       }
       const said=(finalText+' '+interim).trim();
+      lastSaid=said;
       if(resultEl && said){
         const d=diffArHtml(expected, said);
         resultEl.className='speak-result hint';
@@ -2322,6 +2483,8 @@ function startSpeakPractice(expected, who, resultEl){
       recActive=null;
       document.querySelectorAll('.mic-btn').forEach(b=>b.classList.remove('listening','listening-target'));
       const said=(finalText+' '+interim).trim();
+      lastSaid=said;
+      freezeClip().then(()=>{
       const g=gradeUtterance(expected, said);
       if(resultEl){
         const harakaFail=!!(said && g.cons>=0.70 && g.needEnd && !g.end.ok);
@@ -2331,18 +2494,24 @@ function startSpeakPractice(expected, who, resultEl){
           resultEl.className='speak-result ok';
           resultEl.innerHTML='✓ <span class="ar-diff ar-mark">'+d.html+'</span>';
           try{playOk()}catch(e){}
+          hideCompare();
         }else if(harakaFail){
           resultEl.className='speak-result bad';
-          resultEl.innerHTML='✗ Harakaat. '+(g.end.hint||'')+'<br><span class="ar-diff ar-mark">'+d.html+'</span>';
+          resultEl.innerHTML='✗ Harakaat. '+(mdLite(g.end.hint||''))+'<br><span class="ar-diff ar-mark">'+d.html+'</span>';
           try{playNo()}catch(e){}
+          try{navigator.vibrate&&navigator.vibrate(50)}catch(e){}
           try{speakWord({ar:expected}, true)}catch(e){}
+          showCompare(expected, said, 'haraka', g.end.hint||'', {ar:expected});
         }else{
           resultEl.className='speak-result bad';
           resultEl.innerHTML='✗ Verkeerd woord.<br><span class="ar-diff ar-mark">'+d.html+'</span>';
           try{playNo()}catch(e){}
+          try{navigator.vibrate&&navigator.vibrate(50)}catch(e){}
+          showCompare(expected, said, 'word', 'Zeg het woord opnieuw.', {ar:expected});
         }
       }
       stopRoll();
+      });
     };
     recActive=rec;
     safeRecStart(rec);
@@ -2525,7 +2694,7 @@ function renderVocabHub(){
       <span class="grow"></span>
       <button class="btn btn-secondary btn-sm" data-act="nav" data-v="words">Lijst</button>
     </div>
-    <p class="mvp-sub">Kies een les. Zeg = plaatje zien, Arabisch uitspreken.</p>
+    <p class="mvp-sub">Kies een les. Zeg = voorlezen met harakaat-check. Fouten oefenen als Tarteel.</p>
     <div class="hub-toolbar" style="margin-bottom:10px">
       <button class="btn btn-sm ${quizDir==='ar2nl'?'btn-primary':'btn-secondary'}" data-act="set-quiz-dir" data-d="ar2nl">AR→NL</button>
       <button class="btn btn-sm ${quizDir==='nl2ar'?'btn-primary':'btn-secondary'}" data-act="set-quiz-dir" data-d="nl2ar">NL→AR</button>
@@ -2542,6 +2711,10 @@ function renderVocabHub(){
       <div style="display:flex;gap:8px">
         <button class="btn btn-primary btn-sm" style="flex:1" data-act="start-learn" data-l="all">Mix oefenen</button>
         <button class="btn btn-secondary btn-sm" style="flex:1" data-act="start-flash" data-l="all">Mix kaarten</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn btn-secondary btn-sm" style="flex:1" data-act="start-zeg" data-l="all">Mix Zeg</button>
+        ${mistakes.length?`<button class="btn btn-secondary btn-sm" style="flex:1" data-act="start-zeg" data-l="fouten">Fouten (${mistakeStats().length})</button>`:''}
       </div>
     </div>
     <div style="display:flex;gap:8px;margin-top:14px">
@@ -2615,7 +2788,11 @@ function renderHome(){
         <div class="pc-meta">${Object.keys(CONVERSATIONS).length} eenheden</div>
       </button>
     </div>
-
+    ${mistakes.length?`<button type="button" class="resume-row" data-act="nav" data-v="mistakes" style="margin-top:12px">
+      <span class="resume-k">Fouten</span>
+      <span class="resume-t">${mistakeStats().length} woorden om te herhalen</span>
+      <span class="resume-m">Oefen</span>
+    </button>`:''}
 
 `;
 }
@@ -2627,11 +2804,11 @@ function renderFlash(){
   const showFrontAr = flashDir!=='nl2ar';
   let front, back;
   if(showFrontAr){
-    front=`${wordPic(w)}<div class="big-ar" lang="ar">${w.ar}</div>`;
+    front=`${wordPic(w)}<div class="big-ar flash-mushaf ar-mark" lang="ar">${wrapTash(w.ar,'plain')}</div>`;
     back=`${wordPic(w)}<div class="nl">${esc(w.nl)}</div>`;
   }else{
     front=`${wordPic(w)}<div class="nl">${esc(w.nl)}</div>`;
-    back=`${wordPic(w)}<div class="big-ar" lang="ar">${w.ar}</div>`;
+    back=`${wordPic(w)}<div class="big-ar flash-mushaf ar-mark" lang="ar">${wrapTash(w.ar,'plain')}</div>`;
   }
   return`
     <div class="session-top">
@@ -2677,7 +2854,7 @@ function startZegListen(w, resultEl){
   unlockAudio();
   startRoll();
   const mush=document.querySelector('.zeg-mushaf');
-  if(mush) mush.innerHTML=wrapTash(w.ar,'now');
+  if(mush) mush.innerHTML=wrapTash(w.ar, hideText?'wait':'now');
   if(resultEl){resultEl.className='speak-result hint';resultEl.textContent='🎤 Lees het woord voor — met de uitgang'}
   setTimeout(()=>{
     if(state.view!=='zeg' || !state.current || state.current.id!==wordId) return;
@@ -2695,8 +2872,14 @@ function startZegListen(w, resultEl){
         else interim+=(interim?' ':'')+t;
       }
       const said=(finalText+' '+interim).trim();
+      lastSaid=said;
       const cons=said?arScore(said, w.ar):0;
-      if(mush) mush.innerHTML=wrapTash(w.ar, cons>=0.70?'now':'wait');
+      if(mush){
+        if(hideText && cons<0.55) mush.innerHTML=wrapTash(w.ar,'wait');
+        else mush.innerHTML=wrapTash(w.ar, cons>=0.70?'now':'wait');
+      }
+      const live=document.querySelector('.said-live');
+      if(live) live.textContent=said?('… '+said):'';
       if(resultEl && said) resultEl.textContent='… '+said;
     };
     rec.onerror=(ev)=>{
@@ -2710,6 +2893,9 @@ function startZegListen(w, resultEl){
       if(done || state.view!=='zeg') return;
       if(state.answered) return;
       const said=(finalText+' '+interim).trim();
+      lastSaid=said;
+      freezeClip().then(()=>{
+      if(done || state.view!=='zeg' || state.answered) return;
       const g=gradeUtterance(w.ar, said, w.id);
       if(g.ok){
         done=true;
@@ -2718,32 +2904,38 @@ function startZegListen(w, resultEl){
         if(mush) mush.innerHTML=wrapTash(w.ar,'ok');
         if(resultEl){resultEl.className='speak-result ok'; resultEl.innerHTML='✓ Juist — '+esc(w.translit||'');}
         try{playOk()}catch(e){}
+        hideCompare();
         stopRoll();
         setTimeout(()=>{ window._zegLock=null; nextZeg(true); }, 650);
         return;
       }
       if(said && g.cons>=0.70 && g.needEnd && !g.end.ok){
         if(mush) mush.innerHTML=wrapTash(w.ar,'haraka');
-        logMistake(w,'haraka');
+        logMistake(w,'haraka', said);
         if(resultEl){
           resultEl.className='speak-result bad';
-          resultEl.innerHTML='✗ Woord goed, harakaat fout. '+(g.end.hint||'')+' Luister en zeg opnieuw.';
+          resultEl.innerHTML='✗ Woord goed, harakaat fout. '+(mdLite(g.end.hint||''))+' Luister en zeg opnieuw.';
         }
         try{playNo()}catch(e){}
+        try{navigator.vibrate&&navigator.vibrate(50)}catch(e){}
         try{speakWord(w, true)}catch(e){}
+        showCompare(w.ar, said, 'haraka', g.end.hint||'', w);
       } else if(said){
         if(mush) mush.innerHTML=wrapTash(w.ar,'bad');
-        logMistake(w,'word');
-        if(resultEl){resultEl.className='speak-result bad'; resultEl.textContent='✗ Verkeerd woord — probeer opnieuw';}
+        logMistake(w,'word', said);
+        if(resultEl){resultEl.className='speak-result bad'; resultEl.innerHTML='✗ Verkeerd woord — jij: <span lang="ar">'+esc(said)+'</span>';}
         try{playNo()}catch(e){}
+        try{navigator.vibrate&&navigator.vibrate(50)}catch(e){}
+        showCompare(w.ar, said, 'word', 'Zeg het hele woord, met de uitgang.', w);
       } else if(mush){
-        mush.innerHTML=wrapTash(w.ar,'wait');
+        mush.innerHTML=wrapTash(w.ar, hideText?'wait':'wait');
       }
       setTimeout(()=>{
         if(state.view==='zeg' && state.current && state.current.id===wordId && !state.answered && window._zegLock!==wordId){
           startZegListen(state.current, document.querySelector('.zeg-result'));
         }
-      }, 1100);
+      }, 1600);
+      });
     };
     recActive=rec;
     safeRecStart(rec);
@@ -2751,17 +2943,46 @@ function startZegListen(w, resultEl){
 }
 function startZeg(sel){
   unlockAudio();
+  hideCompare();
   state.path='vocab';
-  state.lesson=sel==='all'?'all':parseInt(sel);
-  const all=wordsFor(state.lesson);
+  state.lesson=sel==='all'?'all':(sel==='fouten'?sel:parseInt(sel));
+  let all;
+  if(sel==='fouten'){
+    const ids=mistakeStats().map(m=>m.id).filter(Boolean);
+    all=ids.map(id=>ALL.find(w=>w.id===id)).filter(Boolean);
+    if(!all.length){ toast('Nog geen fouten om te oefenen.'); return; }
+  }else{
+    all=wordsFor(state.lesson);
+  }
   state.queue=shuffle(all.slice()).slice(0, Math.min(SESSION, all.length));
+  if(sel==='fouten' && state.queue.length<4){
+    const extra=[];
+    while(extra.length+state.queue.length<Math.min(6, SESSION) && all.length){
+      extra.push(all[extra.length%all.length]);
+    }
+    state.queue=state.queue.concat(extra);
+  }
   state.sessionLen=state.queue.length;
   state.asked=0;state.correct=0;state.answered=false;
   state.view='zeg';
   state.current=state.queue[0]||null;
   render();
 }
+function startZegOne(id){
+  const w=ALL.find(x=>x.id===id);
+  if(!w){toast('Woord niet gevonden.');return}
+  hideCompare();
+  state.path='vocab';
+  state.lesson='fouten';
+  state.queue=[w,w,w,w,w];
+  state.sessionLen=5;
+  state.asked=0;state.correct=0;state.answered=false;
+  state.view='zeg';
+  state.current=w;
+  render();
+}
 function nextZeg(ok){
+  hideCompare();
   state.zegShow=false;
   if(ok)state.correct++;
   state.asked++;
@@ -2778,22 +2999,27 @@ function nextZeg(ok){
 function renderZeg(){
   const w=state.current;
   if(!w)return`<div class="empty">Klaar.</div>`;
-  const n=state.lesson==='all'?'Alle lessen':'Les '+state.lesson;
+  const n=state.lesson==='all'?'Alle lessen':state.lesson==='fouten'?'Jouw fouten':'Les '+state.lesson;
   return`
     <button class="back" data-act="nav" data-v="vocab"><span>←</span> Terug</button>
     <div class="hub-toolbar"><div class="mvp-kicker">Zeg · ${esc(n)} · ${Math.min(state.asked+1,state.sessionLen)}/${state.sessionLen}</div>
+    <button type="button" class="btn btn-sm ${hideText?'btn-primary':'btn-secondary'}" data-act="toggle-hide">${hideText?'👁 Verborgen':'👁 Tekst'}</button>
     <button type="button" class="btn btn-sm ${autoSpeak?'btn-primary':'btn-secondary'}" data-act="toggle-speak">${autoSpeak?'🔊 Aan':'🔇 Uit'}</button></div>
-    <h2 class="mvp-h">Lees voor</h2>
-    <p class="mvp-sub">Zeg het woord <strong>inclusief de uitgang</strong>. Groen = goed, oranje stip = harakaat, rood = verkeerd woord.</p>
+    <h2 class="mvp-h">${hideText?'Zeg uit het hoofd':'Lees voor'}</h2>
+    <p class="mvp-sub">${hideText?'Tekst is verborgen — zeg het woord inclusief de uitgang. Tik <b>Kijk</b> voor een glimp.':'Zeg het woord <strong>inclusief de uitgang</strong>. Groen = goed, oranje stip = harakaat, rood = verkeerd woord. Tik een woord voor jij vs juist.'}</p>
     <div class="q-pic">${wordPic(w)}</div>
-    <div class="zeg-mushaf ar-mark" lang="ar">${wrapTash(w.ar,'wait')}</div>
-    <div class="who-phon" style="text-align:center">${translitEndHtml(w)}</div>
+    <div class="zeg-target ${hideText?'hide-ar':''}">
+      <div class="zeg-mushaf ar-mark" lang="ar">${wrapTash(w.ar,'wait')}</div>
+      <div class="who-phon zeg-tr" style="text-align:center">${translitEndHtml(w)}</div>
+    </div>
     <div style="text-align:center;font-size:16px;font-weight:600;margin:4px 0 2px">${esc(w.nl)}</div>
+    <div class="said-live"></div>
     ${tarteelLeg()}
     <div class="zeg-result speak-result hint" style="display:block;margin:12px 0">Tik op Zeg en lees het woord voor.</div>
     <div class="mvp-actions" style="justify-content:center">
       <button class="btn btn-primary" data-act="zeg-listen">🎤 Zeg</button>
       <button class="btn btn-secondary" data-act="speak-word" data-ar="${esc(w.ar)}">🔊 Hoor</button>
+      ${hideText?`<button class="btn btn-secondary" data-act="zeg-peek">👁 Kijk</button>`:''}
       <button class="btn btn-ghost" data-act="zeg-skip">Sla over</button>
     </div>
   `;
@@ -2856,10 +3082,10 @@ function renderLearn(){
   if(q.type==='mc-nl2ar'){
     body=`<div style="font-size:48px;line-height:1;margin:8px 0">${wordPic(w)}</div>
       <div class="qmain">${esc(w.nl)}</div>
-      <div class="options">${q.options.map(o=>`<button class="opt" data-act="answer" data-id="${o.id}" data-ok="${o.id===w.id}">${o.ar}</button>`).join('')}</div>`;
+      <div class="options">${q.options.map(o=>`<button class="opt" data-act="answer" data-id="${o.id}" data-ok="${o.id===w.id}"><span class="ar-mark">${wrapTash(o.ar,'plain')}</span></button>`).join('')}</div>`;
   }else if(q.type==='mc-ar2nl'){
     body=`<div style="font-size:48px;line-height:1;margin:8px 0">${wordPic(w)}</div>
-      <div class="qar" lang="ar">${w.ar}</div>
+      <div class="qar ar-mark" lang="ar">${wrapTash(w.ar,'plain')}</div>
       <div class="options">${q.options.map(o=>`<button class="opt" data-act="answer" data-id="${o.id}" data-ok="${o.id===w.id}" style="font-family:var(--font);font-size:16px;direction:ltr">${esc(o.nl)}</button>`).join('')}</div>`;
   }else if(q.type==='typed-nl2ar'){
     body=`<div style="font-size:48px;line-height:1;margin:8px 0">${wordPic(w)}</div>
@@ -2868,7 +3094,7 @@ function renderLearn(){
   }else{
     // typed-ar2nl
     body=`<div style="font-size:48px;line-height:1;margin:8px 0">${wordPic(w)}</div>
-      <div class="qar" lang="ar">${w.ar}</div>
+      <div class="qar ar-mark" lang="ar">${wrapTash(w.ar,'plain')}</div>
       <div class="type-row"><input id="type-in" autocomplete="off" placeholder="Typ Nederlands…"><button class="btn btn-primary" data-act="submit-typed">Check</button></div>`;
   }
   return`
@@ -2953,17 +3179,18 @@ function renderSummary(){
   const acc=state.sessionLen?Math.round(100*state.correct/state.sessionLen):0;
   const top=topMistakes(5);
   const mk=top.length?`<div style="text-align:right;margin:12px 0 4px" class="ar-mark">${top.map(m=>{
-    const lab=m.kind==='haraka'?'harakaat':'woord';
-    return '<div style="margin:6px 0">'+wrapTash(m.ar, m.kind==='haraka'?'haraka':'bad')+' <span style="font-size:12px;color:var(--muted)">'+lab+' · '+m.n+'×</span></div>';
+    const lab=m.haraka && !m.word?'harakaat':m.haraka?'mix':'woord';
+    return '<button type="button" data-act="zeg-one" data-id="'+esc(m.id||'')+'" style="display:block;width:100%;background:none;border:0;padding:0;margin:6px 0;color:inherit">'+wrapTash(m.ar, m.haraka?'haraka':'bad')+' <span style="font-size:12px;color:var(--muted)">'+lab+' · '+m.n+'×</span></button>';
   }).join('')}</div>`:'';
   return`
     <div class="card summary">
       <div class="sum-score">${state.correct}<span>/${state.sessionLen}</span></div>
       <h2>Klaar</h2>
       <p>${acc}% goed${state.review?' · herhaling':''}</p>
-      ${mk?`<p class="mvp-sub" style="margin-top:10px">Vaak mis</p>${mk}`:''}
-      <button class="btn btn-primary btn-block" data-act="start-learn" data-l="${state.lesson}">Nog een ronde</button>
-      <button class="btn btn-secondary btn-block" style="margin-top:8px" data-act="start-zeg" data-l="${state.lesson}">Nu Zeggen</button>
+      ${mk?`<p class="mvp-sub" style="margin-top:10px">Vaak mis · tik om te oefenen</p>${mk}`:''}
+      ${top.length?`<button class="btn btn-secondary btn-block" style="margin-top:8px" data-act="start-zeg" data-l="fouten">Oefen fouten</button>`:''}
+      <button class="btn btn-primary btn-block" data-act="${state.lesson==='fouten'?'start-zeg':'start-learn'}" data-l="${state.lesson}">Nog een ronde</button>
+      ${state.lesson==='fouten'?'':`<button class="btn btn-secondary btn-block" style="margin-top:8px" data-act="start-zeg" data-l="${state.lesson}">Nu Zeggen</button>`}
       <button class="btn btn-ghost btn-block" style="margin-top:8px" data-act="nav" data-v="vocab">Naar lessen</button>
     </div>`;
 }
@@ -2994,6 +3221,18 @@ function renderSettings(){
       <div class="hub-toolbar">
         <div><div style="font-weight:700">Auto-voorlezen</div><div class="blurb">${autoSpeak?'Arabisch wordt voorgelezen':'Uit'}</div></div>
         <button class="btn btn-sm ${autoSpeak?'btn-primary':'btn-secondary'}" data-act="toggle-speak">${autoSpeak?'Aan':'Uit'}</button>
+      </div>
+    </div>
+    <div class="lesson">
+      <div class="hub-toolbar">
+        <div><div style="font-weight:700">Verberg tekst</div><div class="blurb">${hideText?'Zeg uit het hoofd, zoals Tarteel':'Woord blijft zichtbaar'}</div></div>
+        <button class="btn btn-sm ${hideText?'btn-primary':'btn-secondary'}" data-act="toggle-hide">${hideText?'Aan':'Uit'}</button>
+      </div>
+    </div>
+    <div class="lesson">
+      <div class="hub-toolbar">
+        <div><div style="font-weight:700">Harakaat checken</div><div class="blurb">${checkHarakat?'Fouten in de uitgang tellen mee':'Alleen het woord'}</div></div>
+        <button class="btn btn-sm ${checkHarakat?'btn-primary':'btn-secondary'}" data-act="toggle-harakat">${checkHarakat?'Aan':'Uit'}</button>
       </div>
     </div>
     <div class="lesson">
@@ -3039,10 +3278,11 @@ function renderWords(){
     if(!ws.length)continue;
     html+=`<div class="wl-group"><div class="wl-h">Les ${n} · ${esc((LESSON_META[n]||[''])[0])}</div>`;
     for(const w of ws){
-      html+=`<div class="wl-row">
+      const heat=heatOf(w.id);
+      html+=`<div class="wl-row ${heat}">
         <button class="icon-btn" style="width:36px;height:36px;font-size:14px" data-act="speak" data-id="${w.id}">🔊</button>
-        <div class="nl">${esc(w.nl)}<div style="font-size:11px;color:var(--muted);font-weight:500">${esc(w.translit)}</div></div>
-        <div class="ar" lang="ar">${w.ar}</div>
+        <div class="nl">${esc(w.nl)}${heat?`<span class="mk-heat ${heat}" title="vaak mis"></span>`:''}<div style="font-size:11px;color:var(--muted);font-weight:500">${esc(w.translit)}</div></div>
+        <div class="ar ar-mark" lang="ar">${wrapTash(w.ar,'plain')}</div>
       </div>`;
     }
     html+=`</div>`;
@@ -3521,7 +3761,7 @@ function renderParsePane(n){
     <div class="card" style="margin-bottom:10px;width:100%;text-align:center">
       <button type="button" data-act="parse-sent" style="width:100%;background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer">
         <div class="mvp-kicker">Zin ${state.parseI+1}/${tasks.length} · tik voor vertaling</div>
-        <div class="ar" lang="ar" style="font-size:26px;margin:8px 0">${esc(task.ar)}</div>
+        <div class="ar ar-mark" lang="ar" style="font-size:26px;margin:8px 0">${markAr(task.ar,'plain')}</div>
       </button>
       <button type="button" class="icon-btn" data-act="speak-text" data-text="${esc(task.ar)}" aria-label="Hoor" style="width:36px;height:36px;margin:0 auto 8px">🔊</button>
       ${state.parseShowSent?`<div class="who-phon">${esc(romanizeAr(task.ar))}</div><div style="color:var(--muted);font-size:14px;margin-top:4px">${esc(task.nl)}</div>`:''}
@@ -3549,7 +3789,7 @@ function renderBookLesson(){
   const ex=(examples).map(e=>`
     <div class="ex">
       <div>
-        <div class="ar" lang="ar">${e.ar}</div>
+        <div class="ar ar-mark" lang="ar">${markAr(e.ar,'plain')}</div>
         <div class="nl">${esc(e.nl)}</div>
       </div>
       <button class="icon-btn" style="width:36px;height:36px;flex-shrink:0" data-act="speak-text" data-text="${esc(e.ar)}">🔊</button>
@@ -3589,7 +3829,7 @@ function renderBookLesson(){
     <div class="grammar-block book-text" style="background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:16px 16px 8px">
       ${(g.fullText||[]).map(block=>{
         if(block.h) return `<h3 style="font-size:15px;font-weight:700;color:var(--forest);margin:16px 0 8px;padding-top:8px;border-top:1px solid var(--line)">${esc(block.h)}</h3>`;
-        if(block.ar) return `<div class="ex" style="margin-bottom:8px"><div class="ar" lang="ar">${esc(block.ar)}</div><div class="nl">${esc(block.nl||'')}</div><button class="icon-btn" data-act="speak-text" data-text="${esc(block.ar)}" style="width:34px;height:34px;flex-shrink:0" aria-label="Hoor">🔊</button></div>`;
+        if(block.ar) return `<div class="ex" style="margin-bottom:8px"><div class="ar ar-mark" lang="ar">${markAr(block.ar,'plain')}</div><div class="nl">${esc(block.nl||'')}</div><button class="icon-btn" data-act="speak-text" data-text="${esc(block.ar)}" style="width:34px;height:34px;flex-shrink:0" aria-label="Hoor">🔊</button></div>`;
         if(block.p) return `<p style="font-size:14px;line-height:1.6;color:var(--ink-soft);margin-bottom:10px">${esc(block.p)}</p>`;
         return '';
       }).join('')}
@@ -3662,7 +3902,7 @@ function renderGramExercise(n){
       <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px">${needPic?'Kijk naar de foto':'Vraag '+(gi+1)}</div>
       ${pic?`<div class="q-pic gram-pic">${pic}</div>`:''}
       <div class="ar" style="font-size:18px;font-weight:700;text-align:center;margin-bottom:10px;line-height:1.5;display:flex;align-items:center;justify-content:center;gap:8px" lang="ar">
-        <span>${esc(ex.q)}</span>
+        <span class="ar-mark">${markAr(ex.q,'plain')}</span>
         <button type="button" class="icon-btn" data-act="speak-text" data-text="${esc(ex.q)}" aria-label="Hoor" style="width:36px;height:36px;flex-shrink:0">🔊</button>
       </div>
       <div class="options" style="grid-template-columns:1fr">${optsHtml}</div>
@@ -3743,7 +3983,7 @@ function renderConvUnit(){
             <button type="button" data-act="speak-line" data-text="${esc(line.ar)}" data-who="${esc(line.who||'')}" aria-label="Hoor">🔊</button>
             <button type="button" class="mic-btn" data-act="practice-speak" data-text="${esc(line.ar)}" data-who="${esc(line.who||'')}" aria-label="Nazeggen">🎤</button>
           </div>
-          <div class="ar" lang="ar" style="color:${col}">${esc(line.ar)}</div>
+          <div class="ar ar-mark" lang="ar" style="color:${col}">${markAr(line.ar, hideText?'wait':'plain')}</div>
         </div>
         <div class="nl">${esc(line.nl)}</div>
       </div>
@@ -3764,11 +4004,12 @@ function renderConvUnit(){
       <button class="btn btn-secondary btn-sm" data-act="toggle-all-trans">${state.convShowAll?'NL uit':'NL aan'}</button>
     </div>
     <div class="book-dialogue-wrap">
-      <div class="book-dialogue">
+      <div class="book-dialogue ${hideText?'hide-ar':''}">
         ${lines}
         <div class="mvp-actions">
           <button class="btn btn-primary btn-sm" data-act="speak-dialogue" data-u="${n}" data-di="${di}">Beluister</button>
           <button class="btn btn-secondary btn-sm" data-act="practice-dialogue" data-u="${n}" data-di="${di}">Oefen</button>
+          <button class="btn btn-ghost btn-sm" data-act="toggle-hide">${hideText?'Tekst aan':'Verberg'}</button>
         </div>
         <div class="dlg-practice-result" style="width:100%;margin-top:6px"></div>
         ${tarteelLeg()}
@@ -3781,6 +4022,34 @@ function renderConvUnit(){
     </div>`;
 }
 
+
+function renderMistakes(){
+  const stats=mistakeStats();
+  if(!stats.length){
+    return`
+      <button class="back" data-act="nav" data-v="home"><span>←</span> Terug</button>
+      <h2 class="mvp-h">Fouten</h2>
+      <p class="mvp-sub">Nog geen uitspraakfouten. Oefen bij Zeg of in een dialoog — harakaat en verkeerde woorden komen hier.</p>
+      <button class="btn btn-primary btn-block" data-act="start-zeg" data-l="all">Zeg oefenen</button>`;
+  }
+  const rows=stats.map(m=>{
+    const heat=m.n>=3?'hot':m.n>=1?'warm':'';
+    const lab=m.haraka && !m.word?'harakaat':m.haraka?'harakaat + woord':'woord';
+    return `<button type="button" class="mvp-row" data-act="zeg-one" data-id="${esc(m.id||'')}">
+      <div style="flex:1;text-align:end" class="ar-mark">${wrapTash(m.ar, m.haraka?'haraka':'bad')}</div>
+      <span class="mvp-meta">${m.n}× · ${lab}<span class="mk-heat ${heat}"></span></span>
+    </button>`;
+  }).join('');
+  return`
+    <button class="back" data-act="nav" data-v="home"><span>←</span> Terug</button>
+    <h2 class="mvp-h">Fouten</h2>
+    <p class="mvp-sub">${stats.length} woorden · tik er één om hem te herhalen. Oranje = harakaat, rood = verkeerd woord.</p>
+    <div class="mvp-actions" style="margin-bottom:12px">
+      <button class="btn btn-primary" data-act="start-zeg" data-l="fouten">Oefen alles</button>
+      <button class="btn btn-ghost" data-act="clear-mistakes">Lijst leegmaken</button>
+    </div>
+    <div class="mvp-list">${rows}</div>`;
+}
 
 function render(){
   const app=document.getElementById('app');
@@ -3799,6 +4068,7 @@ function render(){
   else if(state.view==='conv')html=renderConv();
   else if(state.view==='conv-unit')html=renderConvUnit();
   else if(state.view==='settings')html=renderSettings();
+  else if(state.view==='mistakes')html=renderMistakes();
   app.innerHTML=appHeader()+html+((state.view==='vocab'||state.view==='book'||state.view==='conv')?`<button type="button" class="theme-fab" data-act="toggle-theme" aria-label="Thema">${darkMode?'☀️':'🌙'}</button>`:'');
   const host=document.getElementById('tabbar-host');
   if(host) host.innerHTML=tabbar();
@@ -3849,11 +4119,13 @@ document.addEventListener('click',e=>{
   const act=btn.dataset.act;
   if(act==='nav'){
     stopAllMedia();
+    hideCompare();
     const v=btn.dataset.v;
     if(v==='vocab'){state.path='vocab';state.view='vocab';state.bookLesson=null}
     else if(v==='book'){state.path='grammar';state.view='book';state.bookLesson=null;state.bookTab='uitleg'}
     else if(v==='home'){state.path='home';state.view='home';state.bookLesson=null}
     else if(v==='conv'){state.path='conv';state.view='conv';state.convUnit=null}
+    else if(v==='mistakes'){state.path='home';state.view='mistakes'}
     else{state.view=v;if(v==='words'||v==='add')state.path='vocab'}
     render();(document.getElementById("app")||window).scrollTop=0;
   }
@@ -3873,6 +4145,58 @@ document.addEventListener('click',e=>{
   }
   else if(act==='start-learn'){startLearn(btn.dataset.l)}
   else if(act==='start-zeg'){startZeg(btn.dataset.l)}
+  else if(act==='zeg-one'){startZegOne(btn.dataset.id)}
+  else if(act==='toggle-hide'){
+    hideText=!hideText; saveHide();
+    document.querySelectorAll('.zeg-target, .book-dialogue').forEach(el=>{
+      if(hideText) el.classList.add('hide-ar'); else el.classList.remove('hide-ar');
+    });
+    if(window._dlgListening){
+      document.querySelectorAll('[data-act="toggle-hide"]').forEach(b=>{ b.textContent=hideText?'Tekst aan':'Verberg'; });
+      return;
+    }
+    render();
+  }
+  else if(act==='toggle-harakat'){checkHarakat=!checkHarakat;saveHk();render()}
+  else if(act==='clear-mistakes'){
+    mistakes=[]; saveMk(); toast('Foutenlijst leeg'); render();
+  }
+  else if(act==='zeg-peek' || act==='dlg-peek'){
+    e.stopPropagation();
+    const box=document.querySelector('.zeg-target')||document.querySelector('.book-dialogue');
+    if(!box) return;
+    box.classList.add('peek');
+    setTimeout(()=>box.classList.remove('peek'), 1400);
+  }
+  else if(act==='tok-tap'){
+    e.stopPropagation(); e.preventDefault();
+    const ar=btn.getAttribute('data-ar')||'';
+    if(!ar) return;
+    const cls=btn.className||'';
+    if(hideText && (cls.indexOf('tok-wait')>=0 || cls.indexOf('tok-now')>=0)){
+      const box=btn.closest('.hide-ar');
+      if(box && !box.classList.contains('peek')) return;
+    }
+    if(cls.indexOf('tok-bad')>=0){
+      showCompare(ar, lastSaid||lastCmp.said||'', 'word', 'Zeg dit woord opnieuw.', lastCmp.word||{ar});
+      try{speakWord({ar}, true)}catch(err){}
+    }else if(cls.indexOf('tok-haraka')>=0){
+      showCompare(ar, lastSaid||lastCmp.said||'', 'haraka', lastCmp.hint||'De uitgang klopte niet.', lastCmp.word||{ar});
+      try{speakWord({ar}, true)}catch(err){}
+    }else{
+      try{speakWord({ar}, true)}catch(err){}
+    }
+  }
+  else if(act==='cmp-gold'){
+    e.stopPropagation();
+    const t=(lastCmp.word&&lastCmp.word.ar)||lastCmp.expected;
+    if(t) speakWord(lastCmp.word||{ar:t}, true);
+  }
+  else if(act==='cmp-you'){
+    e.stopPropagation();
+    if(!playLastClip()) toast('Geen opname van jou');
+  }
+  else if(act==='cmp-close'){ e.stopPropagation(); hideCompare(); }
   else if(act==='speak-word'){
     e.stopPropagation();
     const t=btn.getAttribute('data-ar')||'';
