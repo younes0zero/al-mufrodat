@@ -1820,8 +1820,12 @@ function arScore(said, expected, word){
   let s=0;
   if(a&&b){
     if(a0===b0 || a===b) s=1;
-    else if(a===b+'ن'||a===b+'ون'||a===b+'ين'||a===b+'ان'||a===b+'و') s=0.95;
-    else if(b===a+'ن'||b===a+'ون') s=0.9;
+    else if(a===b+'ن'||a===b+'ون'||a===b+'ين'||a===b+'ان'||a===b+'و'||a===b+'ا') s=0.95;
+    else if(b===a+'ن'||b===a+'ون'||b===a+'ا'||a===b.slice(0,-1)||b===a.slice(0,-1)) s=0.9;
+    else if(a.indexOf(b)>=0 || b.indexOf(a)>=0){
+      const shorter=a.length<b.length?a:b, longer=a.length<b.length?b:a;
+      if(shorter.length>=3) s=Math.max(s, 0.72+0.18*(shorter.length/longer.length));
+    }
     else {
       const grams=x=>{const g=new Set(); for(let i=0;i<Math.max(0,x.length-1);i++)g.add(x.slice(i,i+2)); return g};
       const A=grams(a), B=grams(b);
@@ -1829,7 +1833,8 @@ function arScore(said, expected, word){
         let inter=0; for(const g of A) if(B.has(g)) inter++;
         s=2*inter/(A.size+B.size);
       }
-      if(a!==b && Math.abs(a.length-b.length)>2 && s<0.92) s*=0.75;
+      const ac=a.replace(/[اويىه]/g,''), bc=b.replace(/[اويىه]/g,'');
+      if(ac&&bc&&(ac===bc || ac.indexOf(bc)>=0 || bc.indexOf(ac)>=0)) s=Math.max(s,0.82);
     }
   }
   const lat=latinScore(said, expected, word);
@@ -2209,11 +2214,21 @@ function endingScoreFromRoll(expected, said, wordId, snap0){
 }
 function gradeUtterance(expected, said, wordId, snap){
   const word=(wordId && typeof ALL!=='undefined' && ALL)?ALL.find(x=>x.id===wordId):null;
+  const isolated=!!word;
   const cons=arScore(said, expected, word||{ar:expected});
-  const end=checkHarakat ? endingScoreFromRoll(expected, said, wordId, snap) : {ok:true, score:1, cls:'', skipped:true, hint:'', heard:'', agree:'yes'};
-  const harakaFail=cons>=0.62 && checkHarakat && !end.skipped && !end.ok;
-  const ok=cons>=0.62 && !harakaFail;
-  return {ok, cons, end, needEnd:harakaFail};
+  let dur=0;
+  try{
+    if(snap&&snap.x){ const fv=featVec(snap.x, snap.sr); dur=fv?fv.dur:0; }
+  }catch(e){}
+  const end=isolated
+    ? {ok:true, score:1, cls:endingClass(expected), heard:endingClass(expected)||'', skipped:false, hint:'', agree:'yes', why:'read'}
+    : (checkHarakat ? endingScoreFromRoll(expected, said, wordId, snap) : {ok:true, score:1, cls:'', skipped:true, hint:'', heard:'', agree:'yes'});
+  const consOk=isolated
+    ? (cons>=0.36 || (dur>=0.28 && cons>=0.18) || dur>=0.38)
+    : cons>=0.62;
+  const harakaFail=!isolated && cons>=0.62 && checkHarakat && !end.skipped && !end.ok;
+  const ok=consOk && !harakaFail;
+  return {ok, cons, end, needEnd:harakaFail, dur};
 }
 /** Align expected tokens vs said tokens → HTML with red errors */
 
@@ -3090,7 +3105,7 @@ function startZegListen(w, resultEl){
     const snap=rollSamples(2.4);
     freezeClip().then(()=>{
       const g=gradeUtterance(w.ar, said, w.id, snap);
-      if(g.ok){ window._zegDone=false; succeed(g); return; }
+      if(g.ok || (g.dur||0)>=0.28){ window._zegDone=false; succeed(g.ok?g:Object.assign({},g,{ok:true})); return; }
       if(said && g.needEnd){
         if(mush) mush.innerHTML=wrapTash(w.ar,'haraka');
         logMistake(w,'haraka', said);
@@ -3122,7 +3137,7 @@ function startZegListen(w, resultEl){
         return;
       }
       rec.lang='ar-SA';
-      rec.continuous=true;
+      rec.continuous=false;
       rec.interimResults=true;
       rec.maxAlternatives=5;
       rec.onresult=(ev)=>{
@@ -3136,25 +3151,15 @@ function startZegListen(w, resultEl){
         }
         const said=(lastFinal||interim||'').trim();
         lastSaid=said;
-        const cons=said?arScore(said, w.ar, w):0;
-        if(mush){
-          if(hideText && cons<0.50) mush.innerHTML=wrapTash(w.ar,'wait');
-          else mush.innerHTML=wrapTash(w.ar, cons>=0.62?'now':'wait');
-        }
+        const snap=rollSamples(2.4);
+        const g=gradeUtterance(w.ar, said, w.id, snap);
+        if(mush) mush.innerHTML=wrapTash(w.ar, g.ok?'ok':'now');
         const live=document.querySelector('.said-live');
-        if(live) live.textContent=said?(cons>=0.62?('woord herkend · nog '+left()+'s'):('… nog '+left()+'s')):('🎤 nog '+left()+'s');
-        if(lastFinal){
-          const snap=rollSamples(2.4);
-          const g=gradeUtterance(w.ar, lastFinal, w.id, snap);
-          if(g.ok){ succeed(g); return; }
-          if(resultEl){
-            resultEl.className='speak-result hint';
-            if(g.needEnd) resultEl.innerHTML='Nog '+left()+'s · zeg de uitgang <b>'+esc(endLabel(g.end.cls))+'</b> extra duidelijk';
-            else resultEl.textContent='Nog '+left()+'s · zeg '+(w.translit||'het woord')+' opnieuw';
-          }
-        } else if(resultEl){
+        if(live) live.textContent=g.ok?'herkend':'🎤 nog '+left()+'s';
+        if(g.ok){ succeed(g); return; }
+        if(resultEl){
           resultEl.className='speak-result hint';
-          resultEl.textContent='🎤 Nog '+left()+'s — blijf zeggen tot het groen is';
+          resultEl.textContent='🎤 Nog '+left()+'s — zeg '+ (w.translit||'het woord') +' met de uitgang';
         }
       };
       rec.onerror=(ev)=>{
@@ -3166,11 +3171,20 @@ function startZegListen(w, resultEl){
       };
       rec.onend=()=>{
         recActive=null;
+        if(window._zegDone) return;
+        const said=lastSaid||'';
+        const snap=rollSamples(2.4);
+        const g=gradeUtterance(w.ar, said, w.id, snap);
+        if(g.ok){ succeed(g); return; }
         if(!stillOn()){
           if(!window._zegDone && state.view==='zeg' && !state.answered) timeoutFail();
           return;
         }
-        setTimeout(()=>{ if(stillOn()) bind(); }, 80);
+        if(resultEl){
+          resultEl.className='speak-result hint';
+          resultEl.textContent='🎤 Nog '+left()+'s — zeg opnieuw tot het groen is';
+        }
+        setTimeout(()=>{ if(stillOn()) bind(); }, 60);
       };
       recActive=rec;
       safeRecStart(rec);
