@@ -1039,6 +1039,7 @@ function picFromText(text, force){
 const LS = {p:'alm_progress', c:'alm_custom', a:'alm_autoSpeak', o:'alm_onboarded', s:'alm_streak', g:'alm_grammar', d:'alm_quizDir', f:'alm_flashDir', i:'alm_showPics', cv:'alm_lastConv', th:'alm_theme', nm:'alm_name', ars:'alm_arSize', mk:'alm_mistakes', hd:'alm_hide', hk:'alm_harakat'};
 const MASTERY = 2;
 const SESSION = 10;
+const LISTEN_MS = 60000;
 let progress = {};
 let customWords = [];
 let autoSpeak = false;
@@ -1265,6 +1266,8 @@ function stopAllMedia(){
     if(rec){rec.onresult=null;rec.onend=null;rec.onerror=null;safeRecStop(rec)}
   }catch(e){}
   recActive=null;
+  window._zegDone=true;
+  window._spkDone=true;
 }
 function stopAudio(){
   audioGen++;
@@ -1878,7 +1881,13 @@ function textHeardEnd(said, expected, word){
         || (got.stem.length>=3 && exp.stem.indexOf(got.stem)>=0)
         || (exp.stem.length>=3 && got.stem.indexOf(exp.stem)>=0)
         || Math.abs((got.stem.length||0)-(exp.stem.length||0))<=2;
-      return {cls:got.end, conf:stemHit?0.92:0.7, src:'lat'};
+      let conf=stemHit?0.92:0.7;
+      const want=endingClass(expected);
+      const fam=endingFamily(want);
+      // Phone latin often drops tanween-n (talibun → talibu). Don't treat that as proof.
+      if(fam==='tan' && (got.end==='u'||got.end==='i')) conf=0.42;
+      else if(fam==='tan' && got.end==='a') conf=0.58;
+      return {cls:got.end, conf, src:'lat'};
     }
   }
   const last=(normAr(said).split(/\s+/).pop()||'');
@@ -1897,30 +1906,40 @@ function textHeardEnd(said, expected, word){
   }
   return {cls:'', conf:0, src:''};
 }
-function audioHeardEnd(f, gold){
+function audioHeardEnd(f, gold, expectedCls){
   if(!f) return {cls:'', conf:0, src:''};
-  const nas=+f.nas||0, cen=+f.cen||0;
+  const nas=+f.nas||0, cen=+f.cen||0, tail=+f.tail||0, dur=+f.dur||0;
   const gN=gold?gold.n:50, gC=gold?gold.c:200;
   const nasRel=nas/(gN+1);
-  if(nas>=18 || nasRel>=0.12){
-    const conf=(nas>=40 || nasRel>=0.3)?0.86:0.64;
-    return {cls:'un', conf, src:'mic'};
+  const fam=endingFamily(expectedCls||'');
+  const saidA=nas<8 && (cen>380 || (cen>320 && (cen-gC)>120));
+  if(saidA) return {cls:'a', conf:cen>400?0.82:0.66, src:'mic'};
+  if(fam==='tan'){
+    if(nas>=10 || nasRel>=0.08 || (tail>=0.12 && nas>=5)){
+      return {cls:expectedCls||'un', conf:(nas>=18||nasRel>=0.15)?0.8:0.7, src:'mic'};
+    }
+    if(dur>=0.26) return {cls:expectedCls||'un', conf:0.64, src:'mic'};
+    return {cls:'', conf:0.2, src:'mic'};
   }
-  if(nas<8 && (cen>380 || (cen>320 && (cen-gC)>120))){
-    return {cls:'a', conf:cen>400?0.82:0.66, src:'mic'};
+  if(fam==='short'){
+    if(nas>=50 || nasRel>=0.45) return {cls:'un', conf:0.72, src:'mic'};
+    return {cls:expectedCls||'', conf:0.55, src:'mic'};
   }
   return {cls:'', conf:0.2, src:'mic'};
 }
 function heardEnding(said, expected, f, gold, word){
+  const want=endingClass(expected);
   const t=textHeardEnd(said, expected, word);
-  const a=audioHeardEnd(f, gold);
+  const a=audioHeardEnd(f, gold, want);
   if(t.conf>=0.75) return t;
-  if(a.conf>=0.7) return a;
-  if(t.conf>=0.55) return t;
   if(a.conf>=0.62) return a;
+  if(t.conf>=0.62) return t;
   if(t.cls && a.cls && t.cls===a.cls) return {cls:t.cls, conf:Math.min(1, t.conf+a.conf), src:'both'};
-  if(t.cls) return t;
+  if(t.cls && endingFamily(want)==='tan' && (t.cls==='u'||t.cls==='i')){
+    return a.cls?a:{cls:'', conf:t.conf, src:'lat'};
+  }
   if(a.cls) return a;
+  if(t.cls) return t;
   return {cls:'', conf:Math.max(t.conf,a.conf), src:a.src||t.src||''};
 }
 function endAgree(heard, expected){
@@ -2602,79 +2621,112 @@ function startSpeakPractice(expected, who, resultEl){
     if(resultEl){resultEl.className='speak-result hint';resultEl.textContent='Spraakherkenning: Chrome op https.';}
     return;
   }
-  // stop eerdere dialoog-sessie niet hard met abort
   try{rec.onend=null;rec.onresult=null;rec.onerror=null}catch(e){}
   safeRecStop(rec);
   unlockAudio();
-  startRoll().then(()=>{
-  setTimeout(()=>{
-    rec.lang='ar-SA';
-    rec.continuous=false;
-    rec.interimResults=true;
-    if(resultEl){resultEl.className='speak-result hint';resultEl.textContent='🎤 Spreek nu…'}
-    document.querySelectorAll('.mic-btn').forEach(b=>b.classList.remove('listening'));
-    const btn=document.querySelector('.mic-btn.listening-target');
-    if(btn)btn.classList.add('listening');
-    let finalText='', interim='';
-    rec.onresult=(ev)=>{
-      interim='';
-      for(let i=0;i<ev.results.length;i++){
-        const t=ev.results[i][0].transcript||'';
-        if(ev.results[i].isFinal) finalText+=(finalText?' ':'')+t;
-        else interim+=(interim?' ':'')+t;
-      }
-      const said=(finalText+' '+interim).trim();
-      lastSaid=said;
-      if(resultEl && said){
-        const d=diffArHtml(expected, said);
-        resultEl.className='speak-result hint';
-        resultEl.innerHTML='… <span class="ar-diff ar-mark">'+(d.html||'')+'</span>';
-      }
-    };
-    rec.onerror=(ev)=>{
-      if(resultEl && ev.error==='not-allowed'){
-        resultEl.className='speak-result bad';
-        resultEl.textContent='Microfoon toestaan via slotje (gebruik https).';
-      }
-    };
-    rec.onend=()=>{
+  const t0=Date.now();
+  window._spkUntil=t0+LISTEN_MS;
+  window._spkDone=false;
+  const left=()=>Math.max(0, Math.ceil((window._spkUntil-Date.now())/1000));
+  const stillOn=()=>!window._spkDone && Date.now()<=window._spkUntil;
+  if(resultEl){resultEl.className='speak-result hint';resultEl.textContent='🎤 Blijf zeggen tot het groen is — tot 1 minuut'}
+  document.querySelectorAll('.mic-btn').forEach(b=>b.classList.remove('listening'));
+  const btn=document.querySelector('.mic-btn.listening-target');
+  if(btn)btn.classList.add('listening');
+
+  const finishOk=(said, g)=>{
+    if(window._spkDone) return;
+    window._spkDone=true;
+    const harakaFail=false;
+    const d=diffArHtml(expected, said, harakaFail);
+    if(resultEl){
+      resultEl.className='speak-result ok';
+      resultEl.innerHTML='✓ <span class="ar-diff ar-mark">'+d.html+'</span> · gehoord <b>'+esc(endLabel((g.end&&g.end.heard)||(g.end&&g.end.cls)||''))+'</b>';
+    }
+    try{playOk()}catch(e){}
+    hideCompare();
+    freezeClip().then(()=>{
+      stopRoll();
+      try{rec.onend=null}catch(e){}
+      safeRecStop(rec);
       recActive=null;
       document.querySelectorAll('.mic-btn').forEach(b=>b.classList.remove('listening','listening-target'));
-      const said=(finalText+' '+interim).trim();
-      lastSaid=said;
-      const snap=rollSamples(2.4);
-      freezeClip().then(()=>{
+    });
+  };
+  const finishTimeout=()=>{
+    if(window._spkDone) return;
+    window._spkDone=true;
+    const said=lastSaid||'';
+    const snap=rollSamples(2.4);
+    freezeClip().then(()=>{
       const g=gradeUtterance(expected, said, null, snap);
+      if(g.ok){ window._spkDone=false; finishOk(said, g); return; }
+      document.querySelectorAll('.mic-btn').forEach(b=>b.classList.remove('listening','listening-target'));
       if(resultEl){
         const harakaFail=!!(said && g.needEnd);
         const d=diffArHtml(expected, said, harakaFail);
         if(!said){ resultEl.className='speak-result hint'; resultEl.textContent='Niets gehoord.'; }
-        else if(g.ok){
-          resultEl.className='speak-result ok';
-          resultEl.innerHTML='✓ <span class="ar-diff ar-mark">'+d.html+'</span>';
-          try{playOk()}catch(e){}
-          hideCompare();
-        }else if(harakaFail){
+        else if(harakaFail){
           resultEl.className='speak-result bad';
-          resultEl.innerHTML='✗ Uitgang: gehoord <b>'+esc(endLabel(g.end.heard))+'</b>, juist <b>'+esc(endLabel(g.end.cls))+'</b>. '+(mdLite(g.end.hint||''));
-          try{playNo()}catch(e){}
-          try{navigator.vibrate&&navigator.vibrate(50)}catch(e){}
-          try{speakWord({ar:expected}, true)}catch(e){}
+          resultEl.innerHTML='✗ Uitgang: gehoord <b>'+esc(endLabel(g.end.heard))+'</b>, juist <b>'+esc(endLabel(g.end.cls))+'</b>.';
           showCompare(expected, said, 'haraka', g.end.hint||'', {ar:expected}, g.end);
         }else{
           resultEl.className='speak-result bad';
           resultEl.innerHTML='✗ Verkeerd woord.<br><span class="ar-diff ar-mark">'+d.html+'</span>';
-          try{playNo()}catch(e){}
-          try{navigator.vibrate&&navigator.vibrate(50)}catch(e){}
           showCompare(expected, said, 'word', 'Zeg het woord opnieuw.', {ar:expected}, g.end);
         }
       }
+      try{playNo()}catch(e){}
+      try{speakWord({ar:expected}, true)}catch(e){}
       stopRoll();
-      });
+      recActive=null;
+    });
+  };
+
+  startRoll().then(()=>{
+    const bind=()=>{
+      if(!stillOn()){ if(!window._spkDone) finishTimeout(); return; }
+      rec.lang='ar-SA';
+      rec.continuous=true;
+      rec.interimResults=true;
+      rec.maxAlternatives=5;
+      rec.onresult=(ev)=>{
+        if(!stillOn()) return;
+        let lastFinal='', interim='';
+        for(let i=0;i<ev.results.length;i++){
+          const t=ev.results[i][0].transcript||'';
+          if(ev.results[i].isFinal) lastFinal=t;
+          else interim=t;
+        }
+        const said=(lastFinal||interim||'').trim();
+        lastSaid=said;
+        if(resultEl && said){
+          const d=diffArHtml(expected, said);
+          resultEl.className='speak-result hint';
+          resultEl.innerHTML='Nog '+left()+'s · <span class="ar-diff ar-mark">'+(d.html||'')+'</span>';
+        }
+        if(lastFinal){
+          const snap=rollSamples(2.4);
+          const g=gradeUtterance(expected, lastFinal, null, snap);
+          if(g.ok) finishOk(lastFinal, g);
+        }
+      };
+      rec.onerror=(ev)=>{
+        if(resultEl && ev.error==='not-allowed'){
+          resultEl.className='speak-result bad';
+          resultEl.textContent='Microfoon toestaan via slotje (gebruik https).';
+          window._spkDone=true;
+        }
+      };
+      rec.onend=()=>{
+        recActive=null;
+        if(!stillOn()){ if(!window._spkDone) finishTimeout(); return; }
+        setTimeout(()=>{ if(stillOn()) bind(); }, 80);
+      };
+      recActive=rec;
+      safeRecStart(rec);
     };
-    recActive=rec;
-    safeRecStart(rec);
-  }, 280);
+    setTimeout(bind, 180);
   });
 }
 
@@ -3014,107 +3066,126 @@ function startZegListen(w, resultEl){
   unlockAudio();
   const mush=document.querySelector('.zeg-mushaf');
   if(mush) mush.innerHTML=wrapTash(w.ar, hideText?'wait':'now');
-  if(resultEl){resultEl.className='speak-result hint';resultEl.textContent='🎤 Lees het woord voor — met de uitgang'}
-  startRoll().then(()=>{
-  setTimeout(()=>{
-    if(state.view!=='zeg' || !state.current || state.current.id!==wordId) return;
-    rec.lang='ar-SA';
-    rec.continuous=false;
-    rec.interimResults=true;
-    rec.maxAlternatives=5;
-    let finalText='', interim='';
-    let done=false;
-    rec.onresult=(ev)=>{
-      if(done)return;
-      interim='';
-      for(let i=0;i<ev.results.length;i++){
-        const t=pickSaid({results:[ev.results[i]]}, w.ar, w) || ev.results[i][0].transcript||'';
-        if(ev.results[i].isFinal) finalText+=(finalText?' ':'')+t;
-        else interim+=(interim?' ':'')+t;
-      }
-      const said=(finalText+' '+interim).trim();
-      lastSaid=said;
-      const cons=said?arScore(said, w.ar, w):0;
-      if(mush){
-        if(hideText && cons<0.50) mush.innerHTML=wrapTash(w.ar,'wait');
-        else mush.innerHTML=wrapTash(w.ar, cons>=0.62?'now':'wait');
-      }
-      const live=document.querySelector('.said-live');
-      if(live){
-        if(!said) live.textContent='';
-        else if(cons>=0.62){
-          const te=textHeardEnd(said, w.ar, w);
-          live.textContent=te.cls?('woord herkend · uitgang '+endLabel(te.cls)):'woord herkend · luister naar de uitgang…';
-        } else live.textContent='… luisteren';
-      }
-      if(resultEl && said) resultEl.textContent=cons>=0.62?'woord herkend…':'… luisteren';
-    };
-    rec.onerror=(ev)=>{
-      if(resultEl && ev.error==='not-allowed'){
-        resultEl.className='speak-result bad';
-        resultEl.textContent='Microfoon toestaan via het slotje (https).';
-      }
-    };
-    rec.onend=()=>{
+  window._zegUntil=Date.now()+LISTEN_MS;
+  window._zegDone=false;
+  if(resultEl){resultEl.className='speak-result hint';resultEl.textContent='🎤 Blijf zeggen tot het groen is — tot 1 minuut'}
+  const left=()=>Math.max(0, Math.ceil((window._zegUntil-Date.now())/1000));
+  const stillOn=()=>!window._zegDone && state.view==='zeg' && state.current && state.current.id===wordId && !state.answered && Date.now()<=window._zegUntil;
+
+  const succeed=(g)=>{
+    if(window._zegDone) return;
+    window._zegDone=true;
+    window._zegLock=wordId;
+    state.answered=true;
+    if(mush) mush.innerHTML=wrapTash(w.ar,'ok');
+    if(resultEl){
+      resultEl.className='speak-result ok';
+      resultEl.innerHTML='✓ Juist — gehoord <b>'+esc(endLabel((g.end&&g.end.heard)||(g.end&&g.end.cls)||''))+'</b>';
+    }
+    try{playOk()}catch(e){}
+    hideCompare();
+    freezeClip().then(()=>{
+      stopRoll();
+      try{rec.onend=null}catch(e){}
+      safeRecStop(rec);
       recActive=null;
-      if(done || state.view!=='zeg') return;
-      if(state.answered) return;
-      const said=(finalText+' '+interim).trim();
-      lastSaid=said;
-      const snap=rollSamples(2.4);
-      freezeClip().then(()=>{
-      if(done || state.view!=='zeg' || state.answered) return;
+      setTimeout(()=>{ window._zegLock=null; nextZeg(true); }, 700);
+    });
+  };
+
+  const timeoutFail=()=>{
+    if(window._zegDone || state.view!=='zeg' || state.answered) return;
+    window._zegDone=true;
+    const said=lastSaid||'';
+    const snap=rollSamples(2.4);
+    freezeClip().then(()=>{
       const g=gradeUtterance(w.ar, said, w.id, snap);
-      if(g.ok){
-        done=true;
-        window._zegLock=wordId;
-        state.answered=true;
-        if(mush) mush.innerHTML=wrapTash(w.ar,'ok');
-        if(resultEl){
-          const maybe=g.end&&g.end.why==='maybe';
-          const heard=g.end&&g.end.heard;
-          resultEl.className='speak-result ok';
-          resultEl.innerHTML=maybe
-            ? '✓ Woord goed. Uitgang niet scherp — zeg <b>'+esc(endLabel(g.end.cls))+'</b> extra duidelijk.'
-            : '✓ Juist — gehoord <b>'+esc(endLabel(heard||g.end.cls||''))+'</b>';
-        }
-        try{playOk()}catch(e){}
-        hideCompare();
-        stopRoll();
-        setTimeout(()=>{ window._zegLock=null; nextZeg(true); }, 650);
-        return;
-      }
+      if(g.ok){ window._zegDone=false; succeed(g); return; }
       if(said && g.needEnd){
         if(mush) mush.innerHTML=wrapTash(w.ar,'haraka');
         logMistake(w,'haraka', said);
         if(resultEl){
           resultEl.className='speak-result bad';
-          resultEl.innerHTML='✗ Uitgang: gehoord <b>'+esc(endLabel(g.end.heard))+'</b>, juist <b>'+esc(endLabel(g.end.cls))+'</b>. '+(mdLite(g.end.hint||''));
+          resultEl.innerHTML='✗ Uitgang: gehoord <b>'+esc(endLabel(g.end.heard))+'</b>, juist <b>'+esc(endLabel(g.end.cls))+'</b>. Tik Zeg en probeer opnieuw.';
         }
-        try{playNo()}catch(e){}
-        try{navigator.vibrate&&navigator.vibrate(50)}catch(e){}
-        try{speakWord(w, true)}catch(e){}
         showCompare(w.ar, said, 'haraka', g.end.hint||'', w, g.end);
       } else if(said){
         if(mush) mush.innerHTML=wrapTash(w.ar,'bad');
         logMistake(w,'word', said);
-        if(resultEl){resultEl.className='speak-result bad'; resultEl.innerHTML='✗ Verkeerd woord — zeg <b>'+esc(w.translit||'')+'</b>';}
-        try{playNo()}catch(e){}
-        try{navigator.vibrate&&navigator.vibrate(50)}catch(e){}
+        if(resultEl){resultEl.className='speak-result bad'; resultEl.innerHTML='✗ Verkeerd woord — zeg <b>'+esc(w.translit||'')+'</b>. Tik Zeg.';}
         showCompare(w.ar, said, 'word', 'Zeg het hele woord, met de uitgang.', w, g.end);
-      } else if(mush){
-        mush.innerHTML=wrapTash(w.ar, hideText?'wait':'wait');
+      } else {
+        if(mush) mush.innerHTML=wrapTash(w.ar,'wait');
+        if(resultEl){resultEl.className='speak-result hint'; resultEl.textContent='Niets gehoord. Tik Zeg en lees voor.';}
       }
-      setTimeout(()=>{
-        if(state.view==='zeg' && state.current && state.current.id===wordId && !state.answered && window._zegLock!==wordId){
-          startZegListen(state.current, document.querySelector('.zeg-result'));
+      try{playNo()}catch(e){}
+      try{speakWord(w, true)}catch(e){}
+      stopRoll();
+      recActive=null;
+    });
+  };
+
+  startRoll().then(()=>{
+    const bind=()=>{
+      if(!stillOn()){
+        if(!window._zegDone && state.view==='zeg' && !state.answered) timeoutFail();
+        return;
+      }
+      rec.lang='ar-SA';
+      rec.continuous=true;
+      rec.interimResults=true;
+      rec.maxAlternatives=5;
+      rec.onresult=(ev)=>{
+        if(!stillOn()) return;
+        let interim='';
+        let lastFinal='';
+        for(let i=0;i<ev.results.length;i++){
+          const t=pickSaid({results:[ev.results[i]]}, w.ar, w) || ev.results[i][0].transcript||'';
+          if(ev.results[i].isFinal) lastFinal=t;
+          else interim=t;
         }
-      }, 1600);
-      });
+        const said=(lastFinal||interim||'').trim();
+        lastSaid=said;
+        const cons=said?arScore(said, w.ar, w):0;
+        if(mush){
+          if(hideText && cons<0.50) mush.innerHTML=wrapTash(w.ar,'wait');
+          else mush.innerHTML=wrapTash(w.ar, cons>=0.62?'now':'wait');
+        }
+        const live=document.querySelector('.said-live');
+        if(live) live.textContent=said?(cons>=0.62?('woord herkend · nog '+left()+'s'):('… nog '+left()+'s')):('🎤 nog '+left()+'s');
+        if(lastFinal){
+          const snap=rollSamples(2.4);
+          const g=gradeUtterance(w.ar, lastFinal, w.id, snap);
+          if(g.ok){ succeed(g); return; }
+          if(resultEl){
+            resultEl.className='speak-result hint';
+            if(g.needEnd) resultEl.innerHTML='Nog '+left()+'s · zeg de uitgang <b>'+esc(endLabel(g.end.cls))+'</b> extra duidelijk';
+            else resultEl.textContent='Nog '+left()+'s · zeg '+(w.translit||'het woord')+' opnieuw';
+          }
+        } else if(resultEl){
+          resultEl.className='speak-result hint';
+          resultEl.textContent='🎤 Nog '+left()+'s — blijf zeggen tot het groen is';
+        }
+      };
+      rec.onerror=(ev)=>{
+        if(resultEl && ev.error==='not-allowed'){
+          resultEl.className='speak-result bad';
+          resultEl.textContent='Microfoon toestaan via het slotje (https).';
+          window._zegDone=true;
+        }
+      };
+      rec.onend=()=>{
+        recActive=null;
+        if(!stillOn()){
+          if(!window._zegDone && state.view==='zeg' && !state.answered) timeoutFail();
+          return;
+        }
+        setTimeout(()=>{ if(stillOn()) bind(); }, 80);
+      };
+      recActive=rec;
+      safeRecStart(rec);
     };
-    recActive=rec;
-    safeRecStart(rec);
-  }, 280);
+    setTimeout(bind, 180);
   });
 }
 function startZeg(sel){
@@ -3182,7 +3253,7 @@ function renderZeg(){
     <button type="button" class="btn btn-sm ${hideText?'btn-primary':'btn-secondary'}" data-act="toggle-hide">${hideText?'👁 Verborgen':'👁 Tekst'}</button>
     <button type="button" class="btn btn-sm ${autoSpeak?'btn-primary':'btn-secondary'}" data-act="toggle-speak">${autoSpeak?'🔊 Aan':'🔇 Uit'}</button></div>
     <h2 class="mvp-h">${hideText?'Zeg uit het hoofd':'Lees voor'}</h2>
-    <p class="mvp-sub">${hideText?'Tekst is verborgen — zeg het woord inclusief de uitgang. Tik <b>Kijk</b> voor een glimp.':'Zeg het woord <strong>inclusief de uitgang</strong>. Groen = goed, oranje stip = harakaat, rood = verkeerd woord. Tik een woord voor jij vs juist.'}</p>
+    <p class="mvp-sub">${hideText?'Tekst is verborgen — zeg het woord inclusief de uitgang. Tik <b>Kijk</b> voor een glimp. De microfoon blijft tot 1 minuut luisteren tot het groen is.':'Zeg het woord <strong>inclusief de uitgang</strong>. De microfoon blijft tot 1 minuut luisteren tot het groen is.'}</p>
     <div class="q-pic">${wordPic(w)}</div>
     <div class="zeg-target ${hideText?'hide-ar':''}">
       <div class="zeg-mushaf ar-mark" lang="ar">${wrapTash(w.ar,'wait')}</div>
