@@ -3105,11 +3105,14 @@ function renderParsePane(n){
   }
   return `
     <p class="mvp-sub">Tik een woord, daarna het vak. Tik <b>?</b> voor uitleg over dat zinsdeel.</p>
-    <button type="button" class="card" style="margin-bottom:10px;width:100%;text-align:center" data-act="parse-sent">
-      <div class="mvp-kicker">Zin ${state.parseI+1}/${tasks.length} · tik voor vertaling</div>
-      <div class="ar" lang="ar" style="font-size:26px;margin:8px 0">${esc(task.ar)}</div>
+    <div class="card" style="margin-bottom:10px;width:100%;text-align:center">
+      <button type="button" data-act="parse-sent" style="width:100%;background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer">
+        <div class="mvp-kicker">Zin ${state.parseI+1}/${tasks.length} · tik voor vertaling</div>
+        <div class="ar" lang="ar" style="font-size:26px;margin:8px 0">${esc(task.ar)}</div>
+      </button>
+      <button type="button" class="icon-btn" data-act="speak-text" data-text="${esc(task.ar)}" aria-label="Hoor" style="width:36px;height:36px;margin:0 auto 8px">🔊</button>
       ${state.parseShowSent?`<div class="who-phon">${esc(romanizeAr(task.ar))}</div><div style="color:var(--muted);font-size:14px;margin-top:4px">${esc(task.nl)}</div>`:''}
-    </button>
+    </div>
     ${info}
     <div class="parse-slots">${slots}</div>
     <div class="parse-bank">${bank||'<span class="blurb">Alle woorden geplaatst</span>'}</div>
@@ -3245,7 +3248,10 @@ function renderGramExercise(n){
     <div class="card" id="gq-${gi}">
       <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px">${needPic?'Kijk naar de foto':'Vraag '+(gi+1)}</div>
       ${pic?`<div class="q-pic gram-pic">${pic}</div>`:''}
-      <div class="ar" style="font-size:18px;font-weight:700;text-align:center;margin-bottom:10px;line-height:1.5" lang="ar">${esc(ex.q)}</div>
+      <div class="ar" style="font-size:18px;font-weight:700;text-align:center;margin-bottom:10px;line-height:1.5;display:flex;align-items:center;justify-content:center;gap:8px" lang="ar">
+        <span>${esc(ex.q)}</span>
+        <button type="button" class="icon-btn" data-act="speak-text" data-text="${esc(ex.q)}" aria-label="Hoor" style="width:36px;height:36px;flex-shrink:0">🔊</button>
+      </div>
       <div class="options" style="grid-template-columns:1fr">${optsHtml}</div>
       ${ans?`<div style="margin-top:10px;font-size:13px;font-weight:600;color:${ans.ok?'var(--ok)':'var(--clay)'}">${ans.ok?'✓ Goed! ':'✗ '}${esc(ex.explain||'')}</div>`:''}
     </div>
@@ -3456,7 +3462,7 @@ document.addEventListener('click',e=>{
   else if(act==='speak-word'){
     e.stopPropagation();
     const t=btn.getAttribute('data-ar')||'';
-    if(t)speakWord({ar:t});
+    if(t)speakWord({ar:t}, true);
   }
   else if(act==='zeg-listen'){
     const w=state.current;
@@ -3618,7 +3624,12 @@ document.addEventListener('click',e=>{
     unlockAudio();
     const w=ALL.find(x=>x.id===btn.dataset.id);if(w)speakWord(w,true);
   }
-  else if(act==='speak-text'){e.stopPropagation();const t=btn.getAttribute('data-text')||btn.dataset.text||'';speakWord({ar:t})}
+  else if(act==='speak-text'){
+    e.stopPropagation();e.preventDefault();
+    unlockAudio();
+    const t=btn.getAttribute('data-text')||btn.dataset.text||'';
+    if(t)speakWord({ar:t}, true);
+  }
   else if(act==='toggle-auto'){autoSpeak=!autoSpeak;saveA();render()}
   else if(act==='answer'){
     if(state.answered)return;
