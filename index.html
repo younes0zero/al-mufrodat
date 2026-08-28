@@ -1405,16 +1405,20 @@ function speakFile(src, done){
   try{
     const a=getSharedAudio();
     try{a.pause()}catch(e){}
-    a.onended=null;a.onerror=null;
-    let settled=false;
-    const finish=ok=>{if(settled)return;settled=true;clearTimeout(tm);if(done)done(!!ok)};
-    const tm=setTimeout(()=>finish(false),1600);
+    a.onended=null;a.onerror=null;a.onplaying=null;
+    let settled=false, started=false;
+    const finish=ok=>{
+      if(settled)return;settled=true;clearTimeout(tm);
+      if(done)done(!!ok);
+    };
+    const tm=setTimeout(()=>{ if(!started) finish(false); }, 2200);
+    a.onplaying=()=>{ started=true; clearTimeout(tm); };
     a.onended=()=>finish(true);
     a.onerror=()=>finish(false);
     activeAudio=a;
     a.src=src;
     const p=a.play();
-    if(p&&p.catch)p.catch(()=>finish(false));
+    if(p&&p.then) p.then(()=>{ started=true; clearTimeout(tm); }).catch(()=>finish(false));
   }catch(e){if(done)done(false)}
 }
 
@@ -1428,6 +1432,7 @@ function speakWord(word,force){
   stopAudio();
   speakFile(localWordSrc(word), ok0=>{
     if(ok0)return;
+    try{stopAudio()}catch(e){}
     speakProxy(t,ok1=>{
       if(ok1)return;
       speakGoogle(t,ok2=>{
@@ -1920,6 +1925,7 @@ function speakDialogueLine(text, who, onDone){
   speakFile(localLineSrc(t, who), ok0=>{
     if(myGen!==audioGen)return;
     if(ok0){finish(true);return}
+    try{stopAudio()}catch(e){}
     speakProxyPitched(t, g, who, ok1=>{
       if(myGen!==audioGen)return;
       if(ok1){finish(true);return}
