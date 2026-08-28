@@ -1907,34 +1907,23 @@ function textHeardEnd(said, expected, word){
 }
 function audioHeardEnd(f, gold, expectedCls){
   if(!f) return {cls:'', conf:0, src:''};
-  const nas=+f.nas||0, dur=+f.dur||0;
+  const nas=+f.nas||0;
   const fam=endingFamily(expectedCls||'');
   const gN=gold?gold.n:50;
   const nasRel=nas/(gN+1);
-  if(fam==='tan'){
-    if(dur>=0.12) return {cls:expectedCls||'un', conf:0.85, src:'mic'};
-    return {cls:'', conf:0.2, src:'mic'};
-  }
-  if(fam==='short'){
-    if(nas>=50 || nasRel>=0.45) return {cls:'un', conf:0.72, src:'mic'};
-    return {cls:expectedCls||'', conf:0.6, src:'mic'};
+  if(nas>=14 || nasRel>=0.12){
+    return {cls:'un', conf:(nas>=28||nasRel>=0.22)?0.8:0.66, src:'mic'};
   }
   return {cls:'', conf:0.2, src:'mic'};
 }
 function heardEnding(said, expected, f, gold, word){
-  const want=endingClass(expected);
-  const fam=endingFamily(want);
   const t=textHeardEnd(said, expected, word);
-  const a=audioHeardEnd(f, gold, want);
-  if(fam==='tan'){
-    if(t.cls==='un'||t.cls==='in'||t.cls==='an') return {cls:want, conf:Math.max(0.8,t.conf), src:t.src};
-    return {cls:want, conf:0.85, src:a.cls? 'mic':'read'};
-  }
-  if(t.conf>=0.75) return t;
-  if(a.conf>=0.62) return a;
-  if(t.cls) return t;
-  if(a.cls) return a;
-  return {cls:'', conf:Math.max(t.conf,a.conf), src:a.src||t.src||''};
+  const a=audioHeardEnd(f, gold, endingClass(expected));
+  const tan=c=>c==='un'||c==='in'||c==='an';
+  if(tan(t.cls) && t.conf>=0.7) return t;
+  if(tan(a.cls) && a.conf>=0.66) return a;
+  if(t.conf>=0.75 && t.cls && t.cls!=='a') return t;
+  return {cls:'', conf:Math.max(t.conf||0, a.conf||0), src:''};
 }
 function endAgree(heard, expected){
   if(!expected) return 'yes';
@@ -2073,8 +2062,7 @@ function showCompare(expected, said, kind, hint, word, endInfo){
   const h=document.getElementById('cmp-host');
   if(!h) return;
   const want=endingClass(expected);
-  let heard=(endInfo&&(endInfo.heard||endInfo.cls))||'';
-  if(endingFamily(want)==='tan' && (heard==='a'||heard==='u'||heard==='i'||heard==='drop')) heard=want;
+  const heard=(endInfo&&(endInfo.heard))||'';
   const title=kind==='haraka'?'Uitgang / harakaat':kind==='ok'?'Juist':'Verkeerd woord';
   const wantPill=want?('<span class="end-pill">juist '+esc(endLabel(want))+'</span>'):'';
   const heardKind=(!heard?'maybe':(want&&endAgree(heard,want)==='yes'?'ok':'bad'));
@@ -2194,10 +2182,9 @@ function endingScoreFromRoll(expected, said, wordId, snap0){
   const h=heardEnding(said, expected, f, gold, word||{ar:expected, translit:romanizeAr(expected)});
   const agree=endAgree(h.cls, cls);
   let ok=true, why='';
-  if(fam==='tan'){ ok=true; why=h.src||'read'; }
-  else if(agree==='yes'){ ok=true; why=h.src||'match'; }
-  else if(agree==='no' && h.conf>=0.62){ ok=false; why=h.cls||'mismatch'; }
-  else { ok=true; why='maybe'; }
+  if(agree==='yes'){ ok=true; why=h.src||'match'; }
+  else if(agree==='no' && h.conf>=0.8 && h.cls!=='a'){ ok=false; why=h.cls||'mismatch'; }
+  else { ok=true; why=h.cls?'maybe':'no-end'; }
 
   let hint='';
   if(!ok){
@@ -2206,8 +2193,10 @@ function endingScoreFromRoll(expected, said, wordId, snap0){
     else if((h.cls==='un'||h.cls==='in'||h.cls==='an') && fam==='short') hint='Te veel **-n**. Dit woord heeft **'+endLabel(cls)+'**.';
     else if(h.cls==='drop') hint='De uitgang ontbrak. '+endingHint(cls);
     else hint='Gehoord **'+endLabel(h.cls)+'**, juist **'+endLabel(cls)+'**. '+endingHint(cls);
+  } else if(why==='no-end' && fam==='tan'){
+    hint='';
   } else if(why==='maybe' && fam==='tan'){
-    hint='Uitgang niet scherp gehoord. Zeg **'+endLabel(cls)+'** extra duidelijk.';
+    hint='';
   }
   const heard=h.cls||'';
   return {ok, score:ok?(agree==='yes'?1:0.8):0.3, cls, heard, hint, why, feats:f, gold, conf:h.conf, src:h.src, agree};
@@ -2220,15 +2209,22 @@ function gradeUtterance(expected, said, wordId, snap){
   try{
     if(snap&&snap.x){ const fv=featVec(snap.x, snap.sr); dur=fv?fv.dur:0; }
   }catch(e){}
-  const end=isolated
-    ? {ok:true, score:1, cls:endingClass(expected), heard:endingClass(expected)||'', skipped:false, hint:'', agree:'yes', why:'read'}
-    : (checkHarakat ? endingScoreFromRoll(expected, said, wordId, snap) : {ok:true, score:1, cls:'', skipped:true, hint:'', heard:'', agree:'yes'});
+  const end=checkHarakat
+    ? endingScoreFromRoll(expected, said, wordId, snap)
+    : {ok:true, score:1, cls:'', skipped:true, hint:'', heard:'', agree:'yes'};
+  if(isolated){ end.ok=true; }
   const consOk=isolated
     ? (cons>=0.36 || (dur>=0.28 && cons>=0.18) || dur>=0.38)
     : cons>=0.62;
   const harakaFail=!isolated && cons>=0.62 && checkHarakat && !end.skipped && !end.ok;
   const ok=consOk && !harakaFail;
   return {ok, cons, end, needEnd:harakaFail, dur};
+}
+function zegOkHtml(g){
+  const heard=g&&g.end&&g.end.heard;
+  const agree=g&&g.end&&g.end.agree;
+  if(heard && agree==='yes') return '✓ Juist — gehoord <b>'+esc(endLabel(heard))+'</b>';
+  return '✓ Woord goed';
 }
 /** Align expected tokens vs said tokens → HTML with red errors */
 
@@ -2646,7 +2642,7 @@ function startSpeakPractice(expected, who, resultEl){
     const d=diffArHtml(expected, said, harakaFail);
     if(resultEl){
       resultEl.className='speak-result ok';
-      resultEl.innerHTML='✓ <span class="ar-diff ar-mark">'+d.html+'</span> · gehoord <b>'+esc(endLabel((g.end&&g.end.heard)||(g.end&&g.end.cls)||''))+'</b>';
+      resultEl.innerHTML=zegOkHtml(g)+' · <span class="ar-diff ar-mark">'+d.html+'</span>';
     }
     try{playOk()}catch(e){}
     hideCompare();
@@ -3085,7 +3081,7 @@ function startZegListen(w, resultEl){
     if(mush) mush.innerHTML=wrapTash(w.ar,'ok');
     if(resultEl){
       resultEl.className='speak-result ok';
-      resultEl.innerHTML='✓ Juist — gehoord <b>'+esc(endLabel((g.end&&g.end.heard)||(g.end&&g.end.cls)||''))+'</b>';
+      resultEl.innerHTML=zegOkHtml(g);
     }
     try{playOk()}catch(e){}
     hideCompare();
