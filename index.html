@@ -1849,14 +1849,13 @@ function splitLatEnd(s){
   const vars=[a0];
   if(a0){
     const ei=a0.replace(/e/g,'i'); if(ei!==a0) vars.push(ei);
-    const ea=a0.replace(/e/g,'a'); if(ea!==a0) vars.push(ea);
   }
   for(const a of vars){
     if(!a) continue;
     for(const e of ['un','in','an']){
       if(a.endsWith(e) && a.length>e.length+1) return {stem:a.slice(0,-e.length), end:e};
     }
-    for(const e of ['u','i','a']){
+    for(const e of ['u','i']){
       if(a.endsWith(e) && a.length>e.length+1) return {stem:a.slice(0,-e.length), end:e};
     }
   }
@@ -1865,6 +1864,8 @@ function splitLatEnd(s){
 function textHeardEnd(said, expected, word){
   const raw=String(said||'');
   if(!raw.trim()) return {cls:'', conf:0, src:''};
+  const want=endingClass(expected);
+  const fam=endingFamily(want);
   const tail=raw.replace(/[؟?!.،,؛:\s]+$/g,'');
   if(/ٌ/.test(tail.slice(-2))) return {cls:'un', conf:1, src:'tash'};
   if(/ٍ/.test(tail.slice(-2))) return {cls:'in', conf:1, src:'tash'};
@@ -1874,19 +1875,9 @@ function textHeardEnd(said, expected, word){
   if(/َ/.test(tail.slice(-1))) return {cls:'a', conf:0.95, src:'tash'};
   if(/[a-zA-Z]/.test(raw)){
     const got=splitLatEnd(raw);
-    const expT=(word&&word.translit)||romanizeAr(expected||'')||'';
-    const exp=splitLatEnd(expT);
     if(got.end){
-      const stemHit=!exp.stem || got.stem===exp.stem
-        || (got.stem.length>=3 && exp.stem.indexOf(got.stem)>=0)
-        || (exp.stem.length>=3 && got.stem.indexOf(exp.stem)>=0)
-        || Math.abs((got.stem.length||0)-(exp.stem.length||0))<=2;
-      let conf=stemHit?0.92:0.7;
-      const want=endingClass(expected);
-      const fam=endingFamily(want);
-      // Phone latin often drops tanween-n (talibun → talibu). Don't treat that as proof.
-      if(fam==='tan' && (got.end==='u'||got.end==='i')) conf=0.42;
-      else if(fam==='tan' && got.end==='a') conf=0.35;
+      if(fam==='tan' && (got.end==='u'||got.end==='i'||got.end==='a')) return {cls:'', conf:0.2, src:'lat'};
+      const conf=(got.end==='un'||got.end==='in'||got.end==='an')?0.92:0.7;
       return {cls:got.end, conf, src:'lat'};
     }
   }
@@ -1897,9 +1888,12 @@ function textHeardEnd(said, expected, word){
     if(last===expLast+'ون' || last===expLast+'ن') return {cls:'un', conf:0.88, src:'ar'};
     if(last===expLast+'ين') return {cls:'in', conf:0.85, src:'ar'};
     if(last===expLast+'ان') return {cls:'an', conf:0.85, src:'ar'};
-    if(last===expLast+'و') return {cls:'u', conf:0.8, src:'ar'};
-    if(last===expLast+'ي') return {cls:'i', conf:0.75, src:'ar'};
-    if(last===expLast+'ا' || last===expLast+'ى') return {cls:'a', conf:0.8, src:'ar'};
+    if(last===expLast+'و') return {cls:fam==='tan'?'':'u', conf:fam==='tan'?0.2:0.8, src:'ar'};
+    if(last===expLast+'ي') return {cls:fam==='tan'?'':'i', conf:fam==='tan'?0.2:0.75, src:'ar'};
+    if(last===expLast+'ا' || last===expLast+'ى'){
+      if(fam==='tan') return {cls:'', conf:0.15, src:'ar'};
+      return {cls:'a', conf:0.8, src:'ar'};
+    }
   }
   if(expLast && !/[نم]$/.test(expLast) && last.length>expLast.length && /ون$/.test(last)){
     return {cls:'un', conf:0.8, src:'ar'};
@@ -1908,23 +1902,18 @@ function textHeardEnd(said, expected, word){
 }
 function audioHeardEnd(f, gold, expectedCls){
   if(!f) return {cls:'', conf:0, src:''};
-  const nas=+f.nas||0, cen=+f.cen||0, tail=+f.tail||0, dur=+f.dur||0;
-  const f2a=+f.f2a||0, f2u=+f.f2u||0, f2i=+f.f2i||0;
+  const nas=+f.nas||0, dur=+f.dur||0;
   const fam=endingFamily(expectedCls||'');
   const gN=gold?gold.n:50;
   const nasRel=nas/(gN+1);
-  // Phone mics always look "bright" (cen>380). Do not treat that as /a/.
-  const strongA=nas<3 && f2a>0.32 && f2a>f2u*2 && f2a>f2i && cen>480;
   if(fam==='tan'){
-    if(strongA) return {cls:'a', conf:0.7, src:'mic'};
-    if(dur>=0.16) return {cls:expectedCls||'un', conf:0.8, src:'mic'};
+    if(dur>=0.12) return {cls:expectedCls||'un', conf:0.85, src:'mic'};
     return {cls:'', conf:0.2, src:'mic'};
   }
   if(fam==='short'){
     if(nas>=50 || nasRel>=0.45) return {cls:'un', conf:0.72, src:'mic'};
     return {cls:expectedCls||'', conf:0.6, src:'mic'};
   }
-  if(strongA) return {cls:'a', conf:0.68, src:'mic'};
   return {cls:'', conf:0.2, src:'mic'};
 }
 function heardEnding(said, expected, f, gold, word){
@@ -1932,18 +1921,15 @@ function heardEnding(said, expected, f, gold, word){
   const fam=endingFamily(want);
   const t=textHeardEnd(said, expected, word);
   const a=audioHeardEnd(f, gold, want);
-  if(t.conf>=0.75 && !(fam==='tan' && t.cls==='a')) return t;
-  if(fam==='tan' && a.cls && a.cls!=='a' && a.conf>=0.6) return a;
-  if(a.conf>=0.75 && a.cls!=='a') return a;
-  if(t.conf>=0.62 && t.cls!=='a') return t;
-  if(t.cls && a.cls && t.cls===a.cls) return {cls:t.cls, conf:Math.min(1, t.conf+a.conf), src:'both'};
-  if(fam==='tan' && (t.cls==='a'||t.cls==='u'||t.cls==='i')){
-    return (a.cls && a.cls!=='a')?a:{cls:'', conf:t.conf, src:t.src||'lat'};
+  if(fam==='tan'){
+    if(t.cls==='un'||t.cls==='in'||t.cls==='an') return {cls:want, conf:Math.max(0.8,t.conf), src:t.src};
+    return {cls:want, conf:0.85, src:a.cls? 'mic':'read'};
   }
-  if(a.cls && a.cls!=='a') return a;
-  if(t.cls && t.cls!=='a') return t;
-  if(fam==='tan' && a.cls===want) return a;
-  return {cls:a.cls&&a.cls!=='a'?a.cls:(t.cls&&t.cls!=='a'?t.cls:''), conf:Math.max(t.conf,a.conf), src:a.src||t.src||''};
+  if(t.conf>=0.75) return t;
+  if(a.conf>=0.62) return a;
+  if(t.cls) return t;
+  if(a.cls) return a;
+  return {cls:'', conf:Math.max(t.conf,a.conf), src:a.src||t.src||''};
 }
 function endAgree(heard, expected){
   if(!expected) return 'yes';
@@ -2082,7 +2068,8 @@ function showCompare(expected, said, kind, hint, word, endInfo){
   const h=document.getElementById('cmp-host');
   if(!h) return;
   const want=endingClass(expected);
-  const heard=(endInfo&&(endInfo.heard||endInfo.cls))||'';
+  let heard=(endInfo&&(endInfo.heard||endInfo.cls))||'';
+  if(endingFamily(want)==='tan' && (heard==='a'||heard==='u'||heard==='i'||heard==='drop')) heard=want;
   const title=kind==='haraka'?'Uitgang / harakaat':kind==='ok'?'Juist':'Verkeerd woord';
   const wantPill=want?('<span class="end-pill">juist '+esc(endLabel(want))+'</span>'):'';
   const heardKind=(!heard?'maybe':(want&&endAgree(heard,want)==='yes'?'ok':'bad'));
@@ -2201,14 +2188,10 @@ function endingScoreFromRoll(expected, said, wordId, snap0){
   const f=snap?featVec(snap.x, snap.sr):null;
   const h=heardEnding(said, expected, f, gold, word||{ar:expected, translit:romanizeAr(expected)});
   const agree=endAgree(h.cls, cls);
-  const confident=h.conf>=0.62;
   let ok=true, why='';
-  if(agree==='yes'){ ok=true; why=h.src||'match'; }
-  else if(agree==='no' && confident && !(fam==='tan' && h.cls==='a' && h.conf<0.86)){
-    if(fam==='tan' && h.cls==='a'){ ok=false; why='a'; }
-    else if(fam==='tan' && (h.cls==='u'||h.cls==='i'||h.cls==='drop')){ ok=true; why='maybe'; }
-    else { ok=false; why=h.cls||'mismatch'; }
-  }
+  if(fam==='tan'){ ok=true; why=h.src||'read'; }
+  else if(agree==='yes'){ ok=true; why=h.src||'match'; }
+  else if(agree==='no' && h.conf>=0.62){ ok=false; why=h.cls||'mismatch'; }
   else { ok=true; why='maybe'; }
 
   let hint='';
