@@ -1748,35 +1748,86 @@ function translitEndHtml(w){
   const t=esc((w&&w.translit)||romanizeAr((w&&w.ar)||'')||'');
   return t.replace(/(un|in|an)(?=$)/i,'<strong>$1</strong>');
 }
-function arScore(said, expected){
-  const a=normAr(said), b=normAr(expected);
-  if(!a||!b)return 0;
-  if(a===b)return 1;
-  // tanween often shows up as extra ن
-  if(a===b+'ن'||a===b+'ون'||a===b+'ين'||a===b+'ان') return 0.95;
-  if(b===a+'ن') return 0.88;
-  const grams=s=>{const g=new Set(); for(let i=0;i<Math.max(0,s.length-1);i++)g.add(s.slice(i,i+2)); return g};
-  const A=grams(a), B=grams(b);
-  if(!A.size||!B.size)return 0;
-  let inter=0; for(const g of A)if(B.has(g))inter++;
-  let s=2*inter/(A.size+B.size);
-  // different word: don't give a cheap pass via substring
-  if(a!==b && Math.abs(a.length-b.length)>2 && s<0.92) s*=0.75;
-  if(a.length>=2 && b.length>=2 && !a.includes(b) && !b.includes(a) && s<0.8){
-    // consonant skeleton mismatch
-    if(s<0.55) return s;
+function foldAr(s){
+  return normAr(s)
+    .replace(/ط/g,'ت')
+    .replace(/ض/g,'د')
+    .replace(/ص/g,'س')
+    .replace(/ظ/g,'ز')
+    .replace(/ق/g,'ك')
+    .replace(/[ءئؤ]/g,'');
+}
+function foldLat(s){
+  return String(s||'').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z]/g,'')
+    .replace(/aa/g,'a').replace(/ee/g,'i').replace(/ii/g,'i')
+    .replace(/uu/g,'u').replace(/oo/g,'u').replace(/ou/g,'u')
+    .replace(/kh/g,'k').replace(/th/g,'t').replace(/dh/g,'d')
+    .replace(/sh/g,'s').replace(/gh/g,'g')
+    .replace(/q/g,'k');
+}
+function latinScore(said, expected, word){
+  const raw=String(said||'');
+  if(!/[a-zA-Z]/.test(raw)) return 0;
+  const a0=foldLat(raw);
+  if(a0.length<2) return 0;
+  const vars=[a0, a0.replace(/e/g,'i'), a0.replace(/e/g,'a')];
+  const cands=[];
+  if(word&&word.translit) cands.push(word.translit);
+  cands.push(romanizeAr(expected||(word&&word.ar)||''));
+  let best=0;
+  for(const a of vars){
+  for(const c of cands){
+    const b=foldLat(c);
+    if(!b) continue;
+    if(a===b) best=Math.max(best,1);
+    else if(a===b+'n'||a===b+'un'||a===b+'in'||a===b+'an') best=Math.max(best,0.96);
+    else if(b===a+'n'||b===a+'un'||b===a+'in') best=Math.max(best,0.9);
+    else if(b.startsWith(a) && a.length>=Math.max(3, b.length-3)) best=Math.max(best,0.88);
+    else if(a.startsWith(b) && b.length>=3 && a.length<=b.length+3) best=Math.max(best,0.88);
+    else {
+      const grams=s=>{const g=new Set(); for(let i=0;i<Math.max(0,s.length-1);i++)g.add(s.slice(i,i+2)); return g};
+      const A=grams(a), B=grams(b);
+      if(A.size&&B.size){
+        let inter=0; for(const x of A) if(B.has(x)) inter++;
+        best=Math.max(best, 2*inter/(A.size+B.size));
+      }
+    }
   }
-  return s;
+  }
+  return best;
+}
+function arScore(said, expected, word){
+  const a0=normAr(said), b0=normAr(expected);
+  const a=foldAr(said), b=foldAr(expected);
+  let s=0;
+  if(a&&b){
+    if(a0===b0 || a===b) s=1;
+    else if(a===b+'ن'||a===b+'ون'||a===b+'ين'||a===b+'ان'||a===b+'و') s=0.95;
+    else if(b===a+'ن'||b===a+'ون') s=0.9;
+    else {
+      const grams=x=>{const g=new Set(); for(let i=0;i<Math.max(0,x.length-1);i++)g.add(x.slice(i,i+2)); return g};
+      const A=grams(a), B=grams(b);
+      if(A.size&&B.size){
+        let inter=0; for(const g of A) if(B.has(g)) inter++;
+        s=2*inter/(A.size+B.size);
+      }
+      if(a!==b && Math.abs(a.length-b.length)>2 && s<0.92) s*=0.75;
+    }
+  }
+  const lat=latinScore(said, expected, word);
+  return Math.max(s, lat);
 }
 
-function pickSaid(ev, expected){
+function pickSaid(ev, expected, word){
   let best='', bs=-1;
   for(let i=0;i<ev.results.length;i++){
     const r=ev.results[i];
     for(let j=0;j<r.length;j++){
       const t=String(r[j].transcript||'').trim();
       if(!t) continue;
-      const sc=expected?arScore(t, expected):(r[j].confidence||0);
+      const sc=expected?arScore(t, expected, word):(r[j].confidence||0);
       if(sc>bs){ bs=sc; best=t; }
     }
   }
@@ -2047,11 +2098,16 @@ function endingScoreFromRoll(expected, said, wordId, snap0){
   return {ok, score, cls, heard, hint, why, feats:f, gold};
 }
 function gradeUtterance(expected, said, wordId, snap){
-  const cons=arScore(said, expected);
+  const word=(wordId && typeof ALL!=='undefined' && ALL)?ALL.find(x=>x.id===wordId):null;
+  const cons=arScore(said, expected, word||{ar:expected});
   const end=checkHarakat ? endingScoreFromRoll(expected, said, wordId, snap) : {ok:true, score:1, cls:'', skipped:true, hint:''};
   const needEnd=!!end.cls && !end.skipped;
-  const ok= cons>=0.70 && (!needEnd || end.ok);
-  return {ok, cons, end, needEnd};
+  // Isolated vocab: phone ASR never returns harakat (طَالِبٌ → تالب / talibun).
+  // If the lexeme matched, accept. Only block a clearly different word.
+  const isolated=!!wordId;
+  const endOk=!needEnd || end.ok || (isolated && cons>=0.62);
+  const ok=cons>=0.62 && endOk;
+  return {ok, cons, end, needEnd: needEnd && !endOk};
 }
 /** Align expected tokens vs said tokens → HTML with red errors */
 
@@ -2868,22 +2924,23 @@ function startZegListen(w, resultEl){
     rec.lang='ar-SA';
     rec.continuous=false;
     rec.interimResults=true;
+    rec.maxAlternatives=5;
     let finalText='', interim='';
     let done=false;
     rec.onresult=(ev)=>{
       if(done)return;
       interim='';
       for(let i=0;i<ev.results.length;i++){
-        const t=pickSaid({results:[ev.results[i]]}, w.ar) || ev.results[i][0].transcript||'';
+        const t=pickSaid({results:[ev.results[i]]}, w.ar, w) || ev.results[i][0].transcript||'';
         if(ev.results[i].isFinal) finalText+=(finalText?' ':'')+t;
         else interim+=(interim?' ':'')+t;
       }
       const said=(finalText+' '+interim).trim();
       lastSaid=said;
-      const cons=said?arScore(said, w.ar):0;
+      const cons=said?arScore(said, w.ar, w):0;
       if(mush){
-        if(hideText && cons<0.55) mush.innerHTML=wrapTash(w.ar,'wait');
-        else mush.innerHTML=wrapTash(w.ar, cons>=0.70?'now':'wait');
+        if(hideText && cons<0.50) mush.innerHTML=wrapTash(w.ar,'wait');
+        else mush.innerHTML=wrapTash(w.ar, cons>=0.62?'now':'wait');
       }
       const live=document.querySelector('.said-live');
       if(live) live.textContent=said?('… '+said):'';
