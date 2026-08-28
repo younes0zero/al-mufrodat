@@ -1413,6 +1413,8 @@ function localWordSrc(word){
   return '';
 }
 const AUDIO_VER='v6';
+const WORD_END={'l1-1':[0.75,81.5,204],'l1-2':[0.88,132.6,173],'l1-3':[0.74,114.5,201],'l1-4':[0.75,155.8,173],'l1-5':[0.74,91.1,163],'l1-6':[1.02,100.5,199],'l1-7':[0.86,131.2,175],'l1-8':[0.82,155.2,185],'l1-9':[0.85,125.2,160],'l1-10':[0.75,55.3,210],'l1-11':[0.8,104.0,169],'l1-12':[0.8,121.0,175],'l1-13':[0.78,83.1,171],'l1-14':[0.78,135.4,193],'l1-15':[0.81,128.0,168],'l1-16':[0.8,115.8,166],'l1-17':[0.63,71.3,191],'l1-18':[0.56,71.5,208],'l1-19':[0.88,124.1,160],'l1-20':[0.74,77.2,181],'l1-21':[0.81,122.0,198],'l1-22':[0.73,58.0,216],'l1-23':[1.04,105.4,184],'l1-24':[0.9,94.5,176],'l2-1':[0.87,104.6,190],'l2-2':[0.76,124.4,165],'l2-3':[0.8,139.2,179],'l2-4':[0.78,124.1,171],'l3-1':[0.79,139.1,183],'l3-2':[0.76,103.8,166],'l3-3':[0.79,115.7,166],'l3-4':[0.8,131.7,165],'l3-5':[0.9,119.2,163],'l3-6':[0.88,130.1,173],'l3-7':[0.96,138.8,196],'l3-8':[0.99,85.6,191],'l3-9':[0.96,114.3,189],'l3-10':[0.77,87.4,169],'l3-11':[0.78,113.9,163],'l3-12':[0.87,103.6,181],'l3-13':[0.9,107.1,194],'l3-14':[0.94,113.2,168],'l3-15':[0.81,160.4,168],'l3-16':[0.75,135.4,158],'l3-17':[0.95,113.8,175],'l3-18':[0.77,124.8,185],'l3-19':[1.0,89.8,168],'l3-20':[0.95,112.2,191],'l3-21':[0.77,34.4,214],'l3-22':[1.01,83.3,211],'l3-23':[1.13,114.0,173],'l3-24':[0.66,44.5,201],'l3-25':[0.9,109.2,179],'l3-26':[0.84,130.5,180],'l3-27':[0.96,111.5,194],'l4-1':[0.51,0.7,308],'l4-2':[0.86,134.1,161],'l4-3':[0.87,101.3,197],'l4-4':[0.91,117.5,165],'l4-5':[0.63,131.5,197],'l4-6':[0.89,131.1,175],'l4-7':[0.93,81.9,178],'l4-8':[1.06,92.8,203],'l4-9':[1.11,124.7,176],'l4-10':[0.74,50.5,212],'l4-11':[0.9,10.9,204],'l4-12':[0.75,6.6,220],'l4-13':[0.75,11.7,295],'l4-14':[1.02,17.1,186],'l4-15':[1.56,129.1,228],'l4-16':[0.69,0.4,383],'l4-17':[0.7,0.5,300],'l4-18':[0.31,17.7,232],'l4-19':[0.45,0.3,391],'l4-20':[0.57,50.6,217],'l4-21':[0.36,0.3,422],'l5-1':[0.88,11.7,291],'l5-2':[0.68,75.6,206],'l5-3':[0.74,84.2,210],'l5-4':[0.95,12.7,291],'l5-5':[0.94,125.8,163],'l5-6':[0.93,103.2,179],'l5-7':[0.64,171.9,193],'l5-8':[1.03,137.6,166],'l5-9':[0.52,0.2,452],'l5-10':[1.08,137.8,163],'l5-11':[0.46,0.8,268],'l5-12':[0.7,0.2,442],'l5-13':[0.74,82.0,209],'l6-1':[0.64,55.2,212],'l6-2':[0.79,82.6,197],'l6-3':[0.66,103.6,214],'l6-4':[0.73,101.8,186],'l6-5':[0.46,59.3,206],'l6-6':[0.67,98.6,205],'l6-7':[0.76,71.2,207],'l6-8':[0.68,86.5,183],'l6-9':[0.9,116.8,167],'l6-10':[1.19,100.4,175],'l6-11':[0.99,76.4,171],'l6-12':[0.63,81.7,196],'l6-13':[0.97,120.3,173],'l6-14':[0.88,95.8,169],'l6-15':[0.74,56.8,202],'l6-16':[0.57,79.9,211],'l6-17':[1.06,129.1,174],'l6-18':[0.86,128.0,163],'l6-19':[0.85,126.0,171],'l6-20':[1.07,106.7,191],'l6-21':[0.77,99.8,205],'l7-1':[0.92,117.6,187],'l7-2':[0.86,131.2,170],'l7-3':[0.98,138.6,171],'l7-4':[0.88,127.9,171],'l7-5':[0.98,128.9,168],'l7-6':[1.17,99.8,183],'l7-7':[1.1,105.6,168],'l7-8':[0.6,0.3,420],'l7-9':[0.73,403.3,222],'l7-10':[0.8,0.2,451],'l7-11':[0.5,0.3,407],'l8-1':[0.75,0.3,414],'l8-2':[0.84,0.4,374],'l8-3':[0.92,4.3,336],'l8-4':[0.83,0.4,385],'l8-5':[0.69,0.9,295],'l8-6':[0.86,74.1,182],'l8-7':[0.91,0.2,504],'l9-1':[0.97,113.0,170],'l9-2':[0.98,137.0,175],'l9-3':[0.73,140.2,178],'l9-4':[0.99,114.6,168],'l9-5':[0.84,133.1,182],'l9-6':[0.75,98.4,196],'l9-7':[1.03,132.9,171],'l9-8':[0.96,109.5,188],'l9-9':[1.38,13.3,292],'l9-10':[0.71,122.5,204],'l9-11':[1.08,86.2,180],'l9-12':[1.07,11.3,291],'l9-13':[0.71,1.2,300],'l9-14':[0.76,0.2,443],'l9-15':[0.87,88.0,169],'l9-16':[0.91,126.8,179],'l9-17':[0.84,16.1,208],'l9-18':[0.86,16.3,200],'l9-19':[0.78,32.8,214],'l9-20':[1.04,109.1,172],'l9-21':[0.76,5.0,259],'l9-22':[1.06,109.4,173],'l9-23':[1.03,137.2,172],'l9-24':[0.89,8.1,299],'l9-25':[2.19,104.8,165],'l9-26':[0.93,92.9,161],'l9-27':[0.88,146.3,171],'l9-28':[0.86,0.7,339],'l10-1':[0.86,162.2,181],'l10-2':[0.81,173.9,194],'l10-3':[0.63,82.0,211],'l10-4':[0.83,85.4,201],'l10-5':[0.96,76.6,193],'l10-6':[0.59,0.2,476],'l10-7':[0.49,0.3,352],'l10-8':[0.66,79.4,232]};
+
 function localLineSrc(text, who){
   const t=String(text||'').trim();
   if(!t) return '';
@@ -1598,7 +1600,29 @@ function arScore(said, expected){
   return 2*inter/(A.size+B.size);
 }
 
-/* Mic rolling buffer — to score harakat the phone ASR cannot hear */
+function goldOf(id){
+  const g=WORD_END[id];
+  if(!g) return null;
+  return {d:g[0], n:g[1], c:g[2]};
+}
+function endingFamily(cls){
+  if(cls==='un'||cls==='in'||cls==='an') return 'tan';
+  if(cls==='u'||cls==='i'||cls==='a') return 'short';
+  if(cls==='sukun') return 'sukun';
+  return '';
+}
+function stemEndsNun(s){
+  const last=(normAr(s).split(/\s+/).pop()||'');
+  return /[نم]$/.test(last);
+}
+function saidHasTanweenN(said, expected){
+  if(!said) return false;
+  if(stemEndsNun(expected)) return false;
+  const last=(normAr(said).split(/\s+/).pop()||'');
+  return /(?:ون|ين|ان|ن)$/.test(last);
+}
+
+/* Mic rolling buffer — score harakat that phone ASR strips */
 let rollStream=null, rollCtx=null, rollProc=null, rollSrc=null, rollGain=null;
 let rollBuf=null, rollPos=0, rollSr=16000, rollFilled=0;
 async function startRoll(){
@@ -1609,7 +1633,7 @@ async function startRoll(){
     rollCtx=audioCtx||(audioCtx=new AC());
     if(rollCtx.state==='suspended') await rollCtx.resume();
     rollSr=rollCtx.sampleRate||16000;
-    rollBuf=new Float32Array(Math.floor(rollSr*2.4));
+    rollBuf=new Float32Array(Math.floor(rollSr*2.6));
     rollPos=0; rollFilled=0;
     rollSrc=rollCtx.createMediaStreamSource(rollStream);
     rollProc=rollCtx.createScriptProcessor(4096,1,1);
@@ -1635,95 +1659,139 @@ function stopRoll(){
 }
 function rollSamples(sec){
   if(!rollBuf||!rollFilled)return null;
-  const n=Math.min(rollFilled, Math.floor((sec||0.9)*rollSr));
+  const n=Math.min(rollFilled, Math.floor((sec||2.2)*rollSr));
   const out=new Float32Array(n);
   let i=(rollPos-n+rollBuf.length)%rollBuf.length;
   for(let k=0;k<n;k++){ out[k]=rollBuf[i]; i=(i+1)%rollBuf.length; }
   return {x:out, sr:rollSr};
 }
-function featVec(x, sr){
-  if(!x||x.length<32)return null;
-  // trim quiet edges
-  const win=Math.max(8, Math.floor(sr*0.015));
-  let e=new Float32Array(x.length);
-  let acc=0;
-  for(let i=0;i<x.length;i++){
-    acc+=x[i]*x[i];
-    if(i>=win) acc-=x[i-win]*x[i-win];
-    e[i]=acc/win;
+function downsample16k(x, sr){
+  const target=16000;
+  if(Math.abs(sr-target)<80) return {x:x, sr:sr};
+  const ratio=sr/target;
+  const n=Math.max(8, Math.floor(x.length/ratio));
+  const y=new Float32Array(n);
+  for(let i=0;i<n;i++){
+    const j=i*ratio, j0=Math.floor(j), f=j-j0;
+    const a=x[j0]||0, b=x[Math.min(j0+1,x.length-1)]||0;
+    y[i]=a+(b-a)*f;
   }
-  const thr=0.0008;
-  let a=0,b=x.length-1;
-  while(a<b && e[a]<thr)a++;
-  while(b>a && e[b]<thr)b--;
-  const pad=Math.floor(sr*0.02);
-  a=Math.max(0,a-pad); b=Math.min(x.length,b+pad);
-  const y=x.subarray(a,b);
-  const lastN=Math.min(y.length, Math.floor(sr*0.28));
-  const w=y.subarray(y.length-lastN);
-  // Hann + DFT-ish via Goertzel-ish bands
-  let rms=0; for(let i=0;i<w.length;i++) rms+=w[i]*w[i];
-  rms=Math.sqrt(rms/w.length);
-  let zc=0; for(let i=1;i<w.length;i++) if((w[i-1]>=0)!==(w[i]>=0)) zc++;
-  const zcr=zc/w.length;
+  return {x:y, sr:target};
+}
+function bandE(w, sr, f0, f1){
   const N=w.length;
-  const spec=[];
-  const bands=[[80,250],[250,450],[450,900],[900,1600],[1600,2800]];
-  const step=Math.max(1, Math.floor(N/256));
-  function bandE(f0,f1){
-    // naive DFT energy in band
-    let s=0, c=0;
-    const k0=Math.floor(f0*N/sr), k1=Math.max(k0+1, Math.floor(f1*N/sr));
-    for(let k=k0;k<=k1;k+=1){
-      let re=0, im=0;
-      const w0=2*Math.PI*k/N;
-      for(let n=0;n<N;n+=step){ re+=w[n]*Math.cos(w0*n); im-=w[n]*Math.sin(w0*n); }
-      s+=re*re+im*im; c++;
+  if(N<24) return 0;
+  const k0=Math.max(1, Math.floor(f0*N/sr));
+  const k1=Math.max(k0+1, Math.ceil(f1*N/sr));
+  let s=0;
+  const step=N>2400?2:1;
+  for(let k=k0;k<=k1;k++){
+    let re=0, im=0;
+    const w0=2*Math.PI*k/N;
+    for(let n=0;n<N;n+=step){
+      const hann=0.5-0.5*Math.cos(2*Math.PI*n/N);
+      const v=w[n]*hann;
+      re+=v*Math.cos(w0*n);
+      im-=v*Math.sin(w0*n);
     }
-    return s/(c||1);
+    s+=re*re+im*im;
   }
-  const es=bands.map(b=>bandE(b[0],b[1]));
-  const tot=es.reduce((a,b)=>a+b,0)+1e-9;
-  const nasal=es[1]/tot;
-  const low=es[0]/tot;
-  const high=es[4]/tot;
-  const mid=es[2]/tot;
+  return s;
+}
+function featVec(x0, sr0){
+  if(!x0||x0.length<64) return null;
+  const ds=downsample16k(x0, sr0);
+  const x=ds.x, sr=ds.sr;
+  const hop=Math.max(4, Math.round(sr*0.01));
+  const win=Math.max(8, Math.round(sr*0.025));
+  const nEnv=Math.max(1, Math.floor((x.length-win)/hop));
+  const env=new Float32Array(nEnv);
+  let mx=0;
+  for(let i=0;i<nEnv;i++){
+    const o=i*hop;
+    let e=0;
+    for(let j=0;j<win;j++){ const v=x[o+j]||0; e+=v*v; }
+    env[i]=Math.sqrt(e/win);
+    if(env[i]>mx) mx=env[i];
+  }
+  if(mx<1e-6) return null;
+  const thr=0.08*mx;
+  let a=0,b=nEnv-1;
+  while(a<b && env[a]<thr) a++;
+  while(b>a && env[b]<thr) b--;
+  const s0=a*hop, s1=Math.min(x.length, b*hop+win);
+  const y=x.subarray(s0, s1);
   const dur=y.length/sr;
-  return {dur,rms,zcr,nasal,low,high,mid};
+  const envt=env.subarray(a, b+1);
+  let emx=0; for(let i=0;i<envt.length;i++) if(envt[i]>emx) emx=envt[i];
+  let t=envt.length-1;
+  while(t>0 && envt[t]<0.12*emx) t--;
+  let t2=t;
+  while(t2>0 && envt[t2]>=0.12*emx) t2--;
+  const tail=(t-t2)*(hop/sr);
+  const lastN=Math.min(y.length, Math.floor(sr*0.18));
+  const w=y.subarray(y.length-lastN);
+  const nas=bandE(w,sr,220,400)/(bandE(w,sr,500,1400)+1e-12);
+  const bands=[[80,150],[150,250],[250,350],[350,500],[500,700],[700,1000],[1000,1400],[1400,1800],[1800,2400],[2400,3200]];
+  const es=bands.map(b=>bandE(w,sr,b[0],b[1]));
+  const tot=es.reduce((p,q)=>p+q,0)+1e-12;
+  let cen=0;
+  for(let i=0;i<bands.length;i++) cen+=((bands[i][0]+bands[i][1])/2)*(es[i]/tot);
+  const f2u=es[5]/tot;
+  return {dur, tail, nas, cen, f2u};
 }
-function classFromFeats(f){
-  if(!f)return '';
-  // tanween: extra duration + nasal
-  if(f.nasal>0.22 && f.dur>0.28){
-    if(f.high>0.28) return 'in';
-    if(f.low>0.32 && f.high<0.18) return 'un';
-    return 'an';
-  }
-  if(f.high>0.32 && f.low<0.22) return 'i';
-  if(f.low>0.35 && f.high<0.16) return 'u';
-  if(f.dur<0.22 && f.zcr>0.12) return 'sukun';
-  return 'a';
-}
-function endingScoreFromRoll(expected){
+function endingScoreFromRoll(expected, said, wordId){
   const cls=endingClass(expected);
-  if(!cls) return {ok:true, score:1, cls:'', heard:'', hint:''};
-  const snap=rollSamples(1.1);
-  if(!snap) return {ok:true, score:1, cls, heard:'', hint:'', skipped:true};
-  const f=featVec(snap.x, snap.sr);
-  const heard=classFromFeats(f);
-  const family=c=> (c==='un'||c==='u')?'u':(c==='in'||c==='i')?'i':(c==='an'||c==='a')?'a':c;
-  let score=0;
-  if(heard===cls) score=1;
-  else if(family(heard)===family(cls)) score=0.45;
-  else score=0.15;
-  // tanween specifically needs nasal
-  if((cls==='un'||cls==='in'||cls==='an') && f && f.nasal<0.16) score=Math.min(score,0.35);
-  const ok=score>=0.55;
-  return {ok, score, cls, heard, hint: ok?'':endingHint(cls), feats:f};
+  const fam=endingFamily(cls);
+  if(!fam) return {ok:true, score:1, cls:'', heard:'', hint:'', skipped:true};
+  const extraN=saidHasTanweenN(said, expected);
+  const gold=goldOf(wordId);
+  const snap=rollSamples(wordId?2.3:1.05);
+  const f=snap?featVec(snap.x, snap.sr):null;
+  let ok=true, why='', score=1, heard='';
+
+  if(fam==='tan'){
+    if(extraN){ ok=true; why='n'; score=1; heard='un'; }
+    else if(!f){ ok=true; why='nomic'; score=0.6; }
+    else if(gold){
+      const ratio=f.dur/gold.d;
+      const nrel=f.nas/(gold.n+1e-6);
+      if(ratio<0.85){ ok=false; why='short'; score=0.2; heard='drop'; }
+      else if(ratio<0.90 && nrel<0.25){ ok=false; why='short'; score=0.3; heard='drop'; }
+      else if((f.cen-gold.c)>100 && f.nas<20){ ok=false; why='a'; score=0.25; heard='a'; }
+      else { ok=true; why='gold'; score=ratio>=0.95?1:0.8; heard='tan'; }
+    }else{
+      if(f.nas<15 && f.cen>310){ ok=false; why='a'; score=0.3; heard='a'; }
+      else { ok=true; why='open'; score=0.7; heard='tan'; }
+    }
+  }else if(fam==='short'){
+    if(extraN){ ok=false; why='extran'; score=0.3; heard='un'; }
+    else if(!f){ ok=true; why='nomic'; score=0.6; }
+    else if(gold){
+      const ratio=f.dur/gold.d;
+      if(ratio>1.18 && f.nas>50){ ok=false; why='tan'; score=0.35; heard='un'; }
+      else if((cls==='u'||cls==='i') && f.cen>330 && f.nas<12){ ok=false; why='a'; score=0.3; heard='a'; }
+      else { ok=true; why='gold'; score=0.85; heard=cls; }
+    }else{
+      if(f.nas>70 && f.cen<210){ ok=false; why='tan'; score=0.35; heard='un'; }
+      else { ok=true; why='open'; score=0.7; heard=cls; }
+    }
+  }else{
+    if(extraN){ ok=false; why='extran'; score=0.3; }
+    else { ok=true; why='sukun'; score=0.8; }
+  }
+
+  let hint='';
+  if(!ok){
+    if(why==='a') hint='Je zei eerder **-a**. '+endingHint(cls);
+    else if(why==='tan'||why==='extran') hint='Te veel **-n** aan het eind. '+endingHint(cls);
+    else hint=endingHint(cls);
+  }
+  return {ok, score, cls, heard, hint, why, feats:f, gold};
 }
-function gradeUtterance(expected, said){
+function gradeUtterance(expected, said, wordId){
   const cons=arScore(said, expected);
-  const end=endingScoreFromRoll(expected);
+  const end=endingScoreFromRoll(expected, said, wordId);
   const needEnd=!!end.cls && !end.skipped;
   const ok= cons>=0.62 && (!needEnd || end.ok);
   return {ok, cons, end, needEnd};
@@ -1807,7 +1875,7 @@ function gradeDialogueLines(lines, said, live, lockCount){
     let ratio=exp.length?localOk/exp.length:0;
     if(ratio>=0.85 && !live){
       const last=expRaw[expRaw.length-1];
-      const es=endingScoreFromRoll(last);
+      const es=endingScoreFromRoll(last, said);
       if(es && es.cls && !es.skipped && !es.ok){
         parts[parts.length-1]='<span class="tok-haraka">'+esc(last)+'</span>';
         localOk=Math.max(0, localOk-1);
@@ -2523,7 +2591,7 @@ function startZegListen(w, resultEl){
       if(done || state.view!=='zeg') return;
       if(state.answered) return;
       const said=(finalText+' '+interim).trim();
-      const g=gradeUtterance(w.ar, said);
+      const g=gradeUtterance(w.ar, said, w.id);
       if(g.ok){
         done=true;
         window._zegLock=wordId;
