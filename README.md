@@ -10,3 +10,9 @@ Arabische woordenschat app (Medina I) — flashcards, oefenen, grammatica.
 4. Na 1–2 minuten: https://younes0zero.github.io/al-mufrodat/
 
 Of open `index.html` lokaal in je browser.
+
+## Foto's
+
+Woord- en dialoogfoto's staan lokaal in `img/` (geen Unsplash-links).
+Bronnen: Wikipedia / Wikimedia Commons en Pexels, vierkant bijgesneden voor de app.
+Elke foto hoort bij het woord: moskee is een moskee, begroeting is mensen die praten, enz.
