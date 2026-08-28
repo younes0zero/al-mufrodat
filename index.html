@@ -854,6 +854,9 @@ html,body{
 .line-actions button{width:28px !important;height:28px !important;background:transparent !important;border:none !important;opacity:.55}
 .card,.lesson,.book-lesson,.flash-card{box-shadow:none!important;border:1px solid var(--line)!important}
 
+.gram-pic{margin:8px auto 14px}
+.gram-pic .pic-frame{width:180px;height:180px;max-width:70vw;max-height:70vw;border-radius:16px}
+.gram-pic .pic-frame img{width:100%;height:100%;object-fit:cover}
 </style>
 </head>
 <body>
@@ -925,8 +928,8 @@ const PIC_SVG = {"house": "<svg viewBox=\"0 0 80 80\" width=\"72\" height=\"72\"
 
 const EMOJI_PIC = {"🏠": "house", "🕌": "mosque", "🚪": "door", "📖": "book", "🖊️": "pen", "🔑": "key", "🪑": "chair", "🛏️": "bed", "⭐": "star", "👕": "shirt", "🐕": "dog", "🐈": "cat", "🐴": "horse", "🐪": "camel", "👨‍⚕️": "doctor", "👦": "boy", "☀️": "sun", "🌙": "moon", "👩‍🏫": "teacher", "👨‍🏫": "teacher", "🖥️": "desk", "👧": "girl", "👩": "girl", "🔑": "key"};
 
-function picHtml(emoji){
-  if(!showPics||!emoji) return '';
+function picHtml(emoji, force){
+  if((!force&&!showPics)||!emoji) return '';
   let key=null;
   if(EMOJI_PIC[emoji]) key=EMOJI_PIC[emoji];
   else{
@@ -937,8 +940,8 @@ function picHtml(emoji){
   const url=(key&&PHOTO_URLS[key])||PHOTO_URLS.generic;
   return `<div class="pic-frame pic-photo"><img src="${url}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer"/></div>`;
 }
-function picFromText(text){
-  if(!showPics||!text)return '';
+function picFromText(text, force){
+  if((!force&&!showPics)||!text)return '';
   const t=String(text);
   // Arabic stems (without harakat)
   const ar=t.replace(/[\u064B-\u065F\u0670\u0640]/g,'');
@@ -3155,7 +3158,8 @@ function renderGramExercise(n){
   const gi=state.gramIdx;
   const ex=exercises[gi];
   const ans=(state.gramAnswers||{})[gi];
-  const pic = showPics ? (ex.emoji ? picHtml(ex.emoji) : picFromText((ex.q||'')+' '+(ex.explain||'')+' '+(ex.options||[]).join(' '))) : '';
+  const needPic = ex.type==='pic' || !!ex.emoji;
+  const pic = (needPic||showPics) ? (ex.emoji ? picHtml(ex.emoji, true) : picFromText((ex.q||'')+' '+(ex.explain||'')+' '+(ex.options||[]).join(' '), needPic)) : '';
   const optsHtml=ex.options.map((o,j)=>{
     const isAnswer=j===ex.answer;
     const isPicked=ans&&j===ans.oi;
@@ -3174,8 +3178,8 @@ function renderGramExercise(n){
     </div>
     <div class="progress" style="margin-bottom:14px"><i style="width:${Math.round(100*(gi+(ans?1:0))/total)}%"></i></div>
     <div class="card" id="gq-${gi}">
-      <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px">${ex.type==='pic'?'Plaatje':'Vraag '+(gi+1)}</div>
-      ${pic}
+      <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px">${needPic?'Kijk naar de foto':'Vraag '+(gi+1)}</div>
+      ${pic?`<div class="q-pic gram-pic">${pic}</div>`:''}
       <div class="ar" style="font-size:18px;font-weight:700;text-align:center;margin-bottom:10px;line-height:1.5" lang="ar">${esc(ex.q)}</div>
       <div class="options" style="grid-template-columns:1fr">${optsHtml}</div>
       ${ans?`<div style="margin-top:10px;font-size:13px;font-weight:600;color:${ans.ok?'var(--ok)':'var(--clay)'}">${ans.ok?'✓ Goed! ':'✗ '}${esc(ex.explain||'')}</div>`:''}
