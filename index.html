@@ -4,35 +4,35 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <title>Al-Mufrodat — Arabische woordenschat</title>
-<meta name="theme-color" content="#1F4F45">
+<meta name="theme-color" content="#EFE4D4">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --paper:#F6F1E8; --paper-deep:#EBE3D4; --surface:#FFFcf7;
-  --ink:#1B1720; --ink-soft:#433C4A; --muted:#6F6773;
-  --line:#E4D9C8; --line-strong:#D3C6B0;
-  --forest:#3D2B6B; --forest-dark:#2A1C4D; --forest-soft:#EDE7F8;
-  --on-forest:#F8F4FF;
-  --clay:#B4533A; --clay-soft:#F8E6DF; --ok:#2F6B4F; --ok-soft:#E3F3EA;
-  --purple:#3D2B6B; --purple-soft:#EDE7F8; --on-purple:#F8F4FF;
-  --blue:#C45C26; --blue-soft:#F8E8DC; --on-blue:#FFF6EF;
-  --radius:20px; --shadow:0 10px 30px rgba(61,43,107,.08);
+  --paper:#EFE4D4; --paper-deep:#E5D4C0; --surface:#F7EEE2;
+  --ink:#3B2A1C; --ink-soft:#5C4432; --muted:#8A7060;
+  --line:#E2D0B8; --line-strong:#D2B896;
+  --forest:#6B4630; --forest-dark:#4E3222; --forest-soft:#F0E2D0;
+  --on-forest:#F7EEE2;
+  --clay:#A35A42; --clay-soft:#F3E4DA; --ok:#5A6B48; --ok-soft:#E6EBD8;
+  --purple:#6B4630; --purple-soft:#F0E2D0; --on-purple:#F7EEE2;
+  --blue:#6B4630; --blue-soft:#F0E2D0; --on-blue:#F7EEE2;
+  --radius:16px; --shadow:none;
   --font:Figtree,system-ui,sans-serif; --ar:Amiri,serif;
 }
 
 [data-theme="dark"]{
-  --paper:#141218; --paper-deep:#1C1824; --surface:#241F2E;
-  --ink:#F3EEF8; --ink-soft:#C9C0D6; --muted:#9B93A8;
-  --line:#3A3346; --line-strong:#4B4358;
-  --forest:#B9A4F0; --forest-dark:#9B84D9; --forest-soft:#2A2440;
-  --on-forest:#16121F;
-  --clay:#E08A80; --clay-soft:#3A2A28; --ok:#7BC49A; --ok-soft:#1A2C22;
-  --purple:#B9A4F0; --purple-soft:#2A2440; --on-purple:#16121F;
-  --blue:#E09A6A; --blue-soft:#3A2A22; --on-blue:#1A1410;
-  --shadow:0 10px 28px rgba(0,0,0,.4);
+  --paper:#181410; --paper-deep:#221C16; --surface:#261F18;
+  --ink:#F0E4D4; --ink-soft:#D2C0AA; --muted:#A89078;
+  --line:#3A3026; --line-strong:#4C4034;
+  --forest:#D4B08C; --forest-dark:#C4A07C; --forest-soft:#2E261E;
+  --on-forest:#181410;
+  --clay:#D4A090; --clay-soft:#32241E; --ok:#B4C49A; --ok-soft:#22281C;
+  --purple:#D4B08C; --purple-soft:#2E261E; --on-purple:#181410;
+  --blue:#D4B08C; --blue-soft:#2E261E; --on-blue:#181410;
+  --shadow:none;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-font-smoothing:antialiased;color-scheme:light}
@@ -770,10 +770,95 @@ img.conv-side-img{
 .book-line.line-ok .who, .book-line.line-ok .who-name{outline:2px solid #1B7A3A}
 .book-line.line-bad .who, .book-line.line-bad .who-name{outline:2px solid #B42318}
 .book-line.line-active .ar{opacity:1}
+
+/* look only — audio JS unchanged */
+html,body{
+  margin:0 !important;
+  height:100% !important;
+  max-height:100% !important;
+  min-height:0 !important;
+  overflow:hidden !important;
+  position:relative !important;
+  background:var(--paper);
+}
+#app{
+  position:absolute !important;
+  inset:0 !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior-y:contain;
+  min-height:0 !important;
+  padding-bottom:96px !important;
+}
+#tabbar-host{
+  position:absolute !important;
+  left:0;right:0;bottom:0 !important;
+  top:auto !important;
+  z-index:200;
+  background:var(--paper);
+  pointer-events:none;
+}
+#tabbar-host .tabbar, #tabbar-host .tab{pointer-events:auto}
+
+#tabbar-host .tabbar{
+  position:relative !important;
+  left:auto !important;
+  right:auto !important;
+  bottom:auto !important;
+  top:auto !important;
+  padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  background:var(--paper)!important;
+  backdrop-filter:none!important;
+  border-top:1px solid var(--line);
+}
+.tab.active{color:var(--forest)!important;background:var(--forest-soft)!important}
+.btn-primary{background:var(--forest)!important;color:var(--on-forest)!important}
+.path-card,.path-card.vocab,.path-card.grammar,.path-card.talk{
+  background:var(--surface)!important;border:1px solid var(--line)!important
+}
+.continue,.continue.grammar,.continue.conv{
+  background:var(--surface)!important;color:var(--ink)!important;border:1px solid var(--line)!important
+}
+.continue .btn,.continue.grammar .btn,.continue.conv .btn{
+  background:var(--forest)!important;color:var(--on-forest)!important
+}
+.continue .btn.ghost{background:transparent!important;color:var(--ink)!important;border:1px solid var(--line-strong)!important}
+.header .logo{color:var(--forest)!important}
+.book-dialogue{padding:10px 12px}
+.book-line{
+  display:block !important;
+  grid-template-columns:unset !important;
+  padding:10px 0 !important;
+  margin:0 !important;
+  border:none !important;
+  border-bottom:1px solid var(--line) !important;
+}
+.book-line:last-child{border-bottom:none !important}
+.who-row{display:flex !important;align-items:baseline !important;gap:8px !important;margin:0 0 4px !important;flex-wrap:wrap !important}
+.book-line .who,.book-line .who-name{
+  display:inline-block !important;
+  background:transparent !important;
+  color:var(--ink) !important;
+  -webkit-text-fill-color:var(--ink) !important;
+  font-size:22px !important;
+  font-weight:800 !important;
+  padding:0 !important;
+  border-radius:0 !important;
+  font-family:var(--ar) !important;
+  line-height:1.2 !important;
+}
+.who-phon{display:inline !important;font-size:13px !important;color:var(--muted)!important;font-style:normal!important}
+.ar-row{display:flex !important;align-items:flex-start !important;gap:8px !important}
+.book-line .ar{font-size:21px !important;line-height:1.45 !important;font-weight:700 !important}
+.line-actions button{width:28px !important;height:28px !important;background:transparent !important;border:none !important;opacity:.55}
+.card,.lesson,.book-lesson,.flash-card{box-shadow:none!important;border:1px solid var(--line)!important}
+
 </style>
 </head>
 <body>
 <div id="app"></div>
+<div id="tabbar-host"></div>
 <div class="toast" id="toast"></div>
 <script>
 const BASE_WORDS = [{"id": "l1-1", "lesson": 1, "ar": "بَيْت", "translit": "bayt", "nl": "huis", "en": "house"}, {"id": "l1-2", "lesson": 1, "ar": "مَسْجِد", "translit": "masjid", "nl": "moskee", "en": "mosque"}, {"id": "l1-3", "lesson": 1, "ar": "بَاب", "translit": "baab", "nl": "deur", "en": "door"}, {"id": "l1-4", "lesson": 1, "ar": "كِتَاب", "translit": "kitaab", "nl": "boek", "en": "book"}, {"id": "l1-5", "lesson": 1, "ar": "قَلَم", "translit": "qalam", "nl": "pen", "en": "pen"}, {"id": "l1-6", "lesson": 1, "ar": "مِفْتَاح", "translit": "miftaah", "nl": "sleutel", "en": "key"}, {"id": "l1-7", "lesson": 1, "ar": "مَكْتَب", "translit": "maktab", "nl": "bureau", "en": "writing table"}, {"id": "l1-8", "lesson": 1, "ar": "سَرِير", "translit": "sareer", "nl": "bed", "en": "bed"}, {"id": "l1-9", "lesson": 1, "ar": "كُرْسِيّ", "translit": "kursiy", "nl": "stoel", "en": "chair"}, {"id": "l1-10", "lesson": 1, "ar": "نَجْم", "translit": "najm", "nl": "ster", "en": "star"}, {"id": "l1-11", "lesson": 1, "ar": "قَمِيص", "translit": "qamees", "nl": "hemd", "en": "shirt"}, {"id": "l1-12", "lesson": 1, "ar": "طَبِيب", "translit": "tabeeb", "nl": "dokter", "en": "doctor"}, {"id": "l1-13", "lesson": 1, "ar": "وَلَد", "translit": "walad", "nl": "jongen", "en": "boy"}, {"id": "l1-14", "lesson": 1, "ar": "طَالِب", "translit": "taalib", "nl": "student", "en": "student"}, {"id": "l1-15", "lesson": 1, "ar": "رَجُل", "translit": "rajul", "nl": "man", "en": "man"}, {"id": "l1-16", "lesson": 1, "ar": "تَاجِر", "translit": "taajir", "nl": "handelaar", "en": "merchant"}, {"id": "l1-17", "lesson": 1, "ar": "كَلْب", "translit": "kalb", "nl": "hond", "en": "dog"}, {"id": "l1-18", "lesson": 1, "ar": "قِطّ", "translit": "qitt", "nl": "kat", "en": "cat"}, {"id": "l1-19", "lesson": 1, "ar": "حِمَار", "translit": "himaar", "nl": "ezel", "en": "donkey"}, {"id": "l1-20", "lesson": 1, "ar": "فَرَس", "translit": "faras", "nl": "paard", "en": "horse"}, {"id": "l1-21", "lesson": 1, "ar": "جَمَل", "translit": "jamal", "nl": "kameel", "en": "camel"}, {"id": "l1-22", "lesson": 1, "ar": "دِيك", "translit": "deek", "nl": "haan", "en": "rooster"}, {"id": "l1-23", "lesson": 1, "ar": "مُدَرِّس", "translit": "mudarris", "nl": "leraar", "en": "teacher"}, {"id": "l1-24", "lesson": 1, "ar": "مِنْدِيل", "translit": "mindeel", "nl": "zakdoek", "en": "handkerchief"}, {"id": "l2-1", "lesson": 2, "ar": "زَعِيم", "translit": "za'eem", "nl": "leider", "en": "leader"}, {"id": "l2-2", "lesson": 2, "ar": "حَجَر", "translit": "hajar", "nl": "steen", "en": "stone"}, {"id": "l2-3", "lesson": 2, "ar": "سُكَّر", "translit": "sukkar", "nl": "suiker", "en": "sugar"}, {"id": "l2-4", "lesson": 2, "ar": "لَبَن", "translit": "laban", "nl": "melk", "en": "milk"}, {"id": "l3-1", "lesson": 3, "ar": "غَنِيّ", "translit": "ghaniy", "nl": "rijk", "en": "rich"}, {"id": "l3-2", "lesson": 3, "ar": "فَقِير", "translit": "faqeer", "nl": "arm", "en": "poor"}, {"id": "l3-3", "lesson": 3, "ar": "طَوِيل", "translit": "taweel", "nl": "lang", "en": "tall"}, {"id": "l3-4", "lesson": 3, "ar": "قَصِير", "translit": "qaseer", "nl": "kort", "en": "short"}, {"id": "l3-5", "lesson": 3, "ar": "بَارِد", "translit": "baarid", "nl": "koud", "en": "cold"}, {"id": "l3-6", "lesson": 3, "ar": "حَارّ", "translit": "haarr", "nl": "heet", "en": "hot"}, {"id": "l3-7", "lesson": 3, "ar": "جَالِس", "translit": "jaalis", "nl": "zittend", "en": "sitting"}, {"id": "l3-8", "lesson": 3, "ar": "وَاقِف", "translit": "waaqif", "nl": "staand", "en": "standing"}, {"id": "l3-9", "lesson": 3, "ar": "جَدِيد", "translit": "jadeed", "nl": "nieuw", "en": "new"}, {"id": "l3-10", "lesson": 3, "ar": "قَدِيم", "translit": "qadeem", "nl": "oud", "en": "old"}, {"id": "l3-11", "lesson": 3, "ar": "قَرِيب", "translit": "qareeb", "nl": "dichtbij", "en": "near"}, {"id": "l3-12", "lesson": 3, "ar": "بَعِيد", "translit": "ba'eed", "nl": "ver weg", "en": "far away"}, {"id": "l3-13", "lesson": 3, "ar": "نَظِيف", "translit": "nazeef", "nl": "schoon", "en": "clean"}, {"id": "l3-14", "lesson": 3, "ar": "وَسِخ", "translit": "wasikh", "nl": "vuil", "en": "dirty"}, {"id": "l3-15", "lesson": 3, "ar": "صَغِير", "translit": "sagheer", "nl": "klein", "en": "small"}, {"id": "l3-16", "lesson": 3, "ar": "كَبِير", "translit": "kabeer", "nl": "groot", "en": "big"}, {"id": "l3-17", "lesson": 3, "ar": "خَفِيف", "translit": "khafeef", "nl": "licht", "en": "light (weight)"}, {"id": "l3-18", "lesson": 3, "ar": "ثَقِيل", "translit": "thaqeel", "nl": "zwaar", "en": "heavy"}, {"id": "l3-19", "lesson": 3, "ar": "وَرَقَة", "translit": "waraqah", "nl": "papier", "en": "paper"}, {"id": "l3-20", "lesson": 3, "ar": "مَكْسُور", "translit": "maksoor", "nl": "gebroken", "en": "broken"}, {"id": "l3-21", "lesson": 3, "ar": "مَاء", "translit": "maa", "nl": "water", "en": "water"}, {"id": "l3-22", "lesson": 3, "ar": "مَفْتُوح", "translit": "maftooh", "nl": "open", "en": "open"}, {"id": "l3-23", "lesson": 3, "ar": "تُفَّاحَة", "translit": "tuffaahah", "nl": "appel", "en": "apple"}, {"id": "l3-24", "lesson": 3, "ar": "حُلْو", "translit": "hulw", "nl": "zoet", "en": "sweet"}, {"id": "l3-25", "lesson": 3, "ar": "جَمِيل", "translit": "jameel", "nl": "mooi", "en": "beautiful"}, {"id": "l3-26", "lesson": 3, "ar": "مَرِيض", "translit": "mareed", "nl": "ziek", "en": "ill"}, {"id": "l3-27", "lesson": 3, "ar": "دُكَّان", "translit": "dukkaan", "nl": "winkel", "en": "shop"}, {"id": "l4-1", "lesson": 4, "ar": "أَيْنَ", "translit": "ayna", "nl": "waar", "en": "where"}, {"id": "l4-2", "lesson": 4, "ar": "حُجْرَة", "translit": "hujrah", "nl": "kamer", "en": "room"}, {"id": "l4-3", "lesson": 4, "ar": "سَمَاء", "translit": "samaa", "nl": "lucht / hemel", "en": "sky"}, {"id": "l4-4", "lesson": 4, "ar": "حَمَّام", "translit": "hammaam", "nl": "badkamer", "en": "bathroom"}, {"id": "l4-5", "lesson": 4, "ar": "فَصْل", "translit": "fasl", "nl": "klaslokaal", "en": "classroom"}, {"id": "l4-6", "lesson": 4, "ar": "مَطْبَخ", "translit": "matbakh", "nl": "keuken", "en": "kitchen"}, {"id": "l4-7", "lesson": 4, "ar": "مِرْحَاض", "translit": "mirhaad", "nl": "toilet", "en": "toilet"}, {"id": "l4-8", "lesson": 4, "ar": "مَدْرَسَة", "translit": "madrasah", "nl": "school", "en": "school"}, {"id": "l4-9", "lesson": 4, "ar": "جَامِعَة", "translit": "jaami'ah", "nl": "universiteit", "en": "university"}, {"id": "l4-10", "lesson": 4, "ar": "سُوق", "translit": "sooq", "nl": "markt", "en": "market"}, {"id": "l4-11", "lesson": 4, "ar": "اليَابَان", "translit": "al-yaabaan", "nl": "Japan", "en": "Japan"}, {"id": "l4-12", "lesson": 4, "ar": "الصِّين", "translit": "as-seen", "nl": "China", "en": "China"}, {"id": "l4-13", "lesson": 4, "ar": "الْهِنْد", "translit": "al-hind", "nl": "India", "en": "India"}, {"id": "l4-14", "lesson": 4, "ar": "الْفِلِبِّين", "translit": "al-filibeen", "nl": "Filipijnen", "en": "Philippines"}, {"id": "l4-15", "lesson": 4, "ar": "مُدِير الْمَدْرَسَة", "translit": "mudeer al-madrasah", "nl": "schoolhoofd", "en": "headmaster"}, {"id": "l4-16", "lesson": 4, "ar": "ذَهَبَ", "translit": "dhahaba", "nl": "hij ging", "en": "he went"}, {"id": "l4-17", "lesson": 4, "ar": "خَرَجَ", "translit": "kharaja", "nl": "hij ging naar buiten", "en": "he went out"}, {"id": "l4-18", "lesson": 4, "ar": "فِي", "translit": "fee", "nl": "in", "en": "in"}, {"id": "l4-19", "lesson": 4, "ar": "عَلَى", "translit": "alaa", "nl": "op", "en": "on"}, {"id": "l4-20", "lesson": 4, "ar": "مِنْ", "translit": "min", "nl": "van / vanaf", "en": "from"}, {"id": "l4-21", "lesson": 4, "ar": "إِلَى", "translit": "ilaa", "nl": "naar", "en": "to"}, {"id": "l5-1", "lesson": 5, "ar": "الرَّسُول", "translit": "ar-rasool", "nl": "de Boodschapper", "en": "the Messenger"}, {"id": "l5-2", "lesson": 5, "ar": "عَمّ", "translit": "amm", "nl": "oom (vaderskant)", "en": "paternal uncle"}, {"id": "l5-3", "lesson": 5, "ar": "خَال", "translit": "khaal", "nl": "oom (moederskant)", "en": "maternal uncle"}, {"id": "l5-4", "lesson": 5, "ar": "الْكَعْبَة", "translit": "al-ka'bah", "nl": "de Kabah", "en": "the Kabah"}, {"id": "l5-5", "lesson": 5, "ar": "شَارِع", "translit": "shaari", "nl": "straat", "en": "street"}, {"id": "l5-6", "lesson": 5, "ar": "مُغْلَق", "translit": "mughlaq", "nl": "gesloten", "en": "closed"}, {"id": "l5-7", "lesson": 5, "ar": "اِسْم", "translit": "ism", "nl": "naam", "en": "name"}, {"id": "l5-8", "lesson": 5, "ar": "حَقِيبَة", "translit": "haqeebah", "nl": "tas", "en": "bag"}, {"id": "l5-9", "lesson": 5, "ar": "تَحْت", "translit": "tahta", "nl": "onder", "en": "under"}, {"id": "l5-10", "lesson": 5, "ar": "سَيَّارَة", "translit": "sayyaarah", "nl": "auto", "en": "car"}, {"id": "l5-11", "lesson": 5, "ar": "هُنَا", "translit": "hunaa", "nl": "hier", "en": "here"}, {"id": "l5-12", "lesson": 5, "ar": "هُنَاك", "translit": "hunaaka", "nl": "daar", "en": "there"}, {"id": "l5-13", "lesson": 5, "ar": "بِنْت", "translit": "bint", "nl": "dochter / meisje", "en": "daughter / girl"}, {"id": "l6-1", "lesson": 6, "ar": "يَد", "translit": "yad", "nl": "hand", "en": "hand"}, {"id": "l6-2", "lesson": 6, "ar": "رَأْس", "translit": "ra's", "nl": "hoofd", "en": "head"}, {"id": "l6-3", "lesson": 6, "ar": "أَنْف", "translit": "anf", "nl": "neus", "en": "nose"}, {"id": "l6-4", "lesson": 6, "ar": "رِجْل", "translit": "rijl", "nl": "been", "en": "leg"}, {"id": "l6-5", "lesson": 6, "ar": "فَم", "translit": "fam", "nl": "mond", "en": "mouth"}, {"id": "l6-6", "lesson": 6, "ar": "عَيْن", "translit": "ayn", "nl": "oog", "en": "eye"}, {"id": "l6-7", "lesson": 6, "ar": "وَجْه", "translit": "wajh", "nl": "gezicht", "en": "face"}, {"id": "l6-8", "lesson": 6, "ar": "أُذُن", "translit": "udhun", "nl": "oor", "en": "ear"}, {"id": "l6-9", "lesson": 6, "ar": "حَدِيد", "translit": "hadeed", "nl": "ijzer", "en": "iron"}, {"id": "l6-10", "lesson": 6, "ar": "دَرَّاجَة", "translit": "darraajah", "nl": "fiets", "en": "bicycle"}, {"id": "l6-11", "lesson": 6, "ar": "مِلْعَقَة", "translit": "mil'aqah", "nl": "lepel", "en": "spoon"}, {"id": "l6-12", "lesson": 6, "ar": "قِدْر", "translit": "qidr", "nl": "pot", "en": "pot"}, {"id": "l6-13", "lesson": 6, "ar": "بَقَرَة", "translit": "baqarah", "nl": "koe", "en": "cow"}, {"id": "l6-14", "lesson": 6, "ar": "فَلَّاح", "translit": "fallaah", "nl": "boer", "en": "farmer"}, {"id": "l6-15", "lesson": 6, "ar": "شَاي", "translit": "shaay", "nl": "thee", "en": "tea"}, {"id": "l6-16", "lesson": 6, "ar": "أُمّ", "translit": "umm", "nl": "moeder", "en": "mother"}, {"id": "l6-17", "lesson": 6, "ar": "ثَلَّاجَة", "translit": "thallaajah", "nl": "koelkast", "en": "fridge"}, {"id": "l6-18", "lesson": 6, "ar": "قَهْوَة", "translit": "qahwah", "nl": "koffie", "en": "coffee"}, {"id": "l6-19", "lesson": 6, "ar": "سَرِيع", "translit": "saree", "nl": "snel", "en": "fast"}, {"id": "l6-20", "lesson": 6, "ar": "نَافِذَة", "translit": "naafidhah", "nl": "raam", "en": "window"}, {"id": "l6-21", "lesson": 6, "ar": "جِدًّا", "translit": "jiddan", "nl": "heel / erg", "en": "very"}, {"id": "l7-1", "lesson": 7, "ar": "نَاقَة", "translit": "naaqah", "nl": "kameel (vrouwelijk)", "en": "she-camel"}, {"id": "l7-2", "lesson": 7, "ar": "بَطَّة", "translit": "battah", "nl": "eend", "en": "duck"}, {"id": "l7-3", "lesson": 7, "ar": "مُمَرِّض", "translit": "mumarrid", "nl": "verpleger", "en": "nurse (m)"}, {"id": "l7-4", "lesson": 7, "ar": "بَيْضَة", "translit": "baydah", "nl": "ei", "en": "egg"}, {"id": "l7-5", "lesson": 7, "ar": "مُؤَذِّن", "translit": "mu'adhdhin", "nl": "muezzin", "en": "muezzin"}, {"id": "l7-6", "lesson": 7, "ar": "دَجَاجَة", "translit": "dajaajah", "nl": "kip", "en": "hen"}, {"id": "l7-7", "lesson": 7, "ar": "مُمَرِّضَة", "translit": "mumarridah", "nl": "verpleegster", "en": "nurse (f)"}, {"id": "l7-8", "lesson": 7, "ar": "هَذَا", "translit": "haadhaa", "nl": "deze / dit (m)", "en": "this (m)"}, {"id": "l7-9", "lesson": 7, "ar": "هَذِهِ", "translit": "haadhihi", "nl": "deze / dit (v)", "en": "this (f)"}, {"id": "l7-10", "lesson": 7, "ar": "ذَلِكَ", "translit": "dhaalika", "nl": "die / dat (m)", "en": "that (m)"}, {"id": "l7-11", "lesson": 7, "ar": "تِلْكَ", "translit": "tilka", "nl": "die / dat (v)", "en": "that (f)"}, {"id": "l8-1", "lesson": 8, "ar": "أَمْرِيكَا", "translit": "amreekaa", "nl": "Amerika", "en": "America"}, {"id": "l8-2", "lesson": 8, "ar": "أَلْمَانِيَا", "translit": "almaanyaa", "nl": "Duitsland", "en": "Germany"}, {"id": "l8-3", "lesson": 8, "ar": "الْعِرَاق", "translit": "al-'iraaq", "nl": "Irak", "en": "Iraq"}, {"id": "l8-4", "lesson": 8, "ar": "إِنْجِلْتِرَا", "translit": "injiltaraa", "nl": "Engeland", "en": "England"}, {"id": "l8-5", "lesson": 8, "ar": "سْوِيسْرَا", "translit": "sweesraa", "nl": "Zwitserland", "en": "Switzerland"}, {"id": "l8-6", "lesson": 8, "ar": "سِكِّين", "translit": "sikkeen", "nl": "mes", "en": "knife"}, {"id": "l8-7", "lesson": 8, "ar": "مُسْتَشْفَى", "translit": "mustashfaa", "nl": "ziekenhuis", "en": "hospital"}, {"id": "l9-1", "lesson": 9, "ar": "فَاكِهَة", "translit": "faakihah", "nl": "fruit", "en": "fruit"}, {"id": "l9-2", "lesson": 9, "ar": "عُصْفُور", "translit": "usfoor", "nl": "mus", "en": "sparrow"}, {"id": "l9-3", "lesson": 9, "ar": "طَائِر", "translit": "taa'ir", "nl": "vogel", "en": "bird"}, {"id": "l9-4", "lesson": 9, "ar": "عَرَبِيّ", "translit": "arabiy", "nl": "Arabisch", "en": "Arabic"}, {"id": "l9-5", "lesson": 9, "ar": "لُغَة", "translit": "lughah", "nl": "taal", "en": "language"}, {"id": "l9-6", "lesson": 9, "ar": "سَهْل", "translit": "sahl", "nl": "makkelijk", "en": "easy"}, {"id": "l9-7", "lesson": 9, "ar": "مُجْتَهِد", "translit": "mujtahid", "nl": "ijverig", "en": "hardworking"}, {"id": "l9-8", "lesson": 9, "ar": "مَشْهُور", "translit": "mash-hoor", "nl": "beroemd", "en": "famous"}, {"id": "l9-9", "lesson": 9, "ar": "الْإِنْجِلِيزِيَّة", "translit": "al-injileeziyyah", "nl": "Engels (taal)", "en": "English (language)"}, {"id": "l9-10", "lesson": 9, "ar": "صَعْب", "translit": "sa'b", "nl": "moeilijk", "en": "difficult"}, {"id": "l9-11", "lesson": 9, "ar": "مَدِينَة", "translit": "madeenah", "nl": "stad", "en": "city"}, {"id": "l9-12", "lesson": 9, "ar": "الْقَاهِرَة", "translit": "al-qaahirah", "nl": "Caïro", "en": "Cairo"}, {"id": "l9-13", "lesson": 9, "ar": "الْيَوْم", "translit": "al-yawm", "nl": "vandaag", "en": "today"}, {"id": "l9-14", "lesson": 9, "ar": "لِمَاذَا", "translit": "limaadhaa", "nl": "waarom", "en": "why"}, {"id": "l9-15", "lesson": 9, "ar": "فِنْجَان", "translit": "finjaan", "nl": "kopje", "en": "cup"}, {"id": "l9-16", "lesson": 9, "ar": "جَائِع", "translit": "jaa'i", "nl": "hongerig", "en": "hungry"}, {"id": "l9-17", "lesson": 9, "ar": "عَطْشَان", "translit": "atshaan", "nl": "dorstig", "en": "thirsty"}, {"id": "l9-18", "lesson": 9, "ar": "شَبْعَان", "translit": "shab'aan", "nl": "verzadigd", "en": "full"}, {"id": "l9-19", "lesson": 9, "ar": "غَضْبَان", "translit": "ghadbaan", "nl": "boos", "en": "angry"}, {"id": "l9-20", "lesson": 9, "ar": "مَكْتَبَة", "translit": "maktabah", "nl": "bibliotheek", "en": "library"}, {"id": "l9-21", "lesson": 9, "ar": "الْآن", "translit": "al-aan", "nl": "nu", "en": "now"}, {"id": "l9-22", "lesson": 9, "ar": "عِيَادَة", "translit": "iyaadah", "nl": "kliniek", "en": "clinic"}, {"id": "l9-23", "lesson": 9, "ar": "مِرْوَحَة", "translit": "mirwahah", "nl": "ventilator", "en": "fan"}, {"id": "l9-24", "lesson": 9, "ar": "الْكُوَيْت", "translit": "al-kuwayt", "nl": "Koeweit", "en": "Kuwait"}, {"id": "l9-25", "lesson": 9, "ar": "مَدْرَسَة ثَانَوِيَّة", "translit": "madrasah thaanawiyyah", "nl": "middelbare school", "en": "secondary school"}, {"id": "l9-26", "lesson": 9, "ar": "وَزِير", "translit": "wazeer", "nl": "minister", "en": "minister"}, {"id": "l9-27", "lesson": 9, "ar": "حَادّ", "translit": "haadd", "nl": "scherp", "en": "sharp"}, {"id": "l9-28", "lesson": 9, "ar": "إِنْدُونِيسِيَا", "translit": "indoneesyaa", "nl": "Indonesië", "en": "Indonesia"}, {"id": "l10-1", "lesson": 10, "ar": "زَمِيل", "translit": "zameel", "nl": "collega / klasgenoot", "en": "colleague / classmate"}, {"id": "l10-2", "lesson": 10, "ar": "زَوْج", "translit": "zawj", "nl": "echtgenoot", "en": "husband"}, {"id": "l10-3", "lesson": 10, "ar": "طِفْل", "translit": "tifl", "nl": "kind", "en": "child"}, {"id": "l10-4", "lesson": 10, "ar": "شَابّ", "translit": "shaabb", "nl": "jongeman", "en": "young man"}, {"id": "l10-5", "lesson": 10, "ar": "وَاحِد", "translit": "waahid", "nl": "één", "en": "one"}, {"id": "l10-6", "lesson": 10, "ar": "عِنْدَ", "translit": "inda", "nl": "bij", "en": "with / at the house of"}, {"id": "l10-7", "lesson": 10, "ar": "مَعَ", "translit": "ma'a", "nl": "met", "en": "with"}, {"id": "l10-8", "lesson": 10, "ar": "عِنْدِي", "translit": "indee", "nl": "ik heb", "en": "I have"}];
@@ -1297,6 +1382,42 @@ function pickVoiceFor(who){
   return pool[speakerVoiceIndex[who] % pool.length];
 }
 
+function fnv1a(str){
+  let h=2166136261;
+  for(let i=0;i<str.length;i++){
+    h^=str.charCodeAt(i);
+    h=Math.imul(h,16777619)>>>0;
+  }
+  return h.toString(16);
+}
+function localWordSrc(word){
+  if(word&&word.id) return 'audio/w/'+word.id+'.mp3';
+  return '';
+}
+function localLineSrc(text, who){
+  const t=String(text||'').trim();
+  if(!t) return '';
+  const g=genderOf(who||'');
+  return 'audio/l/'+fnv1a(g+'\t'+t)+'.mp3';
+}
+function speakFile(src, done){
+  if(!src){if(done)done(false);return}
+  try{
+    const a=getSharedAudio();
+    try{a.pause()}catch(e){}
+    a.onended=null;a.onerror=null;
+    let settled=false;
+    const finish=ok=>{if(settled)return;settled=true;clearTimeout(tm);if(done)done(!!ok)};
+    const tm=setTimeout(()=>finish(false),1600);
+    a.onended=()=>finish(true);
+    a.onerror=()=>finish(false);
+    activeAudio=a;
+    a.src=src;
+    const p=a.play();
+    if(p&&p.catch)p.catch(()=>finish(false));
+  }catch(e){if(done)done(false)}
+}
+
 function speakWord(word,force){
   if(audioMuted && !force)return;
   if(!autoSpeak && !force)return;
@@ -1305,11 +1426,14 @@ function speakWord(word,force){
   if(!t)return;
   unlockAudio();
   stopAudio();
-  speakProxy(t,ok1=>{
-    if(ok1)return;
-    speakGoogle(t,ok2=>{
-      if(ok2)return;
-      speakWeb(t);
+  speakFile(localWordSrc(word), ok0=>{
+    if(ok0)return;
+    speakProxy(t,ok1=>{
+      if(ok1)return;
+      speakGoogle(t,ok2=>{
+        if(ok2)return;
+        speakWeb(t);
+      });
     });
   });
 }
@@ -1793,20 +1917,22 @@ function speakDialogueLine(text, who, onDone){
   const g=genderOf(who);
   const v=pickVoiceFor(who||'');
   const finish=(ok)=>{if(myGen!==audioGen)return; if(onDone)onDone(!!ok)};
-  // Betrouwbare keten: proxy → google → web. Eén tegelijk.
-  speakProxyPitched(t, g, who, ok1=>{
+  speakFile(localLineSrc(t, who), ok0=>{
     if(myGen!==audioGen)return;
-    if(ok1){finish(true);return}
-    speakGooglePitched(t, g, who, ok2=>{
+    if(ok0){finish(true);return}
+    speakProxyPitched(t, g, who, ok1=>{
       if(myGen!==audioGen)return;
-      if(ok2){finish(true);return}
-      const w=speakWebWithVoice(t, v, g, who);
-      if(!w)finish(false);
-      else {
-        // web speech: estimate done
-        const wait=Math.min(9000, Math.max(1500, t.length*95));
-        setTimeout(()=>finish(true), wait);
-      }
+      if(ok1){finish(true);return}
+      speakGooglePitched(t, g, who, ok2=>{
+        if(myGen!==audioGen)return;
+        if(ok2){finish(true);return}
+        const w=speakWebWithVoice(t, v, g, who);
+        if(!w)finish(false);
+        else {
+          const wait=Math.min(9000, Math.max(1500, t.length*95));
+          setTimeout(()=>finish(true), wait);
+        }
+      });
     });
   });
 }
@@ -3178,7 +3304,9 @@ function render(){
   else if(state.view==='conv')html=renderConv();
   else if(state.view==='conv-unit')html=renderConvUnit();
   else if(state.view==='settings')html=renderSettings();
-  app.innerHTML=appHeader()+html+tabbar()+((state.view==='vocab'||state.view==='book'||state.view==='conv')?`<button type="button" class="theme-fab" data-act="toggle-theme" aria-label="Thema">${darkMode?'☀️':'🌙'}</button>`:'');
+  app.innerHTML=appHeader()+html+((state.view==='vocab'||state.view==='book'||state.view==='conv')?`<button type="button" class="theme-fab" data-act="toggle-theme" aria-label="Thema">${darkMode?'☀️':'🌙'}</button>`:'');
+  const host=document.getElementById('tabbar-host');
+  if(host) host.innerHTML=tabbar();
   if(state.view==='zeg') setTimeout(autoZegListen, 400);
   if(state.view==='flash' && state.pool && state.pool[state.idx] && (state.flipped?(flashDir==='nl2ar'):(flashDir!=='nl2ar'))) setTimeout(()=>speakWord(state.pool[state.idx]), 180);
   // Remove leftover focus/caret from previous view
@@ -3232,7 +3360,7 @@ document.addEventListener('click',e=>{
     else if(v==='home'){state.path='home';state.view='home';state.bookLesson=null}
     else if(v==='conv'){state.path='conv';state.view='conv';state.convUnit=null}
     else{state.view=v;if(v==='words'||v==='add')state.path='vocab'}
-    render();window.scrollTo(0,0);
+    render();(document.getElementById("app")||window).scrollTop=0;
   }
   else if(act==='start-onboard'){
     onboarded=true;saveO();
@@ -3305,7 +3433,7 @@ document.addEventListener('click',e=>{
     state.convOpen={};
     state.convShowAll=false;
     lastConv={u:String(state.convUnit),di:i};try{saveConv()}catch(e){}
-    render();window.scrollTo(0,0);
+    render();(document.getElementById("app")||window).scrollTop=0;
   }
   else if(act==='toggle-all-trans'){
     state.convShowAll=!state.convShowAll;
@@ -3320,7 +3448,7 @@ document.addEventListener('click',e=>{
     unlockAudio();
     state.convUnit=String(btn.dataset.u||'');state.view='conv-unit';state.convOpen={};state.convShowAll=false;state.convDi=0;state.path='conv';
     const _di=(lastConv&&String(lastConv.u)===String(state.convUnit))? (lastConv.di|0) : 0; state.convDi=_di; lastConv={u:String(state.convUnit),di:_di};saveConv();
-    render();window.scrollTo(0,0);
+    render();(document.getElementById("app")||window).scrollTop=0;
   }
   else if(act==='toggle-line'){
     const id=btn.dataset.id;
@@ -3428,7 +3556,7 @@ document.addEventListener('click',e=>{
   else if(act==='dont-know'){handleDontKnow()}
   else if(act==='continue-learn'){continueLearn()}
   else if(act==='book-list'){
-    state.path='grammar';state.view='book';state.bookLesson=null;state.bookTab='uitleg';render();window.scrollTo(0,0);
+    state.path='grammar';state.view='book';state.bookLesson=null;state.bookTab='uitleg';render();(document.getElementById("app")||window).scrollTop=0;
   }
   else if(act==='open-book'){
     state.path='grammar';
@@ -3442,7 +3570,7 @@ document.addEventListener('click',e=>{
     state.gramIdx=gp.idx||0;
     state.gramAnswers=Object.assign({},gp.answers||{});
     state.view='book-lesson';
-    render();window.scrollTo(0,0);
+    render();(document.getElementById("app")||window).scrollTop=0;
   }
   else if(act==='parse-sent'){state.parseShowSent=!state.parseShowSent;render();}
   else if(act==='parse-info'){
@@ -3485,7 +3613,7 @@ document.addEventListener('click',e=>{
     state.view='book-lesson';
     if(state.bookLesson){const gp=getGram(state.bookLesson);gp.tab=tab;lastGrammar=state.bookLesson;saveG()}
     render();
-    window.scrollTo(0,0);
+    (document.getElementById("app")||window).scrollTop=0;
   }
   else if(act==='gram-answer'){
     const qi=+btn.dataset.qi, oi=+btn.dataset.oi, ok=btn.dataset.ok==='true';
@@ -3506,13 +3634,13 @@ document.addEventListener('click',e=>{
   else if(act==='gram-prev'){
     state.gramIdx=Math.max(0,(state.gramIdx||0)-1);
     const gp=getGram(state.bookLesson);gp.idx=state.gramIdx;gp.tab='oefenen';saveG();
-    render();window.scrollTo(0,0);
+    render();(document.getElementById("app")||window).scrollTop=0;
   }
   else if(act==='gram-next'){
     const g=GRAMMAR[state.bookLesson];const total=g&&g.exercises?g.exercises.length:0;
     state.gramIdx=Math.min(Math.max(0,total-1),(state.gramIdx||0)+1);
     const gp=getGram(state.bookLesson);gp.idx=state.gramIdx;gp.tab='oefenen';lastGrammar=state.bookLesson;saveG();
-    render();window.scrollTo(0,0);
+    render();(document.getElementById("app")||window).scrollTop=0;
   }
   else if(act==='add-word'){
     const ar=document.getElementById('f-ar').value.trim();
@@ -3563,16 +3691,18 @@ function onSwipe(dir){
       if(dir==='left'){if((state.gramIdx||0)<total-1){state.gramIdx=(state.gramIdx||0)+1;render()}}
       else{if((state.gramIdx||0)>0){state.gramIdx=(state.gramIdx||0)-1;render()}}
     }else if(state.bookTab==='uitleg'){
-      if(dir==='left'){state.bookTab='voorbeelden';render();window.scrollTo(0,0)}
+      if(dir==='left'){state.bookTab='voorbeelden';render();(document.getElementById("app")||window).scrollTop=0}
     }else if(state.bookTab==='voorbeelden'){
-      if(dir==='left'){state.bookTab='oefenen';render();window.scrollTo(0,0)}
-      else{state.bookTab='uitleg';render();window.scrollTo(0,0)}
+      if(dir==='left'){state.bookTab='oefenen';render();(document.getElementById("app")||window).scrollTop=0}
+      else{state.bookTab='uitleg';render();(document.getElementById("app")||window).scrollTop=0}
     }
   }
 }
 
 document.addEventListener('touchstart',e=>{
   if(e.touches.length!==1)return;
+  const v=state&&state.view;
+  if(v!=='flash' && v!=='learn' && v!=='book-lesson'){touchTracking=false;return}
   const t=e.touches[0];
   touchStartX=t.clientX;touchStartY=t.clientY;touchStartTime=Date.now();
   touchTracking=true;touchSwiping=false;
@@ -3588,10 +3718,9 @@ document.addEventListener('touchmove',e=>{
 },{passive:true});
 
 document.addEventListener('touchend',e=>{
-  if(!touchTracking){return}
-  touchTracking=false;
-  if(!touchSwiping){touchSwiping=false;return}
-  touchSwiping=false;
+  const wasSwipe=touchSwiping;
+  touchTracking=false;touchSwiping=false;
+  if(!wasSwipe)return;
   const target=e.target;
   if(target&&target.closest&&target.closest('input,textarea,select,.type-row,.lesson-tabs,.tabbar,.app-header'))return;
   const t=e.changedTouches[0];
