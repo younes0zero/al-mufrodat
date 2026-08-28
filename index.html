@@ -581,6 +581,14 @@ img.conv-side-img{
 .cmp-lab{font-size:11px;font-weight:700;color:var(--muted);margin-bottom:2px}
 .cmp-ar{font-family:var(--ar);font-size:28px;font-weight:700;direction:rtl;line-height:1.35}
 .cmp-hint{font-size:13px;color:var(--ink-soft);margin:8px 0 4px;line-height:1.4}
+.end-pill{
+  display:inline-block;font-family:system-ui,sans-serif;font-size:12px;font-weight:800;
+  padding:3px 9px;border-radius:999px;background:var(--paper-deep);color:var(--ink);
+  margin-inline-start:8px;direction:ltr;letter-spacing:.02em;vertical-align:middle;white-space:nowrap
+}
+.end-pill.ok{background:var(--ok-soft);color:var(--ok)}
+.end-pill.bad{background:rgba(196,92,38,.14);color:#C45C26}
+.end-pill.maybe{background:rgba(180,83,9,.14);color:#B45309}
 .mk-heat{display:inline-block;width:8px;height:8px;border-radius:50%;margin-inline-start:6px;vertical-align:middle;background:var(--line)}
 .mk-heat.warm{background:#D4A017}
 .mk-heat.hot{background:#C45C26}
@@ -1820,15 +1828,119 @@ function arScore(said, expected, word){
   return Math.max(s, lat);
 }
 
+function endLabel(cls){
+  return ({
+    un:'-un ٌ', in:'-in ٍ', an:'-an ً',
+    u:'-u ُ', i:'-i ِ', a:'-a َ',
+    sukun:'sukūn ْ', drop:'geen uitgang', tan:'tanwīn',
+    '':'onzeker'
+  })[cls]||cls||'onzeker';
+}
+function splitLatEnd(s){
+  const a0=foldLat(s);
+  const vars=[a0];
+  if(a0){
+    const ei=a0.replace(/e/g,'i'); if(ei!==a0) vars.push(ei);
+    const ea=a0.replace(/e/g,'a'); if(ea!==a0) vars.push(ea);
+  }
+  for(const a of vars){
+    if(!a) continue;
+    for(const e of ['un','in','an']){
+      if(a.endsWith(e) && a.length>e.length+1) return {stem:a.slice(0,-e.length), end:e};
+    }
+    for(const e of ['u','i','a']){
+      if(a.endsWith(e) && a.length>e.length+1) return {stem:a.slice(0,-e.length), end:e};
+    }
+  }
+  return {stem:a0, end:''};
+}
+function textHeardEnd(said, expected, word){
+  const raw=String(said||'');
+  if(!raw.trim()) return {cls:'', conf:0, src:''};
+  const tail=raw.replace(/[؟?!.،,؛:\s]+$/g,'');
+  if(/ٌ/.test(tail.slice(-2))) return {cls:'un', conf:1, src:'tash'};
+  if(/ٍ/.test(tail.slice(-2))) return {cls:'in', conf:1, src:'tash'};
+  if(/ً/.test(tail.slice(-3))) return {cls:'an', conf:1, src:'tash'};
+  if(/ُ/.test(tail.slice(-1))) return {cls:'u', conf:0.95, src:'tash'};
+  if(/ِ/.test(tail.slice(-1))) return {cls:'i', conf:0.95, src:'tash'};
+  if(/َ/.test(tail.slice(-1))) return {cls:'a', conf:0.95, src:'tash'};
+  if(/[a-zA-Z]/.test(raw)){
+    const got=splitLatEnd(raw);
+    const expT=(word&&word.translit)||romanizeAr(expected||'')||'';
+    const exp=splitLatEnd(expT);
+    if(got.end){
+      const stemHit=!exp.stem || got.stem===exp.stem
+        || (got.stem.length>=3 && exp.stem.indexOf(got.stem)>=0)
+        || (exp.stem.length>=3 && got.stem.indexOf(exp.stem)>=0)
+        || Math.abs((got.stem.length||0)-(exp.stem.length||0))<=2;
+      return {cls:got.end, conf:stemHit?0.92:0.7, src:'lat'};
+    }
+  }
+  const last=(normAr(said).split(/\s+/).pop()||'');
+  const expLast=(normAr(expected).split(/\s+/).pop()||'');
+  if(!last) return {cls:'', conf:0, src:''};
+  if(expLast && last!==expLast){
+    if(last===expLast+'ون' || last===expLast+'ن') return {cls:'un', conf:0.88, src:'ar'};
+    if(last===expLast+'ين') return {cls:'in', conf:0.85, src:'ar'};
+    if(last===expLast+'ان') return {cls:'an', conf:0.85, src:'ar'};
+    if(last===expLast+'و') return {cls:'u', conf:0.8, src:'ar'};
+    if(last===expLast+'ي') return {cls:'i', conf:0.75, src:'ar'};
+    if(last===expLast+'ا' || last===expLast+'ى') return {cls:'a', conf:0.8, src:'ar'};
+  }
+  if(expLast && !/[نم]$/.test(expLast) && last.length>expLast.length && /ون$/.test(last)){
+    return {cls:'un', conf:0.8, src:'ar'};
+  }
+  return {cls:'', conf:0, src:''};
+}
+function audioHeardEnd(f, gold){
+  if(!f) return {cls:'', conf:0, src:''};
+  const nas=+f.nas||0, cen=+f.cen||0;
+  const gN=gold?gold.n:50, gC=gold?gold.c:200;
+  const nasRel=nas/(gN+1);
+  if(nas>=18 || nasRel>=0.12){
+    const conf=(nas>=40 || nasRel>=0.3)?0.86:0.64;
+    return {cls:'un', conf, src:'mic'};
+  }
+  if(nas<8 && (cen>380 || (cen>320 && (cen-gC)>120))){
+    return {cls:'a', conf:cen>400?0.82:0.66, src:'mic'};
+  }
+  return {cls:'', conf:0.2, src:'mic'};
+}
+function heardEnding(said, expected, f, gold, word){
+  const t=textHeardEnd(said, expected, word);
+  const a=audioHeardEnd(f, gold);
+  if(t.conf>=0.75) return t;
+  if(a.conf>=0.7) return a;
+  if(t.conf>=0.55) return t;
+  if(a.conf>=0.62) return a;
+  if(t.cls && a.cls && t.cls===a.cls) return {cls:t.cls, conf:Math.min(1, t.conf+a.conf), src:'both'};
+  if(t.cls) return t;
+  if(a.cls) return a;
+  return {cls:'', conf:Math.max(t.conf,a.conf), src:a.src||t.src||''};
+}
+function endAgree(heard, expected){
+  if(!expected) return 'yes';
+  if(!heard) return 'maybe';
+  if(heard===expected) return 'yes';
+  const tan=c=>c==='un'||c==='in'||c==='an'||c==='tan';
+  if(tan(heard)&&tan(expected)) return 'yes';
+  if(heard==='drop') return expected==='sukun'?'yes':'no';
+  return 'no';
+}
+
 function pickSaid(ev, expected, word){
-  let best='', bs=-1;
+  let best='', bs=-1, bestEnd=0;
   for(let i=0;i<ev.results.length;i++){
     const r=ev.results[i];
     for(let j=0;j<r.length;j++){
       const t=String(r[j].transcript||'').trim();
       if(!t) continue;
       const sc=expected?arScore(t, expected, word):(r[j].confidence||0);
-      if(sc>bs){ bs=sc; best=t; }
+      const te=expected?textHeardEnd(t, expected, word):{conf:0};
+      const tot=sc+(te.conf>=0.7?0.06:0);
+      if(tot>bs+0.001 || (Math.abs(tot-bs)<0.02 && te.conf>bestEnd)){
+        bs=tot; best=t; bestEnd=te.conf;
+      }
     }
   }
   return best;
@@ -1938,20 +2050,27 @@ function hideCompare(){
   const h=document.getElementById('cmp-host');
   if(h) h.innerHTML='';
 }
-function showCompare(expected, said, kind, hint, word){
-  lastCmp={expected:expected||'', said:said||'', kind:kind||'word', hint:hint||'', word:word||null};
+function showCompare(expected, said, kind, hint, word, endInfo){
+  lastCmp={expected:expected||'', said:said||'', kind:kind||'word', hint:hint||'', word:word||null, end:endInfo||null};
   const h=document.getElementById('cmp-host');
   if(!h) return;
-  const title=kind==='haraka'?'Harakaat fout':kind==='ok'?'Juist':'Verkeerd woord';
-  const you=said?('<span lang="ar">'+esc(said)+'</span>'):'<span style="color:var(--muted)">— niets gehoord</span>';
+  const want=endingClass(expected);
+  const heard=(endInfo&&(endInfo.heard||endInfo.cls))||'';
+  const title=kind==='haraka'?'Uitgang / harakaat':kind==='ok'?'Juist':'Verkeerd woord';
+  const wantPill=want?('<span class="end-pill">juist '+esc(endLabel(want))+'</span>'):'';
+  const heardKind=(!heard?'maybe':(want&&endAgree(heard,want)==='yes'?'ok':'bad'));
+  const heardPill='<span class="end-pill '+heardKind+'">gehoord '+esc(endLabel(heard))+'</span>';
+  const you=(kind==='word')
+    ? (said?('<span lang="ar">'+esc(said)+'</span>'):'<span style="color:var(--muted)">— niets gehoord</span>')
+    : heardPill;
   h.innerHTML='<div class="cmp-sheet" role="dialog" aria-label="Vergelijk uitspraak">'+
     '<div class="cmp-k">'+title+' · tik om te beluisteren</div>'+
     '<div class="cmp-row">'+
-      '<div><div class="cmp-lab">Juist</div><div class="cmp-ar ar-mark">'+markAr(expected, kind==='haraka'?'haraka':'ok')+'</div></div>'+
+      '<div><div class="cmp-lab">Juist</div><div class="cmp-ar ar-mark">'+markAr(expected, kind==='haraka'?'haraka':'ok')+wantPill+'</div></div>'+
       '<button type="button" class="btn btn-sm btn-secondary" data-act="cmp-gold">🔊 Juist</button>'+
     '</div>'+
     '<div class="cmp-row">'+
-      '<div><div class="cmp-lab">Jij zei</div><div class="cmp-ar">'+you+'</div></div>'+
+      '<div><div class="cmp-lab">'+(kind==='word'?'Jij zei':'Gehoord')+'</div><div class="cmp-ar">'+you+'</div></div>'+
       '<button type="button" class="btn btn-sm btn-secondary" data-act="cmp-you"'+(lastClipUrl?'':' disabled')+'>▶ Jij</button>'+
     '</div>'+
     (hint?('<p class="cmp-hint">'+mdLite(hint)+'</p>'):'')+
@@ -2040,74 +2159,47 @@ function featVec(x0, sr0){
   let cen=0;
   for(let i=0;i<bands.length;i++) cen+=((bands[i][0]+bands[i][1])/2)*(es[i]/tot);
   const f2u=es[5]/tot;
-  return {dur, tail, nas, cen, f2u, cnas:nas, ccen:cen};
+  const f2a=(es[6]+es[7])/tot;
+  const f2i=(es[8]+es[9])/tot;
+  const f1=(es[2]+es[3]+es[4])/tot;
+  return {dur, tail, nas, cen, f2u, f2a, f2i, f1, cnas:nas, ccen:cen};
 }
 function endingScoreFromRoll(expected, said, wordId, snap0){
   const cls=endingClass(expected);
   const fam=endingFamily(cls);
-  if(!fam) return {ok:true, score:1, cls:'', heard:'', hint:'', skipped:true};
-  const extraN=saidHasTanweenN(said, expected);
+  if(!fam) return {ok:true, score:1, cls:'', heard:'', hint:'', skipped:true, conf:1, src:'', agree:'yes'};
+  const word=(wordId && typeof ALL!=='undefined' && ALL)?ALL.find(x=>x.id===wordId):null;
   const gold=goldOf(wordId);
   const snap=snap0||rollSamples(wordId?2.3:1.05);
   const f=snap?featVec(snap.x, snap.sr):null;
-  const consOk=!!said && arScore(said, expected)>=0.70;
-  let ok=true, why='', score=1, heard='';
-
-  if(fam==='tan'){
-    if(extraN){ ok=true; why='n'; score=1; heard='un'; }
-    else if(!f){
-      // Mic buffer empty: don't fail a word that was recognized
-      ok=consOk || !gold;
-      why='nomic'; score=ok?0.7:0.2; heard=ok?'':'drop';
-    }else if(gold){
-      const ratio=f.dur/(gold.d+1e-6);
-      const saidA=f.nas<8 && f.cen>380 && (f.cen-gold.c)>160;
-      const chopped=f.dur<0.24 || (ratio<0.42 && f.tail<0.10 && f.nas<12);
-      if(saidA){ ok=false; why='a'; score=0.25; heard='a'; }
-      else if(chopped && !consOk){ ok=false; why='short'; score=0.2; heard='drop'; }
-      else if(chopped && consOk && f.nas<8 && f.tail<0.08){ ok=false; why='short'; score=0.25; heard='drop'; }
-      else { ok=true; why='gold'; score=ratio>=0.6?1:0.85; heard='tan'; }
-    }else{
-      if(f.nas<8 && f.cen>380){ ok=false; why='a'; score=0.3; heard='a'; }
-      else if(f.dur<0.22 && f.nas<8){ ok=false; why='short'; score=0.25; heard='drop'; }
-      else { ok=true; why='open'; score=0.75; heard='tan'; }
-    }
-  }else if(fam==='short'){
-    if(extraN && f && gold && f.dur/(gold.d+1e-6)>1.4 && f.nas>80){
-      ok=false; why='extran'; score=0.3; heard='un';
-    }else if(!f){ ok=true; why='nomic'; score=0.7; }
-    else if(gold){
-      const ratio=f.dur/(gold.d+1e-6);
-      if(ratio>1.5 && f.nas>90){ ok=false; why='tan'; score=0.35; heard='un'; }
-      else if((cls==='u'||cls==='i') && f.cen>400 && f.nas<6){ ok=false; why='a'; score=0.3; heard='a'; }
-      else { ok=true; why='gold'; score=0.85; heard=cls; }
-    }else{
-      ok=true; why='open'; score=0.75; heard=cls;
-    }
-  }else{
-    ok=true; why='sukun'; score=0.8;
-  }
+  const h=heardEnding(said, expected, f, gold, word||{ar:expected, translit:romanizeAr(expected)});
+  const agree=endAgree(h.cls, cls);
+  const confident=h.conf>=0.62;
+  let ok=true, why='';
+  if(agree==='yes'){ ok=true; why=h.src||'match'; }
+  else if(agree==='no' && confident){ ok=false; why=h.cls||'mismatch'; }
+  else { ok=true; why='maybe'; }
 
   let hint='';
   if(!ok){
-    if(why==='a') hint='Je zei eerder **-a**. '+endingHint(cls);
-    else if(why==='tan'||why==='extran') hint='Te veel **-n** aan het eind. '+endingHint(cls);
-    else if(why==='nomic') hint='Zeg de uitgang duidelijk (bijv. kitaab**un**).';
-    else hint=endingHint(cls);
+    if(h.cls==='a') hint='Gehoord **'+endLabel('a')+'**, juist is **'+endLabel(cls)+'**. '+endingHint(cls);
+    else if(h.cls==='u' && fam==='tan') hint='Gehoord **-u** zonder tanwīn. Zeg de **-n**: **'+endLabel(cls)+'**.';
+    else if((h.cls==='un'||h.cls==='in'||h.cls==='an') && fam==='short') hint='Te veel **-n**. Dit woord heeft **'+endLabel(cls)+'**.';
+    else if(h.cls==='drop') hint='De uitgang ontbrak. '+endingHint(cls);
+    else hint='Gehoord **'+endLabel(h.cls)+'**, juist **'+endLabel(cls)+'**. '+endingHint(cls);
+  } else if(why==='maybe' && fam==='tan'){
+    hint='Uitgang niet scherp gehoord. Zeg **'+endLabel(cls)+'** extra duidelijk.';
   }
-  return {ok, score, cls, heard, hint, why, feats:f, gold};
+  const heard=h.cls||'';
+  return {ok, score:ok?(agree==='yes'?1:0.8):0.3, cls, heard, hint, why, feats:f, gold, conf:h.conf, src:h.src, agree};
 }
 function gradeUtterance(expected, said, wordId, snap){
   const word=(wordId && typeof ALL!=='undefined' && ALL)?ALL.find(x=>x.id===wordId):null;
   const cons=arScore(said, expected, word||{ar:expected});
-  const end=checkHarakat ? endingScoreFromRoll(expected, said, wordId, snap) : {ok:true, score:1, cls:'', skipped:true, hint:''};
-  const needEnd=!!end.cls && !end.skipped;
-  // Isolated vocab: phone ASR never returns harakat (طَالِبٌ → تالب / talibun).
-  // If the lexeme matched, accept. Only block a clearly different word.
-  const isolated=!!wordId;
-  const endOk=!needEnd || end.ok || (isolated && cons>=0.62);
-  const ok=cons>=0.62 && endOk;
-  return {ok, cons, end, needEnd: needEnd && !endOk};
+  const end=checkHarakat ? endingScoreFromRoll(expected, said, wordId, snap) : {ok:true, score:1, cls:'', skipped:true, hint:'', heard:'', agree:'yes'};
+  const harakaFail=cons>=0.62 && checkHarakat && !end.skipped && !end.ok;
+  const ok=cons>=0.62 && !harakaFail;
+  return {ok, cons, end, needEnd:harakaFail};
 }
 /** Align expected tokens vs said tokens → HTML with red errors */
 
@@ -2549,7 +2641,7 @@ function startSpeakPractice(expected, who, resultEl){
       freezeClip().then(()=>{
       const g=gradeUtterance(expected, said, null, snap);
       if(resultEl){
-        const harakaFail=!!(said && g.cons>=0.70 && g.needEnd && !g.end.ok);
+        const harakaFail=!!(said && g.needEnd);
         const d=diffArHtml(expected, said, harakaFail);
         if(!said){ resultEl.className='speak-result hint'; resultEl.textContent='Niets gehoord.'; }
         else if(g.ok){
@@ -2559,17 +2651,17 @@ function startSpeakPractice(expected, who, resultEl){
           hideCompare();
         }else if(harakaFail){
           resultEl.className='speak-result bad';
-          resultEl.innerHTML='✗ Harakaat. '+(mdLite(g.end.hint||''))+'<br><span class="ar-diff ar-mark">'+d.html+'</span>';
+          resultEl.innerHTML='✗ Uitgang: gehoord <b>'+esc(endLabel(g.end.heard))+'</b>, juist <b>'+esc(endLabel(g.end.cls))+'</b>. '+(mdLite(g.end.hint||''));
           try{playNo()}catch(e){}
           try{navigator.vibrate&&navigator.vibrate(50)}catch(e){}
           try{speakWord({ar:expected}, true)}catch(e){}
-          showCompare(expected, said, 'haraka', g.end.hint||'', {ar:expected});
+          showCompare(expected, said, 'haraka', g.end.hint||'', {ar:expected}, g.end);
         }else{
           resultEl.className='speak-result bad';
           resultEl.innerHTML='✗ Verkeerd woord.<br><span class="ar-diff ar-mark">'+d.html+'</span>';
           try{playNo()}catch(e){}
           try{navigator.vibrate&&navigator.vibrate(50)}catch(e){}
-          showCompare(expected, said, 'word', 'Zeg het woord opnieuw.', {ar:expected});
+          showCompare(expected, said, 'word', 'Zeg het woord opnieuw.', {ar:expected}, g.end);
         }
       }
       stopRoll();
@@ -2943,8 +3035,14 @@ function startZegListen(w, resultEl){
         else mush.innerHTML=wrapTash(w.ar, cons>=0.62?'now':'wait');
       }
       const live=document.querySelector('.said-live');
-      if(live) live.textContent=said?('… '+said):'';
-      if(resultEl && said) resultEl.textContent='… '+said;
+      if(live){
+        if(!said) live.textContent='';
+        else if(cons>=0.62){
+          const te=textHeardEnd(said, w.ar, w);
+          live.textContent=te.cls?('woord herkend · uitgang '+endLabel(te.cls)):'woord herkend · luister naar de uitgang…';
+        } else live.textContent='… luisteren';
+      }
+      if(resultEl && said) resultEl.textContent=cons>=0.62?'woord herkend…':'… luisteren';
     };
     rec.onerror=(ev)=>{
       if(resultEl && ev.error==='not-allowed'){
@@ -2967,31 +3065,38 @@ function startZegListen(w, resultEl){
         window._zegLock=wordId;
         state.answered=true;
         if(mush) mush.innerHTML=wrapTash(w.ar,'ok');
-        if(resultEl){resultEl.className='speak-result ok'; resultEl.innerHTML='✓ Juist — '+esc(w.translit||'');}
+        if(resultEl){
+          const maybe=g.end&&g.end.why==='maybe';
+          const heard=g.end&&g.end.heard;
+          resultEl.className='speak-result ok';
+          resultEl.innerHTML=maybe
+            ? '✓ Woord goed. Uitgang niet scherp — zeg <b>'+esc(endLabel(g.end.cls))+'</b> extra duidelijk.'
+            : '✓ Juist — gehoord <b>'+esc(endLabel(heard||g.end.cls||''))+'</b>';
+        }
         try{playOk()}catch(e){}
         hideCompare();
         stopRoll();
         setTimeout(()=>{ window._zegLock=null; nextZeg(true); }, 650);
         return;
       }
-      if(said && g.cons>=0.70 && g.needEnd && !g.end.ok){
+      if(said && g.needEnd){
         if(mush) mush.innerHTML=wrapTash(w.ar,'haraka');
         logMistake(w,'haraka', said);
         if(resultEl){
           resultEl.className='speak-result bad';
-          resultEl.innerHTML='✗ Woord goed, harakaat fout. '+(mdLite(g.end.hint||''))+' Luister en zeg opnieuw.';
+          resultEl.innerHTML='✗ Uitgang: gehoord <b>'+esc(endLabel(g.end.heard))+'</b>, juist <b>'+esc(endLabel(g.end.cls))+'</b>. '+(mdLite(g.end.hint||''));
         }
         try{playNo()}catch(e){}
         try{navigator.vibrate&&navigator.vibrate(50)}catch(e){}
         try{speakWord(w, true)}catch(e){}
-        showCompare(w.ar, said, 'haraka', g.end.hint||'', w);
+        showCompare(w.ar, said, 'haraka', g.end.hint||'', w, g.end);
       } else if(said){
         if(mush) mush.innerHTML=wrapTash(w.ar,'bad');
         logMistake(w,'word', said);
-        if(resultEl){resultEl.className='speak-result bad'; resultEl.innerHTML='✗ Verkeerd woord — jij: <span lang="ar">'+esc(said)+'</span>';}
+        if(resultEl){resultEl.className='speak-result bad'; resultEl.innerHTML='✗ Verkeerd woord — zeg <b>'+esc(w.translit||'')+'</b>';}
         try{playNo()}catch(e){}
         try{navigator.vibrate&&navigator.vibrate(50)}catch(e){}
-        showCompare(w.ar, said, 'word', 'Zeg het hele woord, met de uitgang.', w);
+        showCompare(w.ar, said, 'word', 'Zeg het hele woord, met de uitgang.', w, g.end);
       } else if(mush){
         mush.innerHTML=wrapTash(w.ar, hideText?'wait':'wait');
       }
@@ -4244,10 +4349,10 @@ document.addEventListener('click',e=>{
       if(box && !box.classList.contains('peek')) return;
     }
     if(cls.indexOf('tok-bad')>=0){
-      showCompare(ar, lastSaid||lastCmp.said||'', 'word', 'Zeg dit woord opnieuw.', lastCmp.word||{ar});
+      showCompare(ar, lastSaid||lastCmp.said||'', 'word', 'Zeg dit woord opnieuw.', lastCmp.word||{ar}, lastCmp.end);
       try{speakWord({ar}, true)}catch(err){}
     }else if(cls.indexOf('tok-haraka')>=0){
-      showCompare(ar, lastSaid||lastCmp.said||'', 'haraka', lastCmp.hint||'De uitgang klopte niet.', lastCmp.word||{ar});
+      showCompare(ar, lastSaid||lastCmp.said||'', 'haraka', lastCmp.hint||'De uitgang klopte niet.', lastCmp.word||{ar}, lastCmp.end);
       try{speakWord({ar}, true)}catch(err){}
     }else{
       try{speakWord({ar}, true)}catch(err){}
