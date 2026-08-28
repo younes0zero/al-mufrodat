@@ -1218,10 +1218,10 @@ function playBlobPitched(blob, gender, done, who){
   try{a.pause()}catch(e){}
   a.onended=null;a.onerror=null;
   a.src=url;
-  // Lichte unieke rate per spreker (niet te extreem = minder haperen)
-  const base=prof.gender==='f'?1.06:0.94;
-  const tweak=(prof.idx%6)*0.02;
-  a.playbackRate=Math.min(1.2, Math.max(0.82, base+(prof.gender==='f'?tweak:-tweak)));
+  // Duidelijk andere snelheid per spreker (fallback als lokale MP3 ontbreekt)
+  const base=prof.gender==='f'?1.08:0.90;
+  const tweak=(prof.idx%6)*0.045;
+  a.playbackRate=Math.min(1.28, Math.max(0.78, base+(prof.gender==='f'?tweak:-tweak)));
   a.onended=()=>{try{URL.revokeObjectURL(url)}catch(e){}; if(myGen===audioGen&&done)done(true)};
   a.onerror=()=>{try{URL.revokeObjectURL(url)}catch(e){}; if(myGen===audioGen&&done)done(false)};
   activeAudio=a;
@@ -1353,13 +1353,13 @@ function namePhonetic(who){
 }
 function genderOf(who){
   if(!who)return 'm';
-  const w=String(who).replace(/[\u064B-\u065F\u0670]/g,'').trim();
+  const raw=String(who);
+  const w=raw.replace(/[\u064B-\u065F\u0670\u0640]/g,'').trim();
   for(const f of FEMALE_NAMES){
-    const fn=f.replace(/[\u064B-\u065F\u0670]/g,'');
-    if(w.includes(fn)||fn.includes(w))return 'f';
+    const fn=String(f).replace(/[\u064B-\u065F\u0670\u0640]/g,'').trim();
+    if(fn && w===fn) return 'f';
   }
-  // common feminine markers
-  if(/ة$/.test(w)||/ا$/.test(w)&&/(ى|ة)/.test(String(who)))return 'f';
+  if(/ة$/.test(w) || /ى$/.test(w)) return 'f';
   return 'm';
 }
 let maleArVoices=[], femaleArVoices=[], allArVoices=[];
@@ -1406,8 +1406,15 @@ function localWordSrc(word){
 function localLineSrc(text, who){
   const t=String(text||'').trim();
   if(!t) return '';
-  const g=genderOf(who||'');
-  return 'audio/l/'+fnv1a(g+'\t'+t)+'.mp3';
+  const w=String(who||'').trim();
+  // unieke stem per persoon (naam + zin)
+  if(w) return 'audio/l/'+fnv1a(w+'\t'+t)+'.mp3';
+  return 'audio/l/'+fnv1a(genderOf(w)+'\t'+t)+'.mp3';
+}
+function localLineSrcLegacy(text, who){
+  const t=String(text||'').trim();
+  if(!t) return '';
+  return 'audio/l/'+fnv1a(genderOf(who||'')+'\t'+t)+'.mp3';
 }
 function speakFile(src, done, onStart){
   if(!src){if(done)done(false);return}
@@ -1978,12 +1985,20 @@ function speakDialogueLine(text, who, onDone){
     });
   };
   const local=localLineSrc(t, who);
+  const legacy=localLineSrcLegacy(t, who);
   if(!local){fallback();return}
-  speakFile(local, ok=>{
-    if(myGen!==audioGen)return;
-    if(ok||usedLocal){finish(true);return}
-    fallback();
-  }, ()=>{usedLocal=true});
+  const tryFile=(src, next)=>{
+    if(!src){if(next)next();return}
+    speakFile(src, ok=>{
+      if(myGen!==audioGen)return;
+      if(ok||usedLocal){finish(true);return}
+      if(next)next(); else fallback();
+    }, ()=>{usedLocal=true});
+  };
+  tryFile(local, ()=>{
+    if(legacy && legacy!==local) tryFile(legacy, fallback);
+    else fallback();
+  });
 }
 
 function speakProxyPitched(text, gender, who, done){
