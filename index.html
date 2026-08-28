@@ -1122,9 +1122,16 @@ function unlockAudio(){ audioMuted=false;
 }
 
 let audioGen=0; // invalidates in-flight TTS when user clicks another line
+let playLinesGen=0;
+let playLinesTimer=null;
 let sharedAudio=null;
+function stopPlayLines(){
+  playLinesGen++;
+  try{if(playLinesTimer){clearTimeout(playLinesTimer);playLinesTimer=null}}catch(e){}
+}
 function stopAllMedia(){
   audioMuted=true;
+  stopPlayLines();
   stopAudio();
   window._dlgListening=false;
   try{
@@ -1489,7 +1496,9 @@ function speakWord(word,force){
 }
 
 function playLines(lines,i){
+  const gen=playLinesGen;
   if(audioMuted)return;
+  if(gen!==playLinesGen)return;
   if(!lines||i>=lines.length)return;
   const item=lines[i];
   const t=String(item&&item.ar!=null?item.ar:item||'').trim();
@@ -1501,7 +1510,11 @@ function playLines(lines,i){
     if(src){try{const pre=new Audio(); pre.preload='auto'; pre.src=src}catch(e){}}
   }
   speakDialogueLine(t, who, ()=>{
-    setTimeout(()=>playLines(lines,i+1), 70);
+    if(gen!==playLinesGen)return;
+    playLinesTimer=setTimeout(()=>{
+      if(gen!==playLinesGen)return;
+      playLines(lines,i+1);
+    }, 70);
   });
 }
 
@@ -3501,6 +3514,8 @@ document.addEventListener('click',e=>{
   else if(act==='toggle-theme'){darkMode=!darkMode;saveTheme();applyTheme();render()}
   else if(act==='conv-di'){
     if(window._dlgListening){return} // niet naar ander dialoog tijdens oefenen
+    stopPlayLines();
+    stopAudio();
     
     const dir=btn.dataset.dir;
     const c=CONVERSATIONS[String(state.convUnit||'')];
@@ -3526,6 +3541,8 @@ document.addEventListener('click',e=>{
     render();
   }
   else if(act==='open-conv'){
+    stopPlayLines();
+    stopAudio();
     unlockAudio();
     state.convUnit=String(btn.dataset.u||'');state.view='conv-unit';state.convOpen={};state.convShowAll=false;state.convDi=0;state.path='conv';
     const _di=(lastConv&&String(lastConv.u)===String(state.convUnit))? (lastConv.di|0) : 0; state.convDi=_di; lastConv={u:String(state.convUnit),di:_di};saveConv();
@@ -3596,12 +3613,14 @@ document.addEventListener('click',e=>{
   }
   else if(act==='speak-line'){
     e.stopPropagation();e.preventDefault();
+    stopPlayLines();
     const t=btn.getAttribute('data-text')||btn.dataset.text||'';
     const who=btn.getAttribute('data-who')||btn.dataset.who||'';
     if(t)speakDialogueLine(t, who);
   }
   else if(act==='speak-dialogue'){
     e.stopPropagation();
+    stopPlayLines();
     const u=btn.dataset.u||state.convUnit;
     const di=+btn.dataset.di;
     const c=CONVERSATIONS[u];
