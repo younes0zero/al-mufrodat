@@ -1163,7 +1163,7 @@ function speakWeb(text){
   try{
     primeVoices();
     speechSynthesis.cancel();
-    const u=new SpeechSynthesisUtterance(text);
+    const u=new SpeechSynthesisUtterance(ttsSpell(text));
     if(arabicVoice){
       u.voice=arabicVoice;
       u.lang=arabicVoice.lang||'ar-SA';
@@ -1272,10 +1272,24 @@ function playBlob(blob,done){
 }
 
 /* CORS-friendly Google TTS proxy (works on GitHub Pages) */
+function ttsSpell(s){
+  // Force audible i'rab: tanween ٌ/ٍ/ً → vowel + nūn
+  let o='', t=String(s||'');
+  for(let i=0;i<t.length;i++){
+    const c=t[i];
+    if(c==='ٌ') o+='ُنْ';
+    else if(c==='ٍ') o+='ِنْ';
+    else if(c==='ً'){
+      o+='َنْ';
+      if(t[i+1]==='ا') i++;
+    }else o+=c;
+  }
+  return o;
+}
 function speakProxy(text,done){
   if(audioMuted){if(done)done(false);return}
   const myGen=audioGen;
-  const q=encodeURIComponent(text);
+  const q=encodeURIComponent(ttsSpell(text));
   const url='https://tts-api.netlify.app/?text='+q+'&lang=ar';
   fetch(url,{mode:'cors',credentials:'omit',cache:'force-cache'})
     .then(r=>{if(!r.ok)throw new Error('http');return r.blob()})
@@ -1293,7 +1307,7 @@ function speakProxy(text,done){
 function speakGoogle(text,done){
   if(audioMuted){if(done)done(false);return}
   const myGen=audioGen;
-  const q=encodeURIComponent(text);
+  const q=encodeURIComponent(ttsSpell(text));
   const urls=[
     'https://translate.googleapis.com/translate_tts?ie=UTF-8&client=gtx&tl=ar&q='+q,
     'https://translate.google.com/translate_tts?ie=UTF-8&tl=ar&client=tw-ob&q='+q
@@ -1412,8 +1426,8 @@ function localWordSrc(word){
   if(word&&word.id) return 'audio/w/'+word.id+'.mp3?'+AUDIO_VER;
   return '';
 }
-const AUDIO_VER='v6';
-const WORD_END={'l1-1':[0.75,81.5,204],'l1-2':[0.88,132.6,173],'l1-3':[0.74,114.5,201],'l1-4':[0.75,155.8,173],'l1-5':[0.74,91.1,163],'l1-6':[1.02,100.5,199],'l1-7':[0.86,131.2,175],'l1-8':[0.82,155.2,185],'l1-9':[0.85,125.2,160],'l1-10':[0.75,55.3,210],'l1-11':[0.8,104.0,169],'l1-12':[0.8,121.0,175],'l1-13':[0.78,83.1,171],'l1-14':[0.78,135.4,193],'l1-15':[0.81,128.0,168],'l1-16':[0.8,115.8,166],'l1-17':[0.63,71.3,191],'l1-18':[0.56,71.5,208],'l1-19':[0.88,124.1,160],'l1-20':[0.74,77.2,181],'l1-21':[0.81,122.0,198],'l1-22':[0.73,58.0,216],'l1-23':[1.04,105.4,184],'l1-24':[0.9,94.5,176],'l2-1':[0.87,104.6,190],'l2-2':[0.76,124.4,165],'l2-3':[0.8,139.2,179],'l2-4':[0.78,124.1,171],'l3-1':[0.79,139.1,183],'l3-2':[0.76,103.8,166],'l3-3':[0.79,115.7,166],'l3-4':[0.8,131.7,165],'l3-5':[0.9,119.2,163],'l3-6':[0.88,130.1,173],'l3-7':[0.96,138.8,196],'l3-8':[0.99,85.6,191],'l3-9':[0.96,114.3,189],'l3-10':[0.77,87.4,169],'l3-11':[0.78,113.9,163],'l3-12':[0.87,103.6,181],'l3-13':[0.9,107.1,194],'l3-14':[0.94,113.2,168],'l3-15':[0.81,160.4,168],'l3-16':[0.75,135.4,158],'l3-17':[0.95,113.8,175],'l3-18':[0.77,124.8,185],'l3-19':[1.0,89.8,168],'l3-20':[0.95,112.2,191],'l3-21':[0.77,34.4,214],'l3-22':[1.01,83.3,211],'l3-23':[1.13,114.0,173],'l3-24':[0.66,44.5,201],'l3-25':[0.9,109.2,179],'l3-26':[0.84,130.5,180],'l3-27':[0.96,111.5,194],'l4-1':[0.51,0.7,308],'l4-2':[0.86,134.1,161],'l4-3':[0.87,101.3,197],'l4-4':[0.91,117.5,165],'l4-5':[0.63,131.5,197],'l4-6':[0.89,131.1,175],'l4-7':[0.93,81.9,178],'l4-8':[1.06,92.8,203],'l4-9':[1.11,124.7,176],'l4-10':[0.74,50.5,212],'l4-11':[0.9,10.9,204],'l4-12':[0.75,6.6,220],'l4-13':[0.75,11.7,295],'l4-14':[1.02,17.1,186],'l4-15':[1.56,129.1,228],'l4-16':[0.69,0.4,383],'l4-17':[0.7,0.5,300],'l4-18':[0.31,17.7,232],'l4-19':[0.45,0.3,391],'l4-20':[0.57,50.6,217],'l4-21':[0.36,0.3,422],'l5-1':[0.88,11.7,291],'l5-2':[0.68,75.6,206],'l5-3':[0.74,84.2,210],'l5-4':[0.95,12.7,291],'l5-5':[0.94,125.8,163],'l5-6':[0.93,103.2,179],'l5-7':[0.64,171.9,193],'l5-8':[1.03,137.6,166],'l5-9':[0.52,0.2,452],'l5-10':[1.08,137.8,163],'l5-11':[0.46,0.8,268],'l5-12':[0.7,0.2,442],'l5-13':[0.74,82.0,209],'l6-1':[0.64,55.2,212],'l6-2':[0.79,82.6,197],'l6-3':[0.66,103.6,214],'l6-4':[0.73,101.8,186],'l6-5':[0.46,59.3,206],'l6-6':[0.67,98.6,205],'l6-7':[0.76,71.2,207],'l6-8':[0.68,86.5,183],'l6-9':[0.9,116.8,167],'l6-10':[1.19,100.4,175],'l6-11':[0.99,76.4,171],'l6-12':[0.63,81.7,196],'l6-13':[0.97,120.3,173],'l6-14':[0.88,95.8,169],'l6-15':[0.74,56.8,202],'l6-16':[0.57,79.9,211],'l6-17':[1.06,129.1,174],'l6-18':[0.86,128.0,163],'l6-19':[0.85,126.0,171],'l6-20':[1.07,106.7,191],'l6-21':[0.77,99.8,205],'l7-1':[0.92,117.6,187],'l7-2':[0.86,131.2,170],'l7-3':[0.98,138.6,171],'l7-4':[0.88,127.9,171],'l7-5':[0.98,128.9,168],'l7-6':[1.17,99.8,183],'l7-7':[1.1,105.6,168],'l7-8':[0.6,0.3,420],'l7-9':[0.73,403.3,222],'l7-10':[0.8,0.2,451],'l7-11':[0.5,0.3,407],'l8-1':[0.75,0.3,414],'l8-2':[0.84,0.4,374],'l8-3':[0.92,4.3,336],'l8-4':[0.83,0.4,385],'l8-5':[0.69,0.9,295],'l8-6':[0.86,74.1,182],'l8-7':[0.91,0.2,504],'l9-1':[0.97,113.0,170],'l9-2':[0.98,137.0,175],'l9-3':[0.73,140.2,178],'l9-4':[0.99,114.6,168],'l9-5':[0.84,133.1,182],'l9-6':[0.75,98.4,196],'l9-7':[1.03,132.9,171],'l9-8':[0.96,109.5,188],'l9-9':[1.38,13.3,292],'l9-10':[0.71,122.5,204],'l9-11':[1.08,86.2,180],'l9-12':[1.07,11.3,291],'l9-13':[0.71,1.2,300],'l9-14':[0.76,0.2,443],'l9-15':[0.87,88.0,169],'l9-16':[0.91,126.8,179],'l9-17':[0.84,16.1,208],'l9-18':[0.86,16.3,200],'l9-19':[0.78,32.8,214],'l9-20':[1.04,109.1,172],'l9-21':[0.76,5.0,259],'l9-22':[1.06,109.4,173],'l9-23':[1.03,137.2,172],'l9-24':[0.89,8.1,299],'l9-25':[2.19,104.8,165],'l9-26':[0.93,92.9,161],'l9-27':[0.88,146.3,171],'l9-28':[0.86,0.7,339],'l10-1':[0.86,162.2,181],'l10-2':[0.81,173.9,194],'l10-3':[0.63,82.0,211],'l10-4':[0.83,85.4,201],'l10-5':[0.96,76.6,193],'l10-6':[0.59,0.2,476],'l10-7':[0.49,0.3,352],'l10-8':[0.66,79.4,232]};
+const AUDIO_VER='v7';
+const WORD_END={'l1-1':[0.785,113.2,187],'l1-2':[0.885,129.1,155],'l1-3':[0.755,87.2,169],'l1-4':[0.735,182.4,146],'l1-5':[0.755,153.5,157],'l1-6':[1.035,115.6,178],'l1-7':[0.885,117.8,160],'l1-8':[0.865,127.7,147],'l1-9':[0.885,123.9,151],'l1-10':[0.735,110.1,189],'l1-11':[0.825,170.8,152],'l1-12':[0.825,149.2,149],'l1-13':[0.825,108.5,163],'l1-14':[0.805,135.8,160],'l1-15':[0.845,160.3,152],'l1-16':[0.865,116.8,146],'l1-17':[0.675,115.6,163],'l1-18':[0.645,107.9,158],'l1-19':[0.875,131.6,145],'l1-20':[0.775,111.2,149],'l1-21':[0.835,149.6,158],'l1-22':[0.755,72.4,173],'l1-23':[1.085,104.5,155],'l1-24':[0.925,91.4,163],'l2-1':[0.915,149.0,152],'l2-2':[0.835,222.5,146],'l2-3':[0.815,136.7,152],'l2-4':[0.795,125.7,156],'l3-1':[0.835,138.3,156],'l3-2':[0.795,130.1,147],'l3-3':[0.815,172.0,149],'l3-4':[0.855,165.4,149],'l3-5':[0.935,127.5,152],'l3-6':[0.815,160.6,146],'l3-7':[0.985,182.6,163],'l3-8':[1.045,109.3,160],'l3-9':[0.975,123.7,166],'l3-10':[0.835,146.0,149],'l3-11':[0.815,140.5,148],'l3-12':[0.895,111.9,165],'l3-13':[0.915,129.9,172],'l3-14':[0.995,102.1,150],'l3-15':[0.895,133.8,147],'l3-16':[0.755,144.5,142],'l3-17':[0.995,150.6,152],'l3-18':[0.795,108.3,149],'l3-19':[1.025,104.3,154],'l3-20':[0.945,106.9,160],'l3-21':[0.755,69.8,203],'l3-22':[1.045,83.4,183],'l3-23':[1.135,140.4,173],'l3-24':[0.705,157.9,149],'l3-25':[0.955,160.5,154],'l3-26':[0.855,114.4,159],'l3-27':[0.985,101.7,162],'l4-1':[0.535,1.4,264],'l4-2':[0.865,162.5,146],'l4-3':[0.885,123.0,151],'l4-4':[0.905,131.8,151],'l4-5':[0.695,144.5,153],'l4-6':[0.905,121.1,163],'l4-7':[0.975,129.2,159],'l4-8':[1.135,116.5,163],'l4-9':[1.135,166.3,153],'l4-10':[0.805,92.1,182],'l4-11':[0.925,16.5,168],'l4-12':[0.775,11.6,191],'l4-13':[0.775,8.9,270],'l4-14':[1.045,17.5,166],'l4-15':[1.585,123.5,198],'l4-16':[0.715,1.2,218],'l4-17':[0.725,1.6,186],'l4-18':[0.335,164.6,225],'l4-19':[0.475,0.5,293],'l4-20':[0.595,65.4,210],'l4-21':[0.385,0.4,338],'l5-1':[0.895,6.7,259],'l5-2':[0.715,120.5,167],'l5-3':[0.835,116.9,157],'l5-4':[0.975,7.6,265],'l5-5':[0.955,125.3,147],'l5-6':[0.945,101.8,159],'l5-7':[0.665,126.1,161],'l5-8':[1.055,156.4,151],'l5-9':[0.545,0.4,333],'l5-10':[1.105,164.7,150],'l5-11':[0.485,1.2,251],'l5-12':[0.725,0.4,366],'l5-13':[0.805,118.4,195],'l6-1':[0.665,56.1,198],'l6-2':[0.815,143.1,159],'l6-3':[0.695,66.1,191],'l6-4':[0.755,136.7,154],'l6-5':[0.515,50.8,184],'l6-6':[0.805,98.8,188],'l6-7':[0.805,107.9,170],'l6-8':[0.715,117.9,156],'l6-9':[0.925,139.1,152],'l6-10':[1.205,129.1,160],'l6-11':[0.835,99.5,187],'l6-12':[0.715,214.0,148],'l6-13':[0.985,118.9,154],'l6-14':[0.935,117.2,152],'l6-15':[0.815,101.7,162],'l6-16':[0.615,77.0,180],'l6-17':[1.115,224.7,148],'l6-18':[0.875,197.7,145],'l6-19':[0.855,163.5,152],'l6-20':[1.085,119.0,162],'l6-21':[0.865,142.9,153],'l7-1':[0.915,121.7,172],'l7-2':[0.885,160.8,153],'l7-3':[0.955,107.2,154],'l7-4':[0.895,146.0,165],'l7-5':[1.015,106.6,160],'l7-6':[1.185,151.2,162],'l7-7':[0.935,91.5,162],'l7-8':[0.625,0.4,328],'l7-9':[0.755,510.2,184],'l7-10':[0.825,0.5,303],'l7-11':[0.525,0.4,336],'l8-1':[0.775,0.7,300],'l8-2':[0.865,0.7,311],'l8-3':[0.945,8.8,287],'l8-4':[0.855,0.5,424],'l8-5':[0.715,1.1,237],'l8-6':[0.855,109.5,162],'l8-7':[0.935,0.2,505],'l9-1':[1.005,108.1,156],'l9-2':[1.045,120.1,148],'l9-3':[0.805,147.3,155],'l9-4':[1.025,150.0,163],'l9-5':[0.865,139.2,165],'l9-6':[0.815,143.8,159],'l9-7':[1.055,105.8,162],'l9-8':[1.025,95.7,162],'l9-9':[1.405,8.1,281],'l9-10':[0.805,121.0,161],'l9-11':[1.085,109.6,160],'l9-12':[1.095,6.2,271],'l9-13':[0.735,4.0,204],'l9-14':[0.785,0.5,331],'l9-15':[0.885,108.2,153],'l9-16':[0.935,169.6,155],'l9-17':[0.865,16.8,178],'l9-18':[0.885,19.7,172],'l9-19':[0.805,24.9,200],'l9-20':[1.045,121.6,160],'l9-21':[0.785,10.4,214],'l9-22':[1.075,138.6,156],'l9-23':[1.045,128.4,159],'l9-24':[0.915,6.9,283],'l9-25':[2.275,112.3,155],'l9-26':[0.955,111.9,147],'l9-27':[0.795,162.6,148],'l9-28':[0.885,0.7,274],'l10-1':[0.905,194.0,154],'l10-2':[0.845,147.6,142],'l10-3':[0.735,131.7,164],'l10-4':[0.855,114.9,162],'l10-5':[0.995,82.4,152],'l10-6':[0.615,0.4,344],'l10-7':[0.515,1.4,231],'l10-8':[0.685,252.3,200]};
 
 function localLineSrc(text, who){
   const t=String(text||'').trim();
@@ -1535,7 +1549,7 @@ function getSharedRec(){
   if(!sharedRec){
     sharedRec=new SR();
     sharedRec.lang='ar-SA';
-    sharedRec.maxAlternatives=3;
+    sharedRec.maxAlternatives=5;
   }
   return sharedRec;
 }
@@ -1592,14 +1606,36 @@ function arScore(said, expected){
   const a=normAr(said), b=normAr(expected);
   if(!a||!b)return 0;
   if(a===b)return 1;
-  if(a.includes(b)||b.includes(a))return 0.9;
+  // tanween often shows up as extra ن
+  if(a===b+'ن'||a===b+'ون'||a===b+'ين'||a===b+'ان') return 0.95;
+  if(b===a+'ن') return 0.88;
   const grams=s=>{const g=new Set(); for(let i=0;i<Math.max(0,s.length-1);i++)g.add(s.slice(i,i+2)); return g};
   const A=grams(a), B=grams(b);
   if(!A.size||!B.size)return 0;
   let inter=0; for(const g of A)if(B.has(g))inter++;
-  return 2*inter/(A.size+B.size);
+  let s=2*inter/(A.size+B.size);
+  // different word: don't give a cheap pass via substring
+  if(a!==b && Math.abs(a.length-b.length)>2 && s<0.92) s*=0.75;
+  if(a.length>=2 && b.length>=2 && !a.includes(b) && !b.includes(a) && s<0.8){
+    // consonant skeleton mismatch
+    if(s<0.55) return s;
+  }
+  return s;
 }
 
+function pickSaid(ev, expected){
+  let best='', bs=-1;
+  for(let i=0;i<ev.results.length;i++){
+    const r=ev.results[i];
+    for(let j=0;j<r.length;j++){
+      const t=String(r[j].transcript||'').trim();
+      if(!t) continue;
+      const sc=expected?arScore(t, expected):(r[j].confidence||0);
+      if(sc>bs){ bs=sc; best=t; }
+    }
+  }
+  return best;
+}
 function goldOf(id){
   const g=WORD_END[id];
   if(!g) return null;
@@ -1729,7 +1765,7 @@ function featVec(x0, sr0){
   let t2=t;
   while(t2>0 && envt[t2]>=0.12*emx) t2--;
   const tail=(t-t2)*(hop/sr);
-  const lastN=Math.min(y.length, Math.floor(sr*0.18));
+  const lastN=Math.min(y.length, Math.floor(sr*0.14));
   const w=y.subarray(y.length-lastN);
   const nas=bandE(w,sr,220,400)/(bandE(w,sr,500,1400)+1e-12);
   const bands=[[80,150],[150,250],[250,350],[350,500],[500,700],[700,1000],[1000,1400],[1400,1800],[1800,2400],[2400,3200]];
@@ -1738,7 +1774,7 @@ function featVec(x0, sr0){
   let cen=0;
   for(let i=0;i<bands.length;i++) cen+=((bands[i][0]+bands[i][1])/2)*(es[i]/tot);
   const f2u=es[5]/tot;
-  return {dur, tail, nas, cen, f2u};
+  return {dur, tail, nas, cen, f2u, cnas:nas, ccen:cen};
 }
 function endingScoreFromRoll(expected, said, wordId){
   const cls=endingClass(expected);
@@ -1752,16 +1788,20 @@ function endingScoreFromRoll(expected, said, wordId){
 
   if(fam==='tan'){
     if(extraN){ ok=true; why='n'; score=1; heard='un'; }
-    else if(!f){ ok=true; why='nomic'; score=0.6; }
-    else if(gold){
+    else if(!f){
+      // Isolated word: do not auto-pass if we couldn't hear the ending
+      if(gold){ ok=false; why='nomic'; score=0.2; heard='drop'; }
+      else { ok=true; why='nomic'; score=0.6; }
+    }else if(gold){
       const ratio=f.dur/gold.d;
       const nrel=f.nas/(gold.n+1e-6);
       if(ratio<0.85){ ok=false; why='short'; score=0.2; heard='drop'; }
       else if(ratio<0.90 && nrel<0.25){ ok=false; why='short'; score=0.3; heard='drop'; }
-      else if((f.cen-gold.c)>100 && f.nas<20){ ok=false; why='a'; score=0.25; heard='a'; }
+      else if(f.nas<22 && (f.cen>300 || (f.cen-gold.c)>100)){ ok=false; why='a'; score=0.25; heard='a'; }
       else { ok=true; why='gold'; score=ratio>=0.95?1:0.8; heard='tan'; }
     }else{
-      if(f.nas<15 && f.cen>310){ ok=false; why='a'; score=0.3; heard='a'; }
+      if(f.nas<18 && f.cen>310){ ok=false; why='a'; score=0.3; heard='a'; }
+      else if(f.dur<0.45 && f.nas<20){ ok=false; why='short'; score=0.25; heard='drop'; }
       else { ok=true; why='open'; score=0.7; heard='tan'; }
     }
   }else if(fam==='short'){
@@ -1785,6 +1825,7 @@ function endingScoreFromRoll(expected, said, wordId){
   if(!ok){
     if(why==='a') hint='Je zei eerder **-a**. '+endingHint(cls);
     else if(why==='tan'||why==='extran') hint='Te veel **-n** aan het eind. '+endingHint(cls);
+    else if(why==='nomic') hint='Zeg de uitgang duidelijk (bijv. kitaab**un**).';
     else hint=endingHint(cls);
   }
   return {ok, score, cls, heard, hint, why, feats:f, gold};
@@ -1793,7 +1834,7 @@ function gradeUtterance(expected, said, wordId){
   const cons=arScore(said, expected);
   const end=endingScoreFromRoll(expected, said, wordId);
   const needEnd=!!end.cls && !end.skipped;
-  const ok= cons>=0.62 && (!needEnd || end.ok);
+  const ok= cons>=0.70 && (!needEnd || end.ok);
   return {ok, cons, end, needEnd};
 }
 /** Align expected tokens vs said tokens → HTML with red errors */
@@ -2217,7 +2258,7 @@ function startSpeakPractice(expected, who, resultEl){
           resultEl.className='speak-result ok';
           resultEl.innerHTML='✓ <span class="ar-diff">'+d.html+'</span>';
           try{playOk()}catch(e){}
-        }else if(g.cons>=0.62 && g.needEnd && !g.end.ok){
+        }else if(g.cons>=0.70 && g.needEnd && !g.end.ok){
           resultEl.className='speak-result bad';
           resultEl.innerHTML='✗ Harakaat aan het eind. '+(g.end.hint||'')+'<br><span class="ar-diff">'+d.html+'</span>';
           try{playNo()}catch(e){}
@@ -2280,7 +2321,7 @@ function speakDialogueLine(text, who, onDone){
 
 function speakProxyPitched(text, gender, who, done){
   const myGen=audioGen;
-  const q=encodeURIComponent(text);
+  const q=encodeURIComponent(ttsSpell(text));
   const url='https://tts-api.netlify.app/?text='+q+'&lang=ar';
   fetch(url,{mode:'cors',credentials:'omit',cache:'force-cache'})
     .then(r=>{if(!r.ok)throw new Error('http');return r.blob()})
@@ -2293,7 +2334,7 @@ function speakProxyPitched(text, gender, who, done){
 }
 function speakGooglePitched(text, gender, who, done){
   const myGen=audioGen;
-  const q=encodeURIComponent(text);
+  const q=encodeURIComponent(ttsSpell(text));
   const url='https://translate.googleapis.com/translate_tts?ie=UTF-8&client=gtx&tl=ar&q='+q;
   fetch(url,{referrerPolicy:'no-referrer',mode:'cors',credentials:'omit'})
     .then(r=>{if(!r.ok)throw new Error('http');return r.blob()})
@@ -2310,7 +2351,7 @@ function speakWebWithVoice(text, voice, gender, who){
     primeVoices();
     refreshArVoices();
     speechSynthesis.cancel();
-    const u=new SpeechSynthesisUtterance(text);
+    const u=new SpeechSynthesisUtterance(ttsSpell(text));
     const prof=profileForSpeaker(who||'', gender);
     let v=voice;
     if(!v){
@@ -2573,7 +2614,7 @@ function startZegListen(w, resultEl){
       if(done)return;
       interim='';
       for(let i=0;i<ev.results.length;i++){
-        const t=ev.results[i][0].transcript||'';
+        const t=pickSaid({results:[ev.results[i]]}, w.ar) || ev.results[i][0].transcript||'';
         if(ev.results[i].isFinal) finalText+=(finalText?' ':'')+t;
         else interim+=(interim?' ':'')+t;
       }
@@ -2602,7 +2643,7 @@ function startZegListen(w, resultEl){
         setTimeout(()=>{ window._zegLock=null; nextZeg(true); }, 420);
         return;
       }
-      if(said && g.cons>=0.62 && g.needEnd && !g.end.ok){
+      if(said && g.cons>=0.70 && g.needEnd && !g.end.ok){
         if(resultEl){
           resultEl.className='speak-result bad';
           resultEl.innerHTML='✗ Woord herkend, maar de uitgang niet. '+(g.end.hint||'');
@@ -2657,7 +2698,7 @@ function renderZeg(){
     <div class="hub-toolbar"><div class="mvp-kicker">Zeg · ${esc(n)} · ${Math.min(state.asked+1,state.sessionLen)}/${state.sessionLen}</div>
     <button type="button" class="btn btn-sm ${autoSpeak?'btn-primary':'btn-secondary'}" data-act="toggle-speak">${autoSpeak?'🔊 Aan':'🔇 Uit'}</button></div>
     <h2 class="mvp-h">Wat is dit?</h2>
-    <p class="mvp-sub">Zeg het woord in het Arabisch.</p>
+    <p class="mvp-sub">Zeg het Arabische woord <strong>inclusief de uitgang</strong> (kitaab<strong>un</strong>).</p>
     <div class="q-pic">${wordPic(w)}</div>
     <div style="text-align:center;font-size:18px;font-weight:700;margin-bottom:4px">${esc(w.nl)}</div>
     <div class="zeg-result speak-result hint" style="display:block;margin:12px 0">Tik op Zeg en noem het woord.</div>
